@@ -17,15 +17,11 @@ function output_log_response( s )	{
 
 function rand_range( ge_min, lt_max )	{
 
-//	const EPSILON4 = 0.0001; // 1/10,000.0
-//	return( ( Math.random() - EPSILON4 ) * ( lt_max - ge_min ) + ge_min );
 	return( ( Math.random() ) * ( lt_max - ge_min ) + ge_min );
 }
 
 function rand_int_range( ge_min, lt_max )	{
 
-//	const EPSILON4 = 0.0001; // 1/10,000
-//	return( Math.floor( rand_range( ge_min, lt_max ) - EPSILON4 ) );
 	return( Math.floor( rand_range( ge_min, lt_max ) ) );
 }
 
@@ -59,7 +55,7 @@ function shuffle_array_copy( arr )	{
 
 function generate_unique_rand_arr( min, max )	{
 
-	// each random number appears once
+	// each integer in range appears once
 
 	let arr = [];
 	let n = max - min;
@@ -97,30 +93,26 @@ if( 1 )	{
 	num_histo_buckets = max_degree + 1;
 
 	let histo = new Array( max_degree + 1 ).fill( 0 );
-	let num_opens = 0;
+	let num_stubs = 0;
 	for( let i=0; i< num_nodes; i++ )	{
 
 		let v = Math.floor( rand_pow_law( min_degree, max_degree + 1 ) );
 		node_degrees[ i ] = v;
 		histo[ v ]++;
-		num_opens += v;
+		num_stubs += v;
 	}
-//	let num_edges = Math.floor( num_opens / 2.0 );
 
-	output_log_response( "stubs: " + num_opens );
-//	output_log_response( "edges: " + num_edges );
+	output_log_response( "stubs: " + num_stubs );
 	output_log_response( "-" );
 	output_log_response( "node degree: " );
-	for( let i=0; i< num_nodes; i++ ) output_log_response( i + ": " + node_degrees[ i ] );
+	for( let i=0; i< num_nodes; i++ )
+		output_log_response( i + ": " + node_degrees[ i ] );
 	output_log_response( "-" );
 	output_log_response( "histogram: " );
-	for( let i=0; i<= max_degree; i++ ) output_log_response( i + ": " + histo[ i ] );
+	for( let i=0; i<= max_degree; i++ )
+		output_log_response( i + ": " + histo[ i ] );
 	output_log_response( "-" );
 
-
-//	simple_histogram( node_degrees ); // default, moved to end of this function
-//	observablehq_log_histo( node_degrees );
-//	Histogram( node_degrees, { thresholds: num_histo_buckets } );
 
 /////////////////
 
@@ -166,8 +158,8 @@ if( 1 )	{
 
 /////////////////
 
-//	let rands = generate_unique_rand_arr( 0, 9 );
-//	console.log( rands );
+//   degree sequence  -->  stub-array                      rstubs: shuffled
+//  [ 1,1,1,1,2,3,3 ] --> [ 0,1,2,3,4,4,5,5,5,6,6,6 ] --> [ 4,5,0,4,5,6,6,1,5,3,2,6 ]
 
 	let deg_seq = [ ...node_degrees ];	// from top of this function
 //	let deg_seq = [ 1,1,1,2,3,3 ];		// len 11 --> bal to 12 --> 6 edges
@@ -175,46 +167,35 @@ if( 1 )	{
 //	let deg_seq = [ 0,8,4,2 ];			// len 14 --> 7 edges
 
 	let stubs = generate_stub_array( deg_seq );
-//	console.log( stubs );
 
 	let rstubs = shuffle_array_copy( stubs );
-//	console.log( rstubs.length );
-//	console.log( rstubs );
 
 	let brstubs = balance_stub_array( rstubs );
-//	console.log( brstubs.length );
-//	console.log( brstubs );
-
 
 /////////////////
 
-	let N = deg_seq.length; // node count from hard-coded example above
+	let N = deg_seq.length; // node count
 
 	let adjacencies = [];
 	for( let i=0; i< N; i++ )	{
-//		adjacencies.push( [] );
 		adjacencies[ i ] = [];
 	}
 	let edges = [];
 
-//   degree sequence  -->  stub-array                      rstubs: shuffled
-//  [ 1,1,1,1,2,3,3 ] --> [ 0,1,2,3,4,4,5,5,5,6,6,6 ] --> [ 4,5,0,4,5,6,6,1,5,3,2,6 ]
-
-//	let stub_vec = [ 4,5,0,4,5,6,6,1,5,3,2,6 ]; // canned shuffled stubs
 	stub_vec = [ ...brstubs ];
 
-	// stub pair matching
-	// best effort: avoid self loops and double edges
+	// stub pair matching, best effort
+	// avoid self loops and double edges
 
-	for( let i=0; i< N; i++ )	{ // index through the nodes
+	for( let i=0; i< N; i++ )	{
 
 		let n = deg_seq[ i ];	// node has n stubs
 		let c = 0;				// stubs index
-		let stop = false;		// stop at end even if not fulfilled
 
-		while( !stop && ( adjacencies[ i ].length < n ) )	{
+		while( ( c < stub_vec.length ) && ( adjacencies[ i ].length < n ) )	{
 
 			let p = stub_vec[ c ];	// pairing candidate
+
 			if( ( p >= 0 )&&( p != i ) )	{	// available and not self
 
 				if( adjacencies[ p ].includes( i ) == false )	{ // not duplicate
@@ -225,7 +206,7 @@ if( 1 )	{
 					adjacencies[ i ].push( p );
 					adjacencies[ p ].push( i );
 
-					// remove both nodes from stubs
+					// invalidate both stubs
 					stub_vec[ c ] = -1;
 					let found = false;
 					for( let j=0; !found && ( j< stub_vec.length ); j++ )	{
@@ -238,10 +219,6 @@ if( 1 )	{
 				}
 			}
 			c++;
-			if( c >= stub_vec.length )	{
-				stop = true;
-				c = 0;
-			}
 		}
 	}
 
@@ -275,22 +252,16 @@ if( 1 )	{
 		);
 	}
 
-/*
-	graph_data.links.push( { source: 0, target: 1 } );
-	graph_data.links.push( { source: 0, target: 2 } );
-	graph_data.links.push( { source: 0, target: 4 } );
-	graph_data.links.push( { source: 3, target: 5 } );
-	graph_data.links.push( { source: 3, target: 6 } );
-*/
+	ForceGraph( graph_data, { width: 400, height: 400 } );
 
-//	console.log( JSON.stringify( graph_data, null, 2 ) );
+	simple_histogram( node_degrees, 360, 200 );
 
-	ForceGraph( graph_data, { width: 500, height: 500 } );
-
-	simple_histogram( node_degrees );
+//	observablehq_log_histo( node_degrees );
+//	Histogram( node_degrees, { thresholds: num_histo_buckets } );
 
 }
 
+///////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////
 
 // Copyright 2021 Observable, Inc.
@@ -360,7 +331,6 @@ function ForceGraph({
 
 	let svg = d3.select( "#" + graph_plot_id )
 		.append( "svg" )
-//		const svg = d3.create("svg")
 		.attr("width", width)
 		.attr("height", height)
 		.attr("viewBox", [-width / 2, -height / 2, width, height])
@@ -442,11 +412,11 @@ function ForceGraph({
 // sample D3 Histogram utility:
 // https://d3-graph-gallery.com/graph/histogram_basic.html
 
-function simple_histogram( data_arr )	{
+function simple_histogram( data_arr, W, H )	{
 
-	let margin = { top: 10, right: 10, bottom: 30, left: 30 },
-		width = 400 - margin.left - margin.right,
-		height = 200 - margin.top - margin.bottom;
+	let margin = { top: 5, right: 5, bottom: 30, left: 20 },
+		width = W - margin.left - margin.right,
+		height = H - margin.top - margin.bottom;
 
 	let svg = d3.select( "#" + histo_plot_id )
 		.append( "svg" )
@@ -501,7 +471,6 @@ function simple_histogram( data_arr )	{
 				return x( d.x1 ) - x( d.x0 ) - 1 ;
 			}
 			return( 0 );
-//				return x( d.x1 ) - x( d.x0 ) - 1 ;
 		} )
 		.attr( "height", function( d ) {
 
@@ -618,6 +587,7 @@ function Histogram(data, {
   yFormat = normalize ? "%" : undefined, // a format specifier string for the y-axis
   color = "steelblue" // bar fill color
 } = {}) {
+
   // Compute values.
   const X = d3.map(data, x);
   const Y0 = d3.map(data, y);
