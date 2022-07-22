@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+
+		<title>SVG - D3.js</title>
+
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+		<script src="https://d3js.org/d3.v7.min.js"></script>
+		<script src="./client.js"></script>
+
+	</head>
+	<body>
+
+		<div class="page_header">
+
+			<h1> SVG - D3.js </h1>
+
+		</div>
+
+		<div id="page_contents">
+
+			Using a prescribed power-law degree distribution and a network growth
+			configuration model to create random real-world graphs.
+			<br>
+			Rendered with D3.js ForceGraph from Observable Inc.
+
+			<div id="graph_plot_div"></div>
+
+			<div id="histo_plot_div"></div>
+
+			log:<br>
+			<textarea id="output_log" readonly=true rows="12" cols="40"></textarea>
+			<p>
+
+		</div>
+
+		<div class="page_footer">
+			<p>
+			<em> © thiebaux 2022 </em>
+		</div>
+
+	</body>
+	<script type="text/javascript">
+
+		test_histogram( "output_log", "graph_plot_div", "histo_plot_div" );
+
+	</script>
+
+</html>
