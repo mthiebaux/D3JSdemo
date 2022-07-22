@@ -16,4 +16,6 @@ In order to algorithmically generate an endless variety of such graphs for testi
 
 The graph shown here is grown using the *Configuration Model*, which applies a prescribed degree distribution to a set of nodes, assigning to each one a number of unmatched edge stubs. These stubs are then randomly assigned to each other using a pair matching algorithm. Care must be taken to avoid introducing biases that could invalidate the desired properties.
 
+### D3 Web Visualization
+
 Using D3.js open source visualization tools, the resulting graph is displayed interactively within the web page. Each page refresh generates a new graph with the same properties. Each node can be touched and dragged around, rearranging the spatial configuration using force calculations (global gravitation and local repulsion). By "massaging" the layout, you can coerce it to relax and spread out, highlighting hidden structure.
