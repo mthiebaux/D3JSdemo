@@ -256,7 +256,7 @@ if( 0 )	{
 
 //	ForceGraph( graph_data, { width: 400, height: 400 } );
 
-	simple_histogram( node_degrees, 360, 200 );
+	simple_histogram( node_degrees, 300, 200 );
 
 //	observablehq_log_histo( node_degrees );
 //	Histogram( node_degrees, { thresholds: num_histo_buckets } );
