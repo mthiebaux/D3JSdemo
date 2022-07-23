@@ -84,7 +84,7 @@ if( 0 )	{
 	num_nodes = 8;
 }
 else
-if( 0 )	{
+if( 1 )	{
 	max_degree = 16;
 	num_nodes = 128;
 }
@@ -252,7 +252,8 @@ if( 0 )	{
 		);
 	}
 
-	mbostock_force_graph( graph_data, 200, 200, graph_plot_id );
+//	mbostock_force_graph( graph_data, 200, 200, graph_plot_id );
+	mbostock_force_graph( graph_data, 300, 300, graph_plot_id );
 
 //	ForceGraph( graph_data, { width: 400, height: 400 } );
 
@@ -275,21 +276,22 @@ function mbostock_force_graph( graph, width, height, plot_div_id )	{
 //		.attr( "width", width )
 //		.attr( "height", height )
 //		.attr( "viewBox", [ -width / 2, -height / 2, width, height ] )
-		.attr( "viewBox", [ -width/2, -height/2, 2 * width, 2 * height ] ) // min-x, min-y, width and height
+		.attr( "viewBox", [ -width, -height, 2 * width, 2 * height ] )
+//		.attr( "viewBox", [ -width/2, -height/2, 2 * width, 2 * height ] ) // min-x, min-y, width and height
 //		.attr( "style", "max-width: 100%; height: auto; height: intrinsic;" )
 		;
 
-//	var color = d3.scaleOrdinal( d3.schemeCategory20 ); // undefined
 	var color = d3.scaleOrdinal( d3.schemeCategory10 );
 
 	var simulation = d3.forceSimulation()
 		.force("link", d3.forceLink() ) //.id( function(d) { return d.id; } ) )
 //		.force("charge", d3.forceManyBody())
 		.force( "charge", d3.forceManyBody().strength( -50.0 ) )
-		.force("center", d3.forceCenter( width / 2, height / 2) )
-		.force( "x", d3.forceX( width / 2 ) )
-		.force( "y", d3.forceY( width / 2 ) )
-//		.force("center", d3.forceCenter( width, height ) )
+//		.force( "center", d3.forceCenter( width, height ) )
+//		.force( "center", d3.forceCenter( width / 2, height / 2 ) )
+		.force( "center", d3.forceCenter( 0, 0 ) )
+//		.force( "x", d3.forceX( width / 2 ) ).force( "y", d3.forceY( width / 2 ) )
+		.force( "x", d3.forceX( 0 ) ).force( "y", d3.forceY( 0 ) )
 		;
 
 	let link = svg.append( "g" )
