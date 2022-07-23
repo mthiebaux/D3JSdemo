@@ -252,11 +252,11 @@ if( 0 )	{
 		);
 	}
 
-	mbostock_force_graph( graph_data, 400, 400, graph_plot_id );
+	mbostock_force_graph( graph_data, 200, 200, graph_plot_id );
 
 //	ForceGraph( graph_data, { width: 400, height: 400 } );
 
-//	simple_histogram( node_degrees, 360, 200 );
+	simple_histogram( node_degrees, 360, 200 );
 
 //	observablehq_log_histo( node_degrees );
 //	Histogram( node_degrees, { thresholds: num_histo_buckets } );
@@ -272,21 +272,15 @@ function mbostock_force_graph( graph, width, height, plot_div_id )	{
 
 	let svg = d3.select( "#" + plot_div_id )
 		.append( "svg" )
-		.attr( "width", width )
-		.attr( "height", height )
+//		.attr( "width", width )
+//		.attr( "height", height )
 //		.attr( "viewBox", [ -width / 2, -height / 2, width, height ] )
-//		.attr( "viewBox", [ 0, 0, width, height ] ) // min-x, min-y, width and height
+		.attr( "viewBox", [ -width/2, -height/2, 2 * width, 2 * height ] ) // min-x, min-y, width and height
 //		.attr( "style", "max-width: 100%; height: auto; height: intrinsic;" )
 		;
 
 //	var color = d3.scaleOrdinal( d3.schemeCategory20 ); // undefined
 	var color = d3.scaleOrdinal( d3.schemeCategory10 );
-
-/*
-console.log( color( 0 ) );
-console.log( color( 1 ) );
-console.log( color( 2 ) );
-*/
 
 	var simulation = d3.forceSimulation()
 		.force("link", d3.forceLink() ) //.id( function(d) { return d.id; } ) )
@@ -324,7 +318,7 @@ console.log( color( 2 ) );
 		.append( "circle" )
 		.attr( "id", function( d ) { return d.id; } ) // for mouse callback access
 		.attr( "r", 5 )
-		.attr( "fill", function( d ) { console.log( d ); return color( d.group ); } )
+		.attr( "fill", function( d ) { return color( d.group ); } )
 		.on( "click", mouseclick )
 		.on( "mouseover", mouseover )
 		.on( "mouseout", mouseout )
@@ -558,16 +552,7 @@ console.log( d3.forceY() );
 			"fill",
 			( { index: i } ) => {
 
-// console.log( G ); // [ undefined, ... ]
-// console.log( G[ i ] ); // undefined
-// console.log( color( G[ i ] ) ); // #4e79a7
-// console.log( color( undefined ) ); // #4e79a7
-// console.log( color( 0 ) ); // #f28e2c
-// console.log( color( 1 ) ); // #f28e2c
-// console.log( color( 2 ) ); // #f28e2c
-
-//				let col = color( G[ i ] );
-				let col = color( undefined );
+				let col = color( G[ i ] );
 
 				return( col );
 			}
