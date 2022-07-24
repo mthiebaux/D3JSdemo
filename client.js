@@ -75,19 +75,30 @@ function test_histogram( log_id, graph_id, histo_id )	{
 	graph_plot_id = graph_id;
 	histo_plot_id = histo_id;
 
-	let min_degree = 1;
+//	let min_degree = 0.25;
+//	let min_degree = 0.5;
+	let min_degree = 0.75;
+//	let min_degree = 1;
+//	let min_degree = 2;
+//	let min_degree = 4;
 	let max_degree = 12;
 	let num_nodes = 64;
 
-if( 0 )	{
-	max_degree = 5;
-	num_nodes = 8;
+if( 1 )	{
+	max_degree = 8;
+	num_nodes = 16;
 }
 else
 if( 1 )	{
-	max_degree = 16;
+	max_degree = 32;
 	num_nodes = 128;
 }
+else
+if( 1 )	{
+	max_degree = 64;
+	num_nodes = 128;
+}
+console.log( num_nodes );
 
 	let node_degrees = new Array( num_nodes );
 	num_histo_buckets = max_degree + 1;
@@ -97,6 +108,9 @@ if( 1 )	{
 	for( let i=0; i< num_nodes; i++ )	{
 
 		let v = Math.floor( rand_pow_law( min_degree, max_degree + 1 ) );
+
+//console.log( min_degree, max_degree, v );
+
 		node_degrees[ i ] = v;
 		histo[ v ]++;
 		num_stubs += v;
@@ -200,11 +214,15 @@ if( 1 )	{
 
 				if( adjacencies[ p ].includes( i ) == false )	{ // not duplicate
 
+// if( Math.random() < 0.25 )	{
+// if( Math.random() < 0.5 )	{
+ if( 1 )	{
 					// store edge and adjacents
 					let e = [ i, p ].sort( ( a, b ) => a - b ); // sort for undirected
 					edges.push( e );
 					adjacencies[ i ].push( p );
 					adjacencies[ p ].push( i );
+}
 
 					// invalidate both stubs
 					stub_vec[ c ] = -1;
@@ -241,9 +259,15 @@ if( 1 )	{
 	};
 
 	for( let i=0; i< N; i++ )	{
-		graph_data.nodes.push( { id: i, group: i } );
+		graph_data.nodes.push(
+			{
+				id: i,
+				group:  adjacencies[ i ].length
+			}
+		);
 	}
 	for( let i=0; i< edges.length; i++ )	{
+
 		graph_data.links.push(
 			{
 				source: edges[ i ][ 0 ],
@@ -287,11 +311,10 @@ function mbostock_force_graph( graph, width, height, plot_div_id )	{
 		.force("link", d3.forceLink() ) //.id( function(d) { return d.id; } ) )
 //		.force("charge", d3.forceManyBody())
 		.force( "charge", d3.forceManyBody().strength( -50.0 ) )
-//		.force( "center", d3.forceCenter( width, height ) )
-//		.force( "center", d3.forceCenter( width / 2, height / 2 ) )
+//		.force( "charge", d3.forceManyBody().strength( -40.0 ) )
 		.force( "center", d3.forceCenter( 0, 0 ) )
-//		.force( "x", d3.forceX( width / 2 ) ).force( "y", d3.forceY( width / 2 ) )
-		.force( "x", d3.forceX( 0 ) ).force( "y", d3.forceY( 0 ) )
+		.force( "x", d3.forceX( 0 ) )
+		.force( "y", d3.forceY( 0 ) )
 		;
 
 	let link = svg.append( "g" )
@@ -303,33 +326,33 @@ function mbostock_force_graph( graph, width, height, plot_div_id )	{
 		.selectAll( "line" )
 		.data( graph.links )
 		.enter()
-		.append( "line" )
-		.attr(
-			"stroke-width",
-			function( d ) {
-//				console.log( d ); // { source: 60, target: 63, group: 56 }
-				return( 2.0 );
-			}
-		);
+			.append( "line" )
+			.attr(
+				"stroke-width",
+				function( d ) {
+	//				console.log( d ); // { source: 60, target: 63, group: 56 }
+					return( 2.0 );
+				}
+			);
 
 	var node = svg.append("g")
 		.attr( "class", "nodes" )
 		.selectAll( "circle" )
 		.data( graph.nodes )
 		.enter()
-		.append( "circle" )
-		.attr( "id", function( d ) { return d.id; } ) // for mouse callback access
-		.attr( "r", 5 )
-		.attr( "fill", function( d ) { return color( d.group ); } )
-		.on( "click", mouseclick )
-		.on( "mouseover", mouseover )
-		.on( "mouseout", mouseout )
-		.call(
-			d3.drag()
-				.on( "start", dragstarted )
-				.on( "drag", dragged )
-				.on( "end", dragended )
-		);
+			.append( "circle" )
+			.attr( "id", function( d ) { return d.id; } ) // for mouse callback access
+			.attr( "r", 5 )
+			.attr( "fill", function( d ) { return color( d.group ); } )
+			.on( "click", mouseclick )
+//			.on( "mouseover", mouseover )
+//			.on( "mouseout", mouseout )
+			.call(
+				d3.drag()
+					.on( "start", dragstarted )
+					.on( "drag", dragged )
+					.on( "end", dragended )
+			);
 
 	node.append( "title" )
 		.text( function(d) { return d.id; } );
@@ -355,13 +378,28 @@ function mbostock_force_graph( graph, width, height, plot_div_id )	{
 
 	function mouseclick( event )	{
 
-		console.log( event.target.id );
+		console.log( "click " + event.target.id );
+
+//		console.log( event.target.id );
+//		console.log( event.target ); // this
 //		console.log( this ); // <circle id="..." r="5" fill="#1f77b4"...
+
+
+		d3.select( this )
+			.attr( "r", 20 );
+		d3.select( this )
+			.transition()
+			.duration( 1000 )
+			.attr( "r", 5 );
 	}
 
-	function mouseover() {
+	function mouseover( event ) {
 
 //		console.log( this ); // <circle id="..." r="5" fill="#1f77b4"...
+//		console.log( event.target );
+//		console.log( event.target.id );
+
+		console.log( "over " + event.target.id );
 
 		d3.select( this )
 			.transition()
@@ -369,7 +407,11 @@ function mbostock_force_graph( graph, width, height, plot_div_id )	{
 			.attr( "r", 10 );
 	}
 
-	function mouseout() {
+	function mouseout( event ) {
+
+
+		console.log( "out " + event.target.id );
+
 		d3.select( this )
 			.transition()
 			.duration( 500 )
