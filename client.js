@@ -98,7 +98,6 @@ if( 1 )	{
 	max_degree = 64;
 	num_nodes = 128;
 }
-console.log( num_nodes );
 
 	let node_degrees = new Array( num_nodes );
 	num_histo_buckets = max_degree + 1;
@@ -259,10 +258,16 @@ console.log( num_nodes );
 	};
 
 	for( let i=0; i< N; i++ )	{
+
+//	console.log( adjacencies[ i ].length / max_degree );
+//		let v = 0.05 + 0.95 * Math.sqrt( adjacencies[ i ].length / max_degree );
+		let v = 0.05 + 0.95 * adjacencies[ i ].length / max_degree;
+
 		graph_data.nodes.push(
 			{
 				id: i,
-				group:  adjacencies[ i ].length
+				value: v,
+				group: adjacencies[ i ].length
 			}
 		);
 	}
@@ -305,8 +310,6 @@ function mbostock_force_graph( graph, width, height, plot_div_id )	{
 //		.attr( "style", "max-width: 100%; height: auto; height: intrinsic;" )
 		;
 
-	var color = d3.scaleOrdinal( d3.schemeCategory10 );
-
 	var simulation = d3.forceSimulation()
 		.force("link", d3.forceLink() ) //.id( function(d) { return d.id; } ) )
 //		.force("charge", d3.forceManyBody())
@@ -318,10 +321,9 @@ function mbostock_force_graph( graph, width, height, plot_div_id )	{
 		;
 
 	let link = svg.append( "g" )
-//		.attr( "stroke", "#999" )
 		.attr( "stroke", "#000" )
 		.attr( "stroke-opacity", 0.2 )
-//		.attr( "stroke-width", 1.5 )
+		.attr( "stroke-width", 1.5 )
 		.attr( "stroke-linecap", "round" )
 		.selectAll( "line" )
 		.data( graph.links )
@@ -335,6 +337,12 @@ function mbostock_force_graph( graph, width, height, plot_div_id )	{
 				}
 			);
 
+	let ord_color = d3.scaleOrdinal( d3.schemeCategory10 );
+
+	function value_to_radius( v )	{
+		return( 4 + 6 * v );
+	}
+
 	var node = svg.append("g")
 		.attr( "class", "nodes" )
 		.selectAll( "circle" )
@@ -342,9 +350,14 @@ function mbostock_force_graph( graph, width, height, plot_div_id )	{
 		.enter()
 			.append( "circle" )
 			.attr( "id", function( d ) { return d.id; } ) // for mouse callback access
-			.attr( "r", 5 )
-			.attr( "fill", function( d ) { return color( d.group ); } )
-			.on( "click", mouseclick )
+			.attr( "value", function( d ) { return d.value; } ) // for mouse callback access
+//			.attr( "r", 5 )
+			.attr( "r", function( d ) { return( value_to_radius( d.value ) ); } )
+//			.attr( "fill", function( d ) { return ord_color( d.group ); } )
+			.attr( "fill", function( d ) { return d3.interpolateTurbo( d.value ); } )
+			.on( "mousedown", mousedown )
+//			.on( "click", mouseclick )
+			.on( "dblclick", mousedblclick )
 //			.on( "mouseover", mouseover )
 //			.on( "mouseout", mouseout )
 			.call(
@@ -376,51 +389,68 @@ function mbostock_force_graph( graph, width, height, plot_div_id )	{
 			.attr("cy", function(d) { return d.y; });
 	}
 
-	function mouseclick( event )	{
+	function mousedown( event, node )	{
 
-		console.log( "click " + event.target.id );
-
-//		console.log( event.target.id );
-//		console.log( event.target ); // this
-//		console.log( this ); // <circle id="..." r="5" fill="#1f77b4"...
-
+//		console.log( "down: " + node.id + " : " + node.value );
+		let rad = value_to_radius( node.value );
 
 		d3.select( this )
-			.attr( "r", 20 );
+			.attr( "r", 2 * rad );
 		d3.select( this )
 			.transition()
 			.duration( 1000 )
-			.attr( "r", 5 );
+			.attr( "r", rad );
 	}
 
-	function mouseover( event ) {
+	function mouseclick( event, node )	{
 
-//		console.log( this ); // <circle id="..." r="5" fill="#1f77b4"...
-//		console.log( event.target );
-//		console.log( event.target.id );
+//		console.log( "click: " + node.id + " : " + node.value );
+		let rad = value_to_radius( node.value );
 
-		console.log( "over " + event.target.id );
+		d3.select( this )
+			.attr( "r", 2 * rad );
+		d3.select( this )
+			.transition()
+			.duration( 1000 )
+			.attr( "r", rad );
+	}
+
+	function mousedblclick( event, node )	{
+
+//		console.log( "double: " + node.id + " : " + node.value );
+		let rad = value_to_radius( node.value );
+
+		d3.select( this )
+			.transition()
+			.duration( 1000 )
+			.attr( "r", 2 * rad );
+	}
+
+	function mouseover( event, node ) {
+
+//		console.log( "over: " + node.id + " : " + node.value );
+		let rad = value_to_radius( node.value );
 
 		d3.select( this )
 			.transition()
 			.duration( 500 )
-			.attr( "r", 10 );
+			.attr( "r", 1.5 * rad );
 	}
 
-	function mouseout( event ) {
+	function mouseout( event, node ) {
 
-
-		console.log( "out " + event.target.id );
+//		console.log( "out: " + node.id + " : " + node.value );
+		let rad = value_to_radius( node.value );
 
 		d3.select( this )
 			.transition()
 			.duration( 500 )
-			.attr( "r", 5 );
+			.attr( "r", rad );
 	}
 
-	function dragstarted(event) {
+	function dragstarted( event, node ) {
 
-//		console.log( event.subject.id ); // .id, .index
+//		console.log( "drag start: " + node.id + " : " + node.value );
 
 		if ( !event.active )
 			simulation.alphaTarget( 0.9 ).restart(); // range [ 0, 1 ]
@@ -428,12 +458,18 @@ function mbostock_force_graph( graph, width, height, plot_div_id )	{
 		event.subject.fy = event.subject.y;
 	}
 
-	function dragged( event ) {
+	function dragged( event, node ) {
+
+//		console.log( "dragging: " + node.id + " : " + node.value );
+
 		event.subject.fx = event.x;
 		event.subject.fy = event.y;
 	}
 
-	function dragended( event ) {
+	function dragended( event, node ) {
+
+//		console.log( "drag end: " + node.id + " : " + node.value );
+
 		if ( !event.active )
 			simulation.alphaTarget ( 0 );
 		event.subject.fx = null;
