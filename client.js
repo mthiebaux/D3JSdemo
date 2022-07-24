@@ -85,6 +85,11 @@ function test_histogram( log_id, graph_id, histo_id )	{
 	let num_nodes = 64;
 
 if( 0 )	{
+	max_degree = 6;
+	num_nodes = 8;
+}
+else
+if( 0 )	{
 	max_degree = 8;
 	num_nodes = 16;
 }
@@ -253,6 +258,7 @@ if( 1 )	{
 /////////////////
 
 	let graph_data = {
+		max_degree: max_degree,
 		nodes: [],
 		links: []
 	};
@@ -260,14 +266,15 @@ if( 1 )	{
 	for( let i=0; i< N; i++ )	{
 
 //	console.log( adjacencies[ i ].length / max_degree );
-//		let v = 0.05 + 0.95 * Math.sqrt( adjacencies[ i ].length / max_degree );
-		let v = 0.05 + 0.95 * adjacencies[ i ].length / max_degree;
+		let d = adjacencies[ i ].length;
+		let v = 0.05 + 0.95 * d / max_degree;
 
 		graph_data.nodes.push(
 			{
-				id: i,
+//				id: i, // redundant
 				value: v,
-				group: adjacencies[ i ].length
+				degree: d,
+				group: 0
 			}
 		);
 	}
@@ -300,6 +307,19 @@ if( 1 )	{
 
 function mbostock_force_graph( graph, width, height, plot_div_id )	{
 
+	function print_graph() 	{
+
+		console.log( "nodes: " + graph.nodes.length );
+		console.log( "links: " + graph.links.length );
+
+		for( let i=0; i< graph.nodes.length; i++ )	{
+			console.log( graph.nodes[ i ].index );
+		}
+		for( let i=0; i< graph.links.length; i++ )	{
+			console.log( graph.links[ i ].source.index + " -> " + graph.links[ i ].target.index );
+		}
+	}
+
 	let svg = d3.select( "#" + plot_div_id )
 		.append( "svg" )
 //		.attr( "width", width )
@@ -320,79 +340,133 @@ function mbostock_force_graph( graph, width, height, plot_div_id )	{
 		.force( "y", d3.forceY( 0 ) )
 		;
 
-	let link = svg.append( "g" )
-		.attr( "stroke", "#000" )
-		.attr( "stroke-opacity", 0.2 )
-		.attr( "stroke-width", 1.5 )
-		.attr( "stroke-linecap", "round" )
-		.selectAll( "line" )
-		.data( graph.links )
-		.enter()
-			.append( "line" )
-			.attr(
-				"stroke-width",
-				function( d ) {
-	//				console.log( d ); // { source: 60, target: 63, group: 56 }
-					return( 2.0 );
-				}
-			);
+	let node = {};
+	let link = {};
 
-	let ord_color = d3.scaleOrdinal( d3.schemeCategory10 );
+	// http://bl.ocks.org/tgk/6068367
+	// https://bl.ocks.org/mbostock/1095795
+	// https://bl.ocks.org/colbenkharrl/21b3808492b93a21de841bc5ceac4e47
+	function clear_graph() {
+
+		simulation.stop();
+
+//		node.data( graph.nodes, function(d) { return d.id; } ).remove();
+//		link.data( graph.links, function(d) { return d.source.id + "-" + d.target.id; } ).remove();
+
+		node.data( graph.nodes ).remove();
+		link.data( graph.links ).remove();
+	}
+
+	function degree_to_value( deg )	{
+		return( 0.05 + 0.95 * deg / graph.max_degree );
+	}
 
 	function value_to_radius( v )	{
 		return( 4 + 6 * v );
 	}
 
-	var node = svg.append("g")
-		.attr( "class", "nodes" )
-		.selectAll( "circle" )
-		.data( graph.nodes )
-		.enter()
-			.append( "circle" )
-			.attr( "id", function( d ) { return d.id; } ) // for mouse callback access
-			.attr( "value", function( d ) { return d.value; } ) // for mouse callback access
-//			.attr( "r", 5 )
-			.attr( "r", function( d ) { return( value_to_radius( d.value ) ); } )
-//			.attr( "fill", function( d ) { return ord_color( d.group ); } )
-			.attr( "fill", function( d ) { return d3.interpolateTurbo( d.value ); } )
-			.on( "mousedown", mousedown )
-//			.on( "click", mouseclick )
-			.on( "dblclick", mousedblclick )
-//			.on( "mouseover", mouseover )
-//			.on( "mouseout", mouseout )
-			.call(
-				d3.drag()
-					.on( "start", dragstarted )
-					.on( "drag", dragged )
-					.on( "end", dragended )
-			);
-
-	node.append( "title" )
-		.text( function(d) { return d.id; } );
-
-	simulation
-		.nodes( graph.nodes )
-		.on( "tick", simulation_tick );
-
-	simulation
-		.force( "link" )
-		.links( graph.links );
-
-	function simulation_tick() {
-		link
-			.attr("x1", function(d) { return d.source.x; })
-			.attr("y1", function(d) { return d.source.y; })
-			.attr("x2", function(d) { return d.target.x; })
-			.attr("y2", function(d) { return d.target.y; });
-		node
-			.attr("cx", function(d) { return d.x; })
-			.attr("cy", function(d) { return d.y; });
+	function degree_to_radius( deg )	{
+		return( 4 + 6 * degree_to_value( deg ) );
 	}
+
+	function initialize_graph()	{
+
+		link = svg.append( "g" )
+			.attr( "stroke", "#000" )
+			.attr( "stroke-opacity", 0.2 )
+			.attr( "stroke-width", 1.5 )
+			.attr( "stroke-linecap", "round" )
+			.selectAll( "line" )
+			.data( graph.links )
+			.enter()
+				.append( "line" )
+				.attr( "stroke-width", function( d ) { return( 2.0 ); } )
+			;
+
+		// colors: https://github.com/d3/d3-scale-chromatic/blob/main/README.md
+		let ord_color = d3.scaleOrdinal( d3.schemeCategory10 );
+
+		node = svg.append("g")
+			.attr( "class", "nodes" )
+			.selectAll( "circle" )
+			.data( graph.nodes )
+			.enter()
+				.append( "circle" )
+	//			.attr( "id", function( d ) { return d.id; } ) // redundant?
+//				.attr( "value", function( d ) { return degree_to_radius( d.degree ); } ) // for mouse callback access
+	//			.attr( "r", 5 )
+				.attr( "r", function( d ) { return( degree_to_radius( d.degree ) ); } )
+	//			.attr( "fill", function( d ) { return ord_color( d.group ); } )
+				.attr( "fill", function( d ) { return d3.interpolateTurbo( degree_to_value( d.degree) ); } )
+				.on( "mousedown", mousedown )
+	//			.on( "click", mouseclick )
+				.on( "dblclick", mousedblclick )
+	//			.on( "mouseover", mouseover )
+	//			.on( "mouseout", mouseout )
+				.call(
+					d3.drag()
+						.on( "start", dragstarted )
+						.on( "drag", dragged )
+						.on( "end", dragended )
+				);
+
+		node.append( "title" )
+			.text( function(d) { return d.id; } );
+
+		simulation
+			.nodes( graph.nodes )
+			.on( "tick", simulation_tick );
+
+		simulation
+			.force( "link" )
+			.links( graph.links );
+
+		function simulation_tick() {
+			link
+				.attr("x1", function(d) { return d.source.x; })
+				.attr("y1", function(d) { return d.source.y; })
+				.attr("x2", function(d) { return d.target.x; })
+				.attr("y2", function(d) { return d.target.y; });
+			node
+				.attr("cx", function(d) { return d.x; })
+				.attr("cy", function(d) { return d.y; });
+		}
+
+		simulation.alphaTarget( 0.5 ).restart();
+	}
+	initialize_graph();
+
+if( 0 )	{
+	d3.interval(function() {
+//	d3.timeout(function() {
+
+		// edit edges...
+		let n = graph.links.length;
+		if( n > 0 )	{
+
+//			console.log( "clear" );
+			clear_graph();
+
+			let s = graph.links[ n - 1 ].source.index;
+			graph.nodes[ s ].degree -= 1;
+
+			let t = graph.links[ n - 1 ].target.index;
+			graph.nodes[ t ].degree -= 1;
+
+			graph.links.pop();
+
+//			console.log( "initialize" );
+			initialize_graph();
+		}
+
+	}, 2000);
+}
 
 	function mousedown( event, node )	{
 
-//		console.log( "down: " + node.id + " : " + node.value );
-		let rad = value_to_radius( node.value );
+		console.log( "down: " + node.index + " : " + node.value );
+//		let rad = value_to_radius( node.value );
+		let rad = degree_to_radius( node.degree );
 
 		d3.select( this )
 			.attr( "r", 2 * rad );
@@ -404,8 +478,8 @@ function mbostock_force_graph( graph, width, height, plot_div_id )	{
 
 	function mouseclick( event, node )	{
 
-//		console.log( "click: " + node.id + " : " + node.value );
-		let rad = value_to_radius( node.value );
+//		console.log( "click: " + node.index + " : " + node.value );
+		let rad = degree_to_radius( node.degree );
 
 		d3.select( this )
 			.attr( "r", 2 * rad );
@@ -417,8 +491,8 @@ function mbostock_force_graph( graph, width, height, plot_div_id )	{
 
 	function mousedblclick( event, node )	{
 
-//		console.log( "double: " + node.id + " : " + node.value );
-		let rad = value_to_radius( node.value );
+//		console.log( "double: " + node.index + " : " + node.value );
+		let rad = degree_to_radius( node.degree );
 
 		d3.select( this )
 			.transition()
@@ -428,8 +502,8 @@ function mbostock_force_graph( graph, width, height, plot_div_id )	{
 
 	function mouseover( event, node ) {
 
-//		console.log( "over: " + node.id + " : " + node.value );
-		let rad = value_to_radius( node.value );
+//		console.log( "over: " + node.index + " : " + node.value );
+		let rad = degree_to_radius( node.degree );
 
 		d3.select( this )
 			.transition()
@@ -439,8 +513,8 @@ function mbostock_force_graph( graph, width, height, plot_div_id )	{
 
 	function mouseout( event, node ) {
 
-//		console.log( "out: " + node.id + " : " + node.value );
-		let rad = value_to_radius( node.value );
+//		console.log( "out: " + node.index + " : " + node.value );
+		let rad = degree_to_radius( node.degree );
 
 		d3.select( this )
 			.transition()
@@ -450,7 +524,7 @@ function mbostock_force_graph( graph, width, height, plot_div_id )	{
 
 	function dragstarted( event, node ) {
 
-//		console.log( "drag start: " + node.id + " : " + node.value );
+//		console.log( "drag start: " + node.index + " : " + node.degree );
 
 		if ( !event.active )
 			simulation.alphaTarget( 0.9 ).restart(); // range [ 0, 1 ]
@@ -460,7 +534,7 @@ function mbostock_force_graph( graph, width, height, plot_div_id )	{
 
 	function dragged( event, node ) {
 
-//		console.log( "dragging: " + node.id + " : " + node.value );
+//		console.log( "dragging: " + node.index + " : " + node.degree );
 
 		event.subject.fx = event.x;
 		event.subject.fy = event.y;
@@ -468,7 +542,7 @@ function mbostock_force_graph( graph, width, height, plot_div_id )	{
 
 	function dragended( event, node ) {
 
-//		console.log( "drag end: " + node.id + " : " + node.value );
+//		console.log( "drag end: " + node.index + " : " + node.degree );
 
 		if ( !event.active )
 			simulation.alphaTarget ( 0 );
