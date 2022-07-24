@@ -84,13 +84,13 @@ function test_histogram( log_id, graph_id, histo_id )	{
 	let max_degree = 12;
 	let num_nodes = 64;
 
-if( 1 )	{
+if( 0 )	{
 	max_degree = 8;
 	num_nodes = 16;
 }
 else
 if( 1 )	{
-	max_degree = 32;
+	max_degree = 16;
 	num_nodes = 128;
 }
 else
