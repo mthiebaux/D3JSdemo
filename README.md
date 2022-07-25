@@ -4,7 +4,7 @@
 
 * Live hosting at [thiebaux.site44.com](https://thiebaux.site44.com/D3JSdemo/index.html)
 
-<img src="./screencap.png" width="200">
+<img src="./images/screencap.png" width="200">
 
 ## Scale-Free Graphs
 
@@ -15,6 +15,8 @@ Scale-free networks are so called because they exhibit characteristics in common
 In order to algorithmically generate an endless variety of such graphs for testing and simulation, they are typically *grown* from scratch using a set of rules from which their desired characteristics emerge. This is the subject of much theoretical analysis in the network literature. While a graph may seem like a rather simple construct, it can contain enormous structural complexity.
 
 The graph shown here is grown using the *Configuration Model*, which applies a prescribed degree distribution to a set of nodes, assigning to each one a number of unmatched edge stubs. These stubs are then randomly assigned to each other using a pair matching algorithm. Care must be taken to avoid introducing biases that could invalidate the desired properties.
+
+<img src="./images/screencap.png" width="200">
 
 ## D3 Web Visualization
 
