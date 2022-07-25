@@ -67,8 +67,6 @@ function generate_unique_rand_arr( min, max )	{
 
 ///////////////////////////////////////////////////////////////////////
 
-let num_histo_buckets = 0;
-
 function test_histogram( log_id, graph_id, histo_id )	{
 
 	output_log_id = log_id;
@@ -105,7 +103,7 @@ if( 1 )	{
 }
 
 	let node_degrees = new Array( num_nodes );
-	num_histo_buckets = max_degree + 1;
+	let num_histo_buckets = max_degree + 1;
 
 	let histo = new Array( max_degree + 1 ).fill( 0 );
 	let num_stubs = 0;
@@ -257,6 +255,7 @@ if( 1 )	{
 
 /////////////////
 
+if( 1 )	{
 	let graph_data = {
 		max_degree: max_degree,
 		nodes: [],
@@ -272,7 +271,6 @@ if( 1 )	{
 		graph_data.nodes.push(
 			{
 //				id: i, // redundant
-				value: v,
 				degree: d,
 				group: 0
 			}
@@ -288,15 +286,33 @@ if( 1 )	{
 		);
 	}
 
-//	mbostock_force_graph( graph_data, 200, 200, graph_plot_id );
 	mbostock_force_graph( graph_data, 300, 300, graph_plot_id );
+}
+else	{
+
+	let graph_data = {
+		max_degree: 3,
+		nodes: [
+			{ degree: 1  },
+			{ degree: 1  },
+			{ degree: 1  },
+			{ degree: 1  }
+		],
+		links: [
+			{ source: 0, target: 1 },
+			{ source: 2, target: 3 }
+		]
+	};
+
+	mbostock_force_graph( graph_data, 300, 300, graph_plot_id );
+}
+
 
 //	ForceGraph( graph_data, { width: 400, height: 400 } );
 
-	simple_histogram( node_degrees, 300, 200 );
-
-//	observablehq_log_histo( node_degrees );
-//	Histogram( node_degrees, { thresholds: num_histo_buckets } );
+	simple_histogram( num_histo_buckets, node_degrees, 300, 200 );
+//	observablehq_log_histo( num_histo_buckets, node_degrees );
+//	Histogram( node_degrees, { thresholds: num_histo_buckets, width: 340, height: 200 } );
 
 }
 
@@ -316,6 +332,10 @@ function mbostock_force_graph( graph, width, height, plot_div_id )	{
 			console.log( graph.nodes[ i ].index );
 		}
 		for( let i=0; i< graph.links.length; i++ )	{
+
+			// if(typeof val === 'object')
+
+//			console.log( graph.links[ i ].source + " -> " + graph.links[ i ].target );
 			console.log( graph.links[ i ].source.index + " -> " + graph.links[ i ].target.index );
 		}
 	}
@@ -343,15 +363,23 @@ function mbostock_force_graph( graph, width, height, plot_div_id )	{
 	let node = {};
 	let link = {};
 
+	function simulation_tick() {
+		link
+			.attr("x1", function(d) { return d.source.x; })
+			.attr("y1", function(d) { return d.source.y; })
+			.attr("x2", function(d) { return d.target.x; })
+			.attr("y2", function(d) { return d.target.y; });
+		node
+			.attr("cx", function(d) { return d.x; })
+			.attr("cy", function(d) { return d.y; });
+	}
+
 	// http://bl.ocks.org/tgk/6068367
 	// https://bl.ocks.org/mbostock/1095795
 	// https://bl.ocks.org/colbenkharrl/21b3808492b93a21de841bc5ceac4e47
 	function clear_graph() {
 
 		simulation.stop();
-
-//		node.data( graph.nodes, function(d) { return d.id; } ).remove();
-//		link.data( graph.links, function(d) { return d.source.id + "-" + d.target.id; } ).remove();
 
 		node.data( graph.nodes ).remove();
 		link.data( graph.links ).remove();
@@ -366,7 +394,7 @@ function mbostock_force_graph( graph, width, height, plot_div_id )	{
 	}
 
 	function degree_to_radius( deg )	{
-		return( 4 + 6 * degree_to_value( deg ) );
+		return( value_to_radius( degree_to_value( deg ) ) );
 	}
 
 	function initialize_graph()	{
@@ -410,9 +438,6 @@ function mbostock_force_graph( graph, width, height, plot_div_id )	{
 						.on( "end", dragended )
 				);
 
-		node.append( "title" )
-			.text( function(d) { return d.id; } );
-
 		simulation
 			.nodes( graph.nodes )
 			.on( "tick", simulation_tick );
@@ -421,51 +446,54 @@ function mbostock_force_graph( graph, width, height, plot_div_id )	{
 			.force( "link" )
 			.links( graph.links );
 
-		function simulation_tick() {
-			link
-				.attr("x1", function(d) { return d.source.x; })
-				.attr("y1", function(d) { return d.source.y; })
-				.attr("x2", function(d) { return d.target.x; })
-				.attr("y2", function(d) { return d.target.y; });
-			node
-				.attr("cx", function(d) { return d.x; })
-				.attr("cy", function(d) { return d.y; });
-		}
-
-		simulation.alphaTarget( 0.5 ).restart();
+		simulation.alphaTarget( 0.1 ).restart();
 	}
 	initialize_graph();
 
-if( 0 )	{
-	d3.interval(function() {
-//	d3.timeout(function() {
+	// auto editing
+	if( 0 )	{
 
-		// edit edges...
-		let n = graph.links.length;
-		if( n > 0 )	{
+		d3.interval( function() {
+//		d3.timeout(function() {
 
-//			console.log( "clear" );
 			clear_graph();
 
-			let s = graph.links[ n - 1 ].source.index;
-			graph.nodes[ s ].degree -= 1;
+			if( Math.random() < 0.5 )	{
+				// add new
 
-			let t = graph.links[ n - 1 ].target.index;
-			graph.nodes[ t ].degree -= 1;
+				let r_src = rand_int_range( 0, graph.nodes.length );
+				let r_tgt = rand_int_range( 0, graph.nodes.length );
 
-			graph.links.pop();
+				graph.nodes[ r_src ].degree += 1;
+				graph.nodes[ r_tgt ].degree += 1;
 
-//			console.log( "initialize" );
+				graph.links.push( { source: r_src, target: r_tgt } );
+			}
+			else	{
+				// remove existing
+
+				if( graph.links.length > 0 )	{
+
+					let r_lnk = rand_int_range( 0, graph.links.length );
+
+					let s = graph.links[ r_lnk ].source.index;
+					graph.nodes[ s ].degree -= 1;
+
+					let t = graph.links[ r_lnk ].target.index;
+					graph.nodes[ t ].degree -= 1;
+
+					graph.links.splice( r_lnk, 1 );
+				}
+			}
+
 			initialize_graph();
-		}
 
-	}, 2000);
-}
+		}, 500 );
+	}
 
 	function mousedown( event, node )	{
 
 		console.log( "down: " + node.index + " : " + node.value );
-//		let rad = value_to_radius( node.value );
 		let rad = degree_to_radius( node.degree );
 
 		d3.select( this )
@@ -557,7 +585,7 @@ if( 0 )	{
 // sample D3 Histogram utility:
 // https://d3-graph-gallery.com/graph/histogram_basic.html
 
-function simple_histogram( data_arr, W, H )	{
+function simple_histogram( num_histo_buckets, data_arr, W, H )	{
 
 	let margin = { top: 5, right: 5, bottom: 30, left: 20 },
 		width = W - margin.left - margin.right,
@@ -607,7 +635,8 @@ function simple_histogram( data_arr, W, H )	{
 		.attr( "x", 1 )
 		.attr( "transform", function( d ) {
 
-			return "translate(" + x( d.x0 - 0.5 ) + "," + y( d.length ) + ")";
+//			return "translate(" + x( d.x0 - 0.5 ) + "," + y( d.length ) + ")";
+			return "translate(" + x( d.x0 ) + "," + y( d.length ) + ")";
 		} )
 		.attr( "width", function( d ) {
 
@@ -627,7 +656,7 @@ function simple_histogram( data_arr, W, H )	{
 ///////////////////////////////////////////////////////////////////////
 
 //https://observablehq.com/@bryangingechen/d3-log-scaled-histogram
-function observablehq_log_histo( data_arr )	{
+function observablehq_log_histo( num_histo_buckets, data_arr )	{
 
 	let width = 400;
 	let height = 300;
