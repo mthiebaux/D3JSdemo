@@ -66,8 +66,51 @@ function generate_unique_rand_arr( min, max )	{
 }
 
 ///////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////
 
-function test_histogram( log_id, graph_id, histo_id )	{
+function generate_degree_sequence( len, min, max )	{
+
+	let seq = Array( len );
+	for( let i=0; i< len; i++ )	{
+		seq[ i ] = Math.floor( rand_pow_law( min, max + 1 ) );
+	}
+	return( seq );
+}
+function generate_stub_array( seq )	{
+
+	//    degree sequence  -->  stub-array
+	//   [ 1,1,1,1,2,3,3 ] --> [ 1,2,3,4,5,5,6,6,6,7,7,7 ]		1-indexing from paper
+	//   [ 1,1,1,1,2,3,3 ] --> [ 0,1,2,3,4,4,5,5,5,6,6,6 ]		0-indexing
+	//   [ 0,8,4,2 ]       --> [ 1,1,1,1,1,1,1,1,2,2,2,2,3,3 ]	0-indexing from paper
+
+	let arr = [];
+	for( let i=0; i< seq.length; i++ )	{
+
+		for( let j=0; j< seq[ i ]; j++ )	{
+
+			arr.push( i );
+		}
+	}
+	return( arr );
+}
+function balance_stub_array( stubs )	{
+
+	// ensure even number of stubs
+	// add random stub if necessary
+	// bias toward nodes with more stubs
+
+	let arr = [ ...stubs ];
+	if( arr.length % 2 == 0 )	{
+		return( arr );
+	}
+	let r = rand_int_range( 0, arr.length );
+	arr.push( arr[ r ] );
+	return( arr );
+}
+
+///////////////////////////////////////////////////////////////////////
+
+function test_graph( log_id, graph_id, histo_id )	{
 
 	output_log_id = log_id;
 	graph_plot_id = graph_id;
@@ -88,8 +131,8 @@ if( 0 )	{
 }
 else
 if( 0 )	{
-	max_degree = 8;
-	num_nodes = 16;
+	max_degree = 16;
+	num_nodes = 64;
 }
 else
 if( 1 )	{
@@ -129,48 +172,6 @@ if( 1 )	{
 		output_log_response( i + ": " + histo[ i ] );
 	output_log_response( "-" );
 
-
-/////////////////
-
-	function generate_degree_sequence( len, min, max )	{
-
-		let seq = Array( len );
-		for( let i=0; i< len; i++ )	{
-			seq[ i ] = Math.floor( rand_pow_law( min, max + 1 ) );
-		}
-		return( seq );
-	}
-	function generate_stub_array( seq )	{
-
-		//    degree sequence  -->  stub-array
-		//   [ 1,1,1,1,2,3,3 ] --> [ 1,2,3,4,5,5,6,6,6,7,7,7 ]		1-indexing from paper
-		//   [ 1,1,1,1,2,3,3 ] --> [ 0,1,2,3,4,4,5,5,5,6,6,6 ]		0-indexing
-		//   [ 0,8,4,2 ]       --> [ 1,1,1,1,1,1,1,1,2,2,2,2,3,3 ]	0-indexing from paper
-
-		let arr = [];
-		for( let i=0; i< seq.length; i++ )	{
-
-			for( let j=0; j< seq[ i ]; j++ )	{
-
-				arr.push( i );
-			}
-		}
-		return( arr );
-	}
-	function balance_stub_array( stubs )	{
-
-		// ensure even number of stubs
-		// add random stub if necessary
-		// bias toward nodes with more stubs
-
-		let arr = [ ...stubs ];
-		if( arr.length % 2 == 0 )	{
-			return( arr );
-		}
-		let r = rand_int_range( 0, arr.length );
-		arr.push( arr[ r ] );
-		return( arr );
-	}
 
 /////////////////
 
@@ -216,15 +217,11 @@ if( 1 )	{
 
 				if( adjacencies[ p ].includes( i ) == false )	{ // not duplicate
 
-// if( Math.random() < 0.25 )	{
-// if( Math.random() < 0.5 )	{
- if( 1 )	{
 					// store edge and adjacents
 					let e = [ i, p ].sort( ( a, b ) => a - b ); // sort for undirected
 					edges.push( e );
 					adjacencies[ i ].push( p );
 					adjacencies[ p ].push( i );
-}
 
 					// invalidate both stubs
 					stub_vec[ c ] = -1;
@@ -264,15 +261,14 @@ if( 1 )	{
 
 	for( let i=0; i< N; i++ )	{
 
-//	console.log( adjacencies[ i ].length / max_degree );
 		let d = adjacencies[ i ].length;
-		let v = 0.05 + 0.95 * d / max_degree;
 
 		graph_data.nodes.push(
 			{
-//				id: i, // redundant
+				id: i, // redundant ?
+				group: 0,
 				degree: d,
-				group: 0
+				adjacent: adjacencies[ i ]
 			}
 		);
 	}
@@ -286,17 +282,21 @@ if( 1 )	{
 		);
 	}
 
-	mbostock_force_graph( graph_data, 300, 300, graph_plot_id );
+//	mbostock_force_graph( graph_data, 300, 300, graph_plot_id );
+
+//	mbostock_modify_graph( graph_data, 500, 500, graph_plot_id );
+
+	mbostock_drag_graph( graph_data, 300, 300, graph_plot_id );
 }
 else	{
 
 	let graph_data = {
-		max_degree: 3,
+		max_degree: 10,
 		nodes: [
-			{ degree: 1  },
-			{ degree: 1  },
-			{ degree: 1  },
-			{ degree: 1  }
+			{ id: 0, degree: 1  },
+			{ id: 1, degree: 1  },
+			{ id: 2, degree: 1  },
+			{ id: 3, degree: 1  }
 		],
 		links: [
 			{ source: 0, target: 1 },
@@ -304,7 +304,11 @@ else	{
 		]
 	};
 
-	mbostock_force_graph( graph_data, 300, 300, graph_plot_id );
+//	mbostock_force_graph( graph_data, 300, 300, graph_plot_id );
+
+//	mbostock_modify_graph( graph_data, 500, 300, graph_plot_id );
+
+	mbostock_drag_graph( graph_data, 300, 300, graph_plot_id );
 }
 
 
@@ -317,6 +321,359 @@ else	{
 }
 
 ///////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////
+
+function degree_to_value( deg, max )	{
+//	return( 0.02 + 0.98 * deg / max );
+	return( 0.05 + 0.95 * deg / max );
+}
+
+function value_to_radius( v )	{
+//	return( 2 + 10 * v );
+	return( 4 + 8 * v );
+}
+
+function degree_to_radius( deg, max )	{
+	return( value_to_radius( degree_to_value( deg, max ) ) );
+}
+
+///////////////////////////////////////////////////////////////////////
+
+function mbostock_drag_graph( graph, width, height, plot_div_id )	{
+
+	let svg = d3.select( "#" + plot_div_id )
+		.append( "svg" )
+//		.attr( "viewBox", [ -width / 2, -height / 2, width, height ] );
+		.attr( "viewBox", [ -width, -height, 2 * width, 2 * height ] );
+
+	const simulation = d3.forceSimulation()
+		.force( "link", d3.forceLink() )
+		.force( "charge", d3.forceManyBody().strength( -50 ) )
+		.force( "center", d3.forceCenter( 0, 0 ) )
+		.force( "x", d3.forceX( 0 ) )
+		.force( "y", d3.forceY( 0 ) )
+		.on( "tick", simulation_tick );
+
+	let link_group = svg.append( "g" )
+		.attr( "stroke", d => "#000" )
+		.attr( "stroke-opacity", d => 0.2 )
+		.attr( "stroke-width", d => 2.0 )
+		.selectAll( "line" );
+
+	let node_group = svg.append( "g" )
+		.attr( "stroke", d => "#000" )
+		.attr( "stroke-width", 0.5 )
+		.selectAll( "circle" );
+
+	function simulation_tick() {
+		link_group
+			.attr( "x1", d => d.source.x )
+			.attr( "y1", d => d.source.y )
+			.attr( "x2", d => d.target.x )
+			.attr( "y2", d => d.target.y );
+		node_group
+			.attr( "cx", d => d.x )
+			.attr( "cy", d => d.y );
+	}
+
+    function update_simulation() {
+
+		simulation.stop();
+
+		node_group = node_group
+//			.data( graph.nodes, d => d.id ) // need key function for editing?
+			.data( graph.nodes )
+			.join(
+				enter => enter.append( "circle" )
+					.attr( "r",
+						d => degree_to_radius( d.degree, graph.max_degree )
+					)
+					.attr( "fill",
+						d => d3.interpolateTurbo( degree_to_value( d.degree, graph.max_degree ) )
+					)
+					.on( "mousedown", mousedown )
+//					.on( "click", mouseclick ) // down and up
+					.on( "dblclick", mousedblclick )
+//					.on( "mouseover", mouseover )
+//					.on( "mouseout", mouseout )
+					.call(
+						d3.drag()
+							.on( "start", dragstarted )
+							.on( "drag", dragging )
+							.on( "end", dragended )
+					),
+				update => update
+					.attr( "r",
+						d => degree_to_radius( d.degree, graph.max_degree )
+					)
+					.attr( "fill",
+						d => d3.interpolateTurbo( degree_to_value( d.degree, graph.max_degree ) )
+					)
+			);
+
+		link_group = link_group
+//			.data( graph.links, d => [ d.source, d.target ] )
+			.data( graph.links )
+//			.join( "line" );
+			.join(
+				enter => enter.append( "line" )
+					.on( "mousedown", mousedown_link )
+			);
+
+		simulation.nodes( graph.nodes )
+		simulation.force( "link" ).links( graph.links );
+		simulation.alphaTarget( 0.1 ).restart();
+    }
+    update_simulation();
+
+	function mousedown_link( event, link )	{
+
+//		console.log( "down event: " + JSON.stringify( event, null, 2 ) ); // bupkis
+		console.log( "down link: " + JSON.stringify( link, null, 2 ) );
+
+		d3.select( this )
+			.attr( "stroke-width", 8.0 );
+		d3.select( this )
+			.transition()
+			.duration( 1000 )
+			.attr( "stroke-width", 2.0 );
+	}
+	function mousedown( event, node )	{
+
+//		console.log( "drag start event: " + JSON.stringify( event, null, 2 ) ); // bupkis
+//		console.log( "down node: " + JSON.stringify( node, null, 2 ) );
+
+		let rad = degree_to_radius( node.degree, graph.max_degree );
+		d3.select( this )
+			.attr( "r", 2 * rad );
+		d3.select( this )
+			.transition()
+			.duration( 1000 )
+			.attr( "r", rad );
+	}
+	function mousedblclick( event, node )	{
+
+		let rad = degree_to_radius( node.degree, graph.max_degree );
+		d3.select( this )
+			.transition()
+			.duration( 1000 )
+			.attr( "r", 2 * rad );
+	}
+
+	function dragstarted( event, node ) {
+
+//		console.log( "drag start event: " + JSON.stringify( event, null, 2 ) );
+//		console.log( "drag start event subject: " + JSON.stringify( event.subject, null, 2 ) );
+//		console.log( "drag start node: " + JSON.stringify( node, null, 2 ) );
+
+		if ( !event.active )
+			simulation.alphaTarget( 0.9 ).restart(); // range [ 0, 1 ]
+		event.subject.fx = event.subject.x;
+		event.subject.fy = event.subject.y;
+	}
+	function dragging( event, node ) {
+
+		event.subject.fx = event.x;
+		event.subject.fy = event.y;
+	}
+	function dragended( event, node ) {
+
+		if ( !event.active )
+			simulation.alphaTarget ( 0 );
+		event.subject.fx = null;
+		event.subject.fy = null;
+	}
+}
+
+///////////////////////////////////////////////////////////////////////
+
+// https://observablehq.com/@d3/modifying-a-force-directed-graph
+
+function mbostock_modify_graph( graph, width, height, plot_div_id )	{
+
+	let svg = d3.select( "#" + plot_div_id )
+		.append( "svg" )
+//		.attr( "width", width ).attr( "height", height )
+		.attr( "viewBox", [ -width / 2, -height / 2, width, height ] );
+
+	const simulation = d3.forceSimulation()
+		.force( "charge", d3.forceManyBody().strength( -70 ) )
+		.force( "link", d3.forceLink() )
+		.force( "x", d3.forceX() )
+		.force( "y", d3.forceY() )
+		.on( "tick", ticked );
+
+	let link_group = svg.append( "g" )
+		.attr( "stroke", d => "#000" )
+		.attr( "stroke-opacity", d => 0.2 )
+		.attr( "stroke-width", d => 2.0 )
+		.selectAll( "line" );
+
+	let node_group = svg.append( "g" )
+		.attr( "stroke", d => "#000" )
+		.attr( "stroke-width", 0.5 )
+		.selectAll( "circle" );
+
+	function ticked() {
+		node_group
+			.attr( "cx", d => d.x )
+			.attr( "cy", d => d.y )
+
+		link_group
+			.attr( "x1", d => d.source.x )
+			.attr( "y1", d => d.source.y )
+			.attr( "x2", d => d.target.x )
+			.attr( "y2", d => d.target.y );
+	}
+
+    function update_original( nodes, links ) {
+
+		// Make a shallow copy to protect against mutation, while
+		// recycling old nodes to preserve position and velocity.
+
+		const old = new Map( node.data().map( d => [ d.id, d ] ) );
+		nodes = nodes.map( d => Object.assign( old.get( d.id ) || {}, d ) );
+		links = links.map( d => Object.assign( {}, d ) );
+
+		node = node
+			.data( nodes, d => d.id )
+			.join(
+				enter => enter.append( "circle" )
+					.attr( "r", 5 )
+					.attr( "fill", d => "#222" )
+			);
+
+		link = link
+			.data( links, d => [ d.source, d.target ] )
+			.join("line");
+
+		simulation.nodes( nodes );
+		simulation.force( "link" ).links( links );
+		simulation.alpha( 0.2 ).restart();
+    }
+    function update_simulation() {
+
+		simulation.stop();
+
+		node_group = node_group
+//			.data( graph.nodes, d => d.id )
+			.data( graph.nodes )
+			.join(
+
+				enter => enter.append( "circle" )
+					.attr( "r",
+						d => degree_to_radius( d.degree, graph.max_degree )
+					)
+					.attr( "fill",
+						d => d3.interpolateTurbo( degree_to_value( d.degree, graph.max_degree ) )
+					)
+				,
+				update => update
+					.attr( "r",
+						d => degree_to_radius( d.degree, graph.max_degree )
+					)
+					.attr( "fill",
+						d => d3.interpolateTurbo( degree_to_value( d.degree, graph.max_degree ) )
+					)
+			);
+
+		link_group = link_group
+//			.data( graph.links, d => [ d.source, d.target ] )
+			.data( graph.links )
+			.join( "line" );
+
+		simulation.nodes( graph.nodes );
+		simulation.force( "link" ).links( graph.links );
+		simulation.alpha( 0.07 ).restart();
+    }
+    update_simulation();
+
+	if( 0 )	{
+
+		d3.interval( function() {
+//		d3.timeout(function() {
+
+//			if( 1 )	{	// add new
+			if( Math.random() < 0.5 )	{	// add new
+
+	// measure degree distribution: generate_stub_array( seq = [ ...deg(i) + 1, deg(i+1) + 1, ... )
+	//		[ 0, 1, 2, 3... ] -> [ 1, 2, 3, 4... ]
+	//  for hub over-representation
+	//   pick stub randomly
+
+// need to determine correct length/initialization...
+				let stub_counts = new Array( graph.max_degree ).fill( 1 );
+
+
+				for( let i=0; i< graph.nodes.length; i++ )	{
+					stub_counts[ i ] = graph.nodes[ i ].degree + 1;
+				}
+//				console.log( stub_counts );
+
+				let stubs = generate_stub_array( stub_counts );
+//				console.log( stubs );
+
+				let r_src = stubs[ rand_int_range( 0, stubs.length ) ];
+				let r_tgt = stubs[ rand_int_range( 0, stubs.length ) ];
+
+	// versus node-count picking:
+//				let r_src = rand_int_range( 0, graph.nodes.length );
+//				let r_tgt = rand_int_range( 0, graph.nodes.length );
+
+//console.log( "nodes[ " + r_src + " ] " + JSON.stringify( graph.nodes[ r_src ], null, 2 ) );
+
+//				if( 0 )	{
+				if( r_src != r_tgt )	{
+
+					if( true )	{ // check for duplicate here
+
+
+
+						graph.nodes[ r_src ].degree += 1;
+						graph.nodes[ r_tgt ].degree += 1;
+
+	// choose copy method
+	//					graph.links.push( { source: r_src, target: r_tgt } );
+						graph.links.push( { source: graph.nodes[ r_src ], target: graph.nodes[ r_tgt ] } );
+
+					}
+				}
+//				else { console.log( r_src, r_tgt ); }
+
+			}
+			else	{	// remove existing
+
+				if( graph.links.length > 0 )	{
+
+					let r_lnk = rand_int_range( 0, graph.links.length );
+
+//console.log( "links[ " + r_lnk + " ] " + JSON.stringify( graph.links[ r_lnk ], null, 2 ) );
+
+//					let s = graph.links[ r_lnk ].source;
+//					let s = graph.links[ r_lnk ].source.id;
+					let s = graph.links[ r_lnk ].source.index;
+					graph.nodes[ s ].degree -= 1;
+
+//console.log( JSON.stringify( graph.nodes[ s ], null, 2 ) );
+
+
+//					let t = graph.links[ r_lnk ].target;
+//					let t = graph.links[ r_lnk ].target.id;
+					let t = graph.links[ r_lnk ].target.index;
+					graph.nodes[ t ].degree -= 1;
+
+//console.log( graph.nodes[ s ].degree, graph.nodes[ t ].degree );
+
+					graph.links.splice( r_lnk, 1 );
+				}
+			}
+
+			update_simulation();
+
+		}, 1600 );
+	}
+}
+
 ///////////////////////////////////////////////////////////////////////
 
 // https://bl.ocks.org/mbostock/4062045
@@ -374,17 +731,6 @@ function mbostock_force_graph( graph, width, height, plot_div_id )	{
 			.attr("cy", function(d) { return d.y; });
 	}
 
-	// http://bl.ocks.org/tgk/6068367
-	// https://bl.ocks.org/mbostock/1095795
-	// https://bl.ocks.org/colbenkharrl/21b3808492b93a21de841bc5ceac4e47
-	function clear_graph() {
-
-		simulation.stop();
-
-		node.data( graph.nodes ).remove();
-		link.data( graph.links ).remove();
-	}
-
 	function degree_to_value( deg )	{
 		return( 0.05 + 0.95 * deg / graph.max_degree );
 	}
@@ -397,7 +743,7 @@ function mbostock_force_graph( graph, width, height, plot_div_id )	{
 		return( value_to_radius( degree_to_value( deg ) ) );
 	}
 
-	function initialize_graph()	{
+	function initialize_links()	{
 
 		link = svg.append( "g" )
 			.attr( "stroke", "#000" )
@@ -410,9 +756,9 @@ function mbostock_force_graph( graph, width, height, plot_div_id )	{
 				.append( "line" )
 				.attr( "stroke-width", function( d ) { return( 2.0 ); } )
 			;
+	}
 
-		// colors: https://github.com/d3/d3-scale-chromatic/blob/main/README.md
-		let ord_color = d3.scaleOrdinal( d3.schemeCategory10 );
+	function initialize_nodes()	{
 
 		node = svg.append("g")
 			.attr( "class", "nodes" )
@@ -421,10 +767,7 @@ function mbostock_force_graph( graph, width, height, plot_div_id )	{
 			.enter()
 				.append( "circle" )
 	//			.attr( "id", function( d ) { return d.id; } ) // redundant?
-//				.attr( "value", function( d ) { return degree_to_radius( d.degree ); } ) // for mouse callback access
-	//			.attr( "r", 5 )
 				.attr( "r", function( d ) { return( degree_to_radius( d.degree ) ); } )
-	//			.attr( "fill", function( d ) { return ord_color( d.group ); } )
 				.attr( "fill", function( d ) { return d3.interpolateTurbo( degree_to_value( d.degree) ); } )
 				.on( "mousedown", mousedown )
 	//			.on( "click", mouseclick )
@@ -437,6 +780,9 @@ function mbostock_force_graph( graph, width, height, plot_div_id )	{
 						.on( "drag", dragged )
 						.on( "end", dragended )
 				);
+	}
+
+	function initialize_sim()	{
 
 		simulation
 			.nodes( graph.nodes )
@@ -448,15 +794,23 @@ function mbostock_force_graph( graph, width, height, plot_div_id )	{
 
 		simulation.alphaTarget( 0.1 ).restart();
 	}
-	initialize_graph();
 
+	initialize_links();
+	initialize_nodes();
+	initialize_sim();
+
+	// http://bl.ocks.org/tgk/6068367
+	// https://bl.ocks.org/mbostock/1095795
+	// https://bl.ocks.org/colbenkharrl/21b3808492b93a21de841bc5ceac4e47
 	// auto editing
 	if( 0 )	{
 
 		d3.interval( function() {
 //		d3.timeout(function() {
 
-			clear_graph();
+			simulation.stop();
+
+			link = link.data( graph.links ).remove();
 
 			if( Math.random() < 0.5 )	{
 				// add new
@@ -468,6 +822,7 @@ function mbostock_force_graph( graph, width, height, plot_div_id )	{
 				graph.nodes[ r_tgt ].degree += 1;
 
 				graph.links.push( { source: r_src, target: r_tgt } );
+//				graph.links.push( { source: graph.nodes[ r_src ], target: graph.nodes[ r_tgt ] } );
 			}
 			else	{
 				// remove existing
@@ -486,14 +841,19 @@ function mbostock_force_graph( graph, width, height, plot_div_id )	{
 				}
 			}
 
-			initialize_graph();
+			initialize_links();
 
-		}, 500 );
+			node = node.data( graph.nodes ).remove();
+			initialize_nodes();
+
+			initialize_sim();
+
+		}, 200 );
 	}
 
 	function mousedown( event, node )	{
 
-		console.log( "down: " + node.index + " : " + node.value );
+//		console.log( "down: " + node.index + " : " + node.degree );
 		let rad = degree_to_radius( node.degree );
 
 		d3.select( this )
@@ -506,7 +866,7 @@ function mbostock_force_graph( graph, width, height, plot_div_id )	{
 
 	function mouseclick( event, node )	{
 
-//		console.log( "click: " + node.index + " : " + node.value );
+//		console.log( "click: " + node.index + " : " + node.degree );
 		let rad = degree_to_radius( node.degree );
 
 		d3.select( this )
@@ -519,7 +879,7 @@ function mbostock_force_graph( graph, width, height, plot_div_id )	{
 
 	function mousedblclick( event, node )	{
 
-//		console.log( "double: " + node.index + " : " + node.value );
+//		console.log( "double: " + node.index + " : " + node.degree );
 		let rad = degree_to_radius( node.degree );
 
 		d3.select( this )
@@ -530,7 +890,7 @@ function mbostock_force_graph( graph, width, height, plot_div_id )	{
 
 	function mouseover( event, node ) {
 
-//		console.log( "over: " + node.index + " : " + node.value );
+//		console.log( "over: " + node.index + " : " + node.degree );
 		let rad = degree_to_radius( node.degree );
 
 		d3.select( this )
@@ -541,7 +901,7 @@ function mbostock_force_graph( graph, width, height, plot_div_id )	{
 
 	function mouseout( event, node ) {
 
-//		console.log( "out: " + node.index + " : " + node.value );
+//		console.log( "out: " + node.index + " : " + node.degree );
 		let rad = degree_to_radius( node.degree );
 
 		d3.select( this )
