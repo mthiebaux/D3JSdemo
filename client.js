@@ -126,8 +126,8 @@ function test_graph( log_id, graph_id, histo_id )	{
 	let num_nodes = 64;
 
 if( 0 )	{
-	max_degree = 6;
-	num_nodes = 8;
+	max_degree = 8;
+	num_nodes = 16;
 }
 else
 if( 0 )	{
@@ -135,7 +135,7 @@ if( 0 )	{
 	num_nodes = 64;
 }
 else
-if( 1 )	{
+if( 0 )	{
 	max_degree = 16;
 	num_nodes = 128;
 }
@@ -218,7 +218,8 @@ if( 1 )	{
 				if( adjacencies[ p ].includes( i ) == false )	{ // not duplicate
 
 					// store edge and adjacents
-					let e = [ i, p ].sort( ( a, b ) => a - b ); // sort for undirected
+					let e = [ i, p ].sort( ( a, b ) => a - b ); // sort for undirected search
+
 					edges.push( e );
 					adjacencies[ i ].push( p );
 					adjacencies[ p ].push( i );
@@ -267,7 +268,7 @@ if( 1 )	{
 			{
 				id: i, // redundant ?
 				group: 0,
-				degree: d,
+//				degree: d,
 				adjacent: adjacencies[ i ]
 			}
 		);
@@ -293,14 +294,15 @@ else	{
 	let graph_data = {
 		max_degree: 10,
 		nodes: [
-			{ id: 0, degree: 1  },
-			{ id: 1, degree: 1  },
-			{ id: 2, degree: 1  },
-			{ id: 3, degree: 1  }
+			{ id: 0, degree: 1, adjacent: [ 1, 2 ] },
+			{ id: 1, degree: 1, adjacent: [ 0 ] },
+			{ id: 2, degree: 1, adjacent: [ 3, 0 ] },
+			{ id: 3, degree: 1, adjacent: [ 2 ] }
 		],
 		links: [
-			{ source: 0, target: 1 },
-			{ source: 2, target: 3 }
+			{ source: 0, target: 1 }, // sorted
+			{ source: 2, target: 3 },
+			{ source: 0, target: 2 }
 		]
 	};
 
@@ -330,7 +332,7 @@ function degree_to_value( deg, max )	{
 
 function value_to_radius( v )	{
 //	return( 2 + 10 * v );
-	return( 4 + 8 * v );
+	return( 4 + 6 * v );
 }
 
 function degree_to_radius( deg, max )	{
@@ -386,10 +388,12 @@ function mbostock_drag_graph( graph, width, height, plot_div_id )	{
 			.join(
 				enter => enter.append( "circle" )
 					.attr( "r",
-						d => degree_to_radius( d.degree, graph.max_degree )
+						d => degree_to_radius( d.adjacent.length, graph.max_degree )
 					)
 					.attr( "fill",
-						d => d3.interpolateTurbo( degree_to_value( d.degree, graph.max_degree ) )
+						d => d3.interpolateTurbo(
+							degree_to_value( d.adjacent.length, graph.max_degree )
+						)
 					)
 					.on( "mousedown", mousedown )
 //					.on( "click", mouseclick ) // down and up
@@ -404,10 +408,12 @@ function mbostock_drag_graph( graph, width, height, plot_div_id )	{
 					),
 				update => update
 					.attr( "r",
-						d => degree_to_radius( d.degree, graph.max_degree )
+						d => degree_to_radius( d.adjacent.length, graph.max_degree )
 					)
 					.attr( "fill",
-						d => d3.interpolateTurbo( degree_to_value( d.degree, graph.max_degree ) )
+						d => d3.interpolateTurbo(
+							degree_to_value( d.adjacent.length, graph.max_degree )
+						)
 					)
 			);
 
@@ -426,10 +432,93 @@ function mbostock_drag_graph( graph, width, height, plot_div_id )	{
     }
     update_simulation();
 
+	const link_edit_range = 8;
+	let link_edit_balance = 0;
+
+	function edit_graph()	{
+
+		let edited = false;
+
+		if( Math.random() < 0.5  )	{
+
+		// remove existing link
+			if( link_edit_balance > -link_edit_range )	{
+
+				if( graph.links.length > 0 )	{
+
+					let r_link_id = rand_int_range( 0, graph.links.length );
+
+					let src_id = graph.links[ r_link_id ].source.index;
+					let tgt_id = graph.links[ r_link_id ].target.index;
+
+					let src_adj_id = graph.nodes[ src_id ].adjacent.indexOf( tgt_id );
+					let tgt_adj_id = graph.nodes[ tgt_id ].adjacent.indexOf( src_id );
+
+					graph.nodes[ src_id ].adjacent.splice( src_adj_id, 1 );
+					graph.nodes[ tgt_id ].adjacent.splice( tgt_adj_id, 1 );
+					graph.links.splice( r_link_id, 1 );
+
+					link_edit_balance--;
+					edited = true;
+				}
+			}
+		}
+		else	{
+
+		// add new link
+			if( link_edit_balance < link_edit_range )	{
+
+				let stub_counts = [];
+				for( let i=0; i< graph.nodes.length; i++ )	{
+
+					stub_counts.push( graph.nodes[ i ].adjacent.length + 1 );
+
+				}
+				let stubs = generate_stub_array( stub_counts );
+
+				let r_src_id = stubs[ rand_int_range( 0, stubs.length ) ];
+				let r_tgt_id = stubs[ rand_int_range( 0, stubs.length ) ];
+
+			// sort for undirected search
+				[ r_src_id, r_tgt_id ] = [ r_src_id, r_tgt_id ].sort( ( a, b ) => a - b );
+
+				if( r_src_id != r_tgt_id )	{
+
+					if( graph.nodes[ r_src_id ].adjacent.includes( r_tgt_id ) == false )	{
+
+						graph.nodes[ r_src_id ].adjacent.push( r_tgt_id );
+						graph.nodes[ r_tgt_id ].adjacent.push( r_src_id );
+
+					// choose copy method
+//						graph.links.push( { source: r_src_id, target: r_tgt_id } );
+						graph.links.push( { source: graph.nodes[ r_src_id ], target: graph.nodes[ r_tgt_id ] } );
+
+						link_edit_balance++;
+						edited = true;
+					}
+					else	{
+//						console.log( "redundant: " + r_src_id + " -> " + r_tgt_id );
+					}
+				}
+			}
+		}
+
+		if( edited )	{
+			update_simulation();
+		}
+	}
+	if( 1 )	{
+		d3.interval(
+//		d3.timeout(
+			edit_graph,
+			1000
+		)
+	}
+
 	function mousedown_link( event, link )	{
 
 //		console.log( "down event: " + JSON.stringify( event, null, 2 ) ); // bupkis
-		console.log( "down link: " + JSON.stringify( link, null, 2 ) );
+//		console.log( "down link: " + JSON.stringify( link, null, 2 ) );
 
 		d3.select( this )
 			.attr( "stroke-width", 8.0 );
@@ -443,7 +532,7 @@ function mbostock_drag_graph( graph, width, height, plot_div_id )	{
 //		console.log( "drag start event: " + JSON.stringify( event, null, 2 ) ); // bupkis
 //		console.log( "down node: " + JSON.stringify( node, null, 2 ) );
 
-		let rad = degree_to_radius( node.degree, graph.max_degree );
+		let rad = degree_to_radius( node.adjacent.length, graph.max_degree );
 		d3.select( this )
 			.attr( "r", 2 * rad );
 		d3.select( this )
@@ -453,7 +542,7 @@ function mbostock_drag_graph( graph, width, height, plot_div_id )	{
 	}
 	function mousedblclick( event, node )	{
 
-		let rad = degree_to_radius( node.degree, graph.max_degree );
+		let rad = degree_to_radius( node.adjacent.length, graph.max_degree );
 		d3.select( this )
 			.transition()
 			.duration( 1000 )
