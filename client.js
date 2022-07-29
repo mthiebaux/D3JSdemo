@@ -272,6 +272,84 @@ function degree_to_radius( deg, max )	{
 
 ///////////////////////////////////////////////////////////////////////
 
+function exec_auto_edit_graph( graph )	{
+
+	// static variable
+    if( typeof this.balance == 'undefined' ) {
+         this.balance = 0;
+    }
+	let edited = false;
+
+	if( Math.random() < 0.5  )	{
+		// remove existing link
+
+		if( this.balance > -( graph.max_degree / 2 ) )	{
+
+			if( graph.links.length > 0 )	{
+
+				let r_link_id = rand_int_range( 0, graph.links.length );
+
+				let src_id = graph.links[ r_link_id ].source.index;
+				let tgt_id = graph.links[ r_link_id ].target.index;
+
+				let src_adj_id = graph.nodes[ src_id ].adjacent.indexOf( tgt_id );
+				let tgt_adj_id = graph.nodes[ tgt_id ].adjacent.indexOf( src_id );
+
+				graph.nodes[ src_id ].adjacent.splice( src_adj_id, 1 );
+				graph.nodes[ tgt_id ].adjacent.splice( tgt_adj_id, 1 );
+				graph.links.splice( r_link_id, 1 );
+
+				this.balance--;
+				edited = true;
+			}
+		}
+	}
+	else	{
+		// add new link
+
+		if( 1 )	{
+//			if( this.balance < link_edit_max_range )	{
+
+			let curr_max_deg = 0;
+			for( let i=0; i< graph.nodes.length; i++ )	{
+
+				let len = graph.nodes[ i ].adjacent.length;
+				if( len > curr_max_deg ) curr_max_deg = len;
+			}
+
+			let stub_counts = [];
+			for( let i=0; i< graph.nodes.length; i++ )	{
+
+				stub_counts.push( graph.nodes[ i ].adjacent.length + 1 );
+			}
+			let stubs = expand_stub_array( stub_counts );
+
+			let r_src_id = stubs[ rand_int_range( 0, stubs.length ) ];
+			let r_tgt_id = stubs[ rand_int_range( 0, stubs.length ) ];
+
+			if( r_src_id != r_tgt_id )	{
+
+			// sort for undirected search
+				[ r_src_id, r_tgt_id ] = [ r_src_id, r_tgt_id ].sort( ( a, b ) => a - b );
+
+				if( graph.nodes[ r_src_id ].adjacent.includes( r_tgt_id ) == false )	{
+
+					graph.nodes[ r_src_id ].adjacent.push( r_tgt_id );
+					graph.nodes[ r_tgt_id ].adjacent.push( r_src_id );
+
+				// choose copy method
+					graph.links.push( { source: r_src_id, target: r_tgt_id } );
+//						graph.links.push( { source: graph.nodes[ r_src_id ], target: graph.nodes[ r_tgt_id ] } );
+
+					this.balance++;
+					edited = true;
+				}
+			}
+		}
+	}
+	return( edited );
+}
+
 function dynamic_drag_graph( graph, width, height, plot_div_id )	{
 
 	d3.select( "#restart_button" ).on(
@@ -286,7 +364,12 @@ function dynamic_drag_graph( graph, width, height, plot_div_id )	{
 
 	function timeout_callback( d )	{
 
-		auto_edit_graph();
+//		auto_edit_graph();
+		if( exec_auto_edit_graph( graph ) )	{
+
+			update_simulation();
+		}
+
 		if( mutate )	{
 			timeout_handle = d3.timeout( timeout_callback, interval );
 		}
@@ -316,7 +399,6 @@ function dynamic_drag_graph( graph, width, height, plot_div_id )	{
 	let svg = d3.select( "#" + plot_div_id )
 		.append( "svg" )
 		.attr( "viewBox", [ -width / 2, -height / 2, width, height ] );
-//		.attr( "viewBox", [ -width, -height, 2 * width, 2 * height ] );
 
 	const simulation = d3.forceSimulation()
 		.force( "link", d3.forceLink() )
@@ -402,83 +484,6 @@ function dynamic_drag_graph( graph, width, height, plot_div_id )	{
 	}
 	update_simulation();
 
-	let link_edit_balance = 0;
-
-	function auto_edit_graph()	{
-
-		let edited = false;
-
-		if( Math.random() < 0.5  )	{
-			// remove existing link
-
-			if( link_edit_balance > -( graph.max_degree / 2 ) )	{
-
-				if( graph.links.length > 0 )	{
-
-					let r_link_id = rand_int_range( 0, graph.links.length );
-
-					let src_id = graph.links[ r_link_id ].source.index;
-					let tgt_id = graph.links[ r_link_id ].target.index;
-
-					let src_adj_id = graph.nodes[ src_id ].adjacent.indexOf( tgt_id );
-					let tgt_adj_id = graph.nodes[ tgt_id ].adjacent.indexOf( src_id );
-
-					graph.nodes[ src_id ].adjacent.splice( src_adj_id, 1 );
-					graph.nodes[ tgt_id ].adjacent.splice( tgt_adj_id, 1 );
-					graph.links.splice( r_link_id, 1 );
-
-					link_edit_balance--;
-					edited = true;
-				}
-			}
-		}
-		else	{
-			// add new link
-
-			if( 1 )	{
-//			if( link_edit_balance < link_edit_max_range )	{
-
-				let curr_max_deg = 0;
-				for( let i=0; i< graph.nodes.length; i++ )	{
-
-					let len = graph.nodes[ i ].adjacent.length;
-					if( len > curr_max_deg ) curr_max_deg = len;
-				}
-
-				let stub_counts = [];
-				for( let i=0; i< graph.nodes.length; i++ )	{
-
-					stub_counts.push( graph.nodes[ i ].adjacent.length + 1 );
-				}
-				let stubs = expand_stub_array( stub_counts );
-
-				let r_src_id = stubs[ rand_int_range( 0, stubs.length ) ];
-				let r_tgt_id = stubs[ rand_int_range( 0, stubs.length ) ];
-
-				if( r_src_id != r_tgt_id )	{
-
-				// sort for undirected search
-					[ r_src_id, r_tgt_id ] = [ r_src_id, r_tgt_id ].sort( ( a, b ) => a - b );
-
-					if( graph.nodes[ r_src_id ].adjacent.includes( r_tgt_id ) == false )	{
-
-						graph.nodes[ r_src_id ].adjacent.push( r_tgt_id );
-						graph.nodes[ r_tgt_id ].adjacent.push( r_src_id );
-
-					// choose copy method
-						graph.links.push( { source: r_src_id, target: r_tgt_id } );
-//						graph.links.push( { source: graph.nodes[ r_src_id ], target: graph.nodes[ r_tgt_id ] } );
-
-						link_edit_balance++;
-						edited = true;
-					}
-				}
-			}
-		}
-		if( edited )	{
-			update_simulation();
-		}
-	}
 
 	function mousedown_link( event, link )	{
 
