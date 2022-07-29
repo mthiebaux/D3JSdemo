@@ -285,7 +285,7 @@ if( 1 )	{
 }
 	}
 
-	dynamic_drag_graph( graph_data, 300, 300, graph_plot_id );
+	dynamic_drag_graph( graph_data, 600, 600, graph_plot_id );
 }
 else	{
 	let graph_data = {
@@ -303,7 +303,7 @@ else	{
 		]
 	};
 
-	dynamic_drag_graph( graph_data, 300, 300, graph_plot_id );
+	dynamic_drag_graph( graph_data, 200, 200, graph_plot_id );
 }
 
 
@@ -336,14 +336,52 @@ function degree_to_radius( deg, max )	{
 
 function dynamic_drag_graph( graph, width, height, plot_div_id )	{
 
+	d3.select( "#restart_button" ).on(
+		"mousedown",
+		function( event )	{
+		}
+	);
+
+	let mutate = false;
+	let interval = 1000;
+	let timeout_handle = null;
+
+	function timeout_callback( d )	{
+
+		auto_edit_graph();
+		if( mutate )	{
+			timeout_handle = d3.timeout( timeout_callback, interval );
+		}
+	}
+
+	d3.select( "#rate_slider" ).on(
+		"input",
+		function( event )	{
+
+			function rate_conversion( i, max )	{
+				return( 10 + 1000 * ( max - i ) / max );
+			}
+			interval = rate_conversion( this.value, Number( this.max ) );
+			if( interval <= 1000 )	{
+
+				if( timeout_handle ) timeout_handle.stop();
+				mutate = true;
+				timeout_handle = d3.timeout( timeout_callback, interval );
+			}
+			else	{
+				mutate = false;
+			}
+		}
+	);
+
 	let svg = d3.select( "#" + plot_div_id )
 		.append( "svg" )
-//		.attr( "viewBox", [ -width / 2, -height / 2, width, height ] );
-		.attr( "viewBox", [ -width, -height, 2 * width, 2 * height ] );
+		.attr( "viewBox", [ -width / 2, -height / 2, width, height ] );
+//		.attr( "viewBox", [ -width, -height, 2 * width, 2 * height ] );
 
 	const simulation = d3.forceSimulation()
 		.force( "link", d3.forceLink() )
-		.force( "charge", d3.forceManyBody().strength( -35 ) )
+		.force( "charge", d3.forceManyBody().strength( -50 ) )
 		.force( "center", d3.forceCenter( 0, 0 ) )
 		.force( "x", d3.forceX( 0 ) )
 		.force( "y", d3.forceY( 0 ) )
@@ -531,13 +569,6 @@ if( 1 )	{
 
 			update_simulation();
 		}
-	}
-	if( 1 )	{
-		d3.interval(
-//		d3.timeout(
-			auto_edit_graph,
-			1000
-		)
 	}
 
 	function mousedown_link( event, link )	{

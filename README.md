@@ -21,3 +21,4 @@ The graph shown here is grown using the *Configuration Model*, which applies a p
 ## D3 Web Visualization
 
 Using D3.js open source visualization tools, the resulting graph is displayed interactively within the web page. Each page refresh generates a new graph with the same properties. Each node can be touched and dragged around, rearranging the spatial configuration using force calculations (global gravitation and local repulsion). By "massaging" the layout, you can coerce it to relax and spread out, highlighting hidden structure.
+

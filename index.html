@@ -15,7 +15,7 @@
 
 		<div class="page_header">
 
-			<h1> &lt svg &gt D3.js </h1>
+			<h1> d3.forceSimulation() </h1>
 
 		</div>
 
@@ -23,11 +23,24 @@
 
 			<div>
 				Using a prescribed power-law degree distribution and a network growth
-				configuration model to create random scale-free graphs.
+				configuration model to create random scale-free graphs. Adjust slider to
+				control mutation rate.
 			</div>
 			<p>
 
-			<div id="graph_plot_div" style="border:1px solid lightgrey;"></div>
+			<!-- input
+				type="button"
+				id="restart_button"
+				value="restart"
+				style="background-color:lightgrey; border-style:outset;" -->
+
+			<div id="graph_plot_div" style="border:1px solid lightgrey;">
+
+				<input id="rate_slider" type="range"
+					min="0" max="100" value="0"
+					style="width:98%; height:20px;">
+
+			</div>
 			<p>
 			<div id="histo_plot_div"></div>
 			<p>
