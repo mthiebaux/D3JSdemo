@@ -68,15 +68,7 @@ function generate_unique_rand_arr( min, max )	{
 ///////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////
 
-function generate_degree_sequence( len, min, max )	{
-
-	let seq = Array( len );
-	for( let i=0; i< len; i++ )	{
-		seq[ i ] = Math.floor( rand_pow_law( min, max + 1 ) );
-	}
-	return( seq );
-}
-function generate_stub_array( seq )	{
+function expand_stub_array( seq )	{
 
 	//    degree sequence  -->  stub-array
 	//   [ 1,1,1,1,2,3,3 ] --> [ 1,2,3,4,5,5,6,6,6,7,7,7 ]		1-indexing from paper
@@ -93,6 +85,7 @@ function generate_stub_array( seq )	{
 	}
 	return( arr );
 }
+
 function balance_stub_array( stubs )	{
 
 	// ensure even number of stubs
@@ -110,108 +103,34 @@ function balance_stub_array( stubs )	{
 
 ///////////////////////////////////////////////////////////////////////
 
-function test_graph( log_id, graph_id, histo_id )	{
+function build_power_graph( num_nodes, min_degree, max_degree )	{
 
-	output_log_id = log_id;
-	graph_plot_id = graph_id;
-	histo_plot_id = histo_id;
-
-//	let min_degree = 0.25;
-//	let min_degree = 0.5;
-	let min_degree = 0.75;
-//	let min_degree = 1;
-//	let min_degree = 2;
-//	let min_degree = 4;
-	let max_degree = 12;
-	let num_nodes = 64;
-
-if( 0 )	{
-	max_degree = 4;
-	num_nodes = 32;
-}
-else
-if( 0 )	{
-	max_degree = 8;
-	num_nodes = 64;
-}
-else
-if( 1 )	{
-	max_degree = 16;
-	num_nodes = 128;
-}
-else
-if( 1 )	{
-	max_degree = 32;
-	num_nodes = 256;
-}
-
-	let node_degrees = new Array( num_nodes );
-	let num_histo_buckets = max_degree + 1;
-
-	let histo = new Array( max_degree + 1 ).fill( 0 );
-	let num_stubs = 0;
+	let degree_sequence = new Array( num_nodes );
 	for( let i=0; i< num_nodes; i++ )	{
-
-		let v = Math.floor( rand_pow_law( min_degree, max_degree + 1 ) );
-
-//console.log( min_degree, max_degree, v );
-
-		node_degrees[ i ] = v;
-		histo[ v ]++;
-		num_stubs += v;
+		degree_sequence[ i ] = Math.floor( rand_pow_law( min_degree, max_degree + 1 ) );
 	}
 
-	output_log_response( "stubs: " + num_stubs );
-	output_log_response( "-" );
-	output_log_response( "node degree: " );
-	for( let i=0; i< num_nodes; i++ )
-		output_log_response( i + ": " + node_degrees[ i ] );
-	output_log_response( "-" );
-	output_log_response( "histogram: " );
-	for( let i=0; i<= max_degree; i++ )
-		output_log_response( i + ": " + histo[ i ] );
-	output_log_response( "-" );
-
-
-/////////////////
-
-//   degree sequence  -->  stub-array                      rstubs: shuffled
-//  [ 1,1,1,1,2,3,3 ] --> [ 0,1,2,3,4,4,5,5,5,6,6,6 ] --> [ 4,5,0,4,5,6,6,1,5,3,2,6 ]
-
-	let deg_seq = [ ...node_degrees ];	// from top of this function
-//	let deg_seq = [ 1,1,1,2,3,3 ];		// len 11 --> bal to 12 --> 6 edges
-//	let deg_seq = [ 1,1,1,1,2,3,3 ];	// len 12 --> 6 edges
-//	let deg_seq = [ 0,8,4,2 ];			// len 14 --> 7 edges
-
-	let stubs = generate_stub_array( deg_seq );
-
-	let rstubs = shuffle_array_copy( stubs );
-
-	let brstubs = balance_stub_array( rstubs );
-
-/////////////////
-
-	let N = deg_seq.length; // node count
+	let stubs = expand_stub_array( degree_sequence );
+	let shuffled = shuffle_array_copy( stubs );
+	let stub_list = balance_stub_array( shuffled );
 
 	let adjacencies = [];
-	for( let i=0; i< N; i++ )	{
+	for( let i=0; i< num_nodes; i++ )	{
 		adjacencies[ i ] = [];
 	}
 	let edges = [];
 
-	stub_vec = [ ...brstubs ];
-
 	// stub pair matching, best effort
 	// avoid self loops and double edges
 
-	for( let i=0; i< N; i++ )	{
+	for( let i=0; i< num_nodes; i++ )	{
 
-		let n = deg_seq[ i ];	// node has n stubs
+		let n = degree_sequence[ i ];	// node has n stubs
 		let c = 0;				// stubs index
 
-		while( ( c < stub_vec.length ) && ( adjacencies[ i ].length < n ) )	{
+		while( ( c < stub_list.length ) && ( adjacencies[ i ].length < n ) )	{
 
-			let p = stub_vec[ c ];	// pairing candidate
+			let p = stub_list[ c ];	// pairing candidate
 
 			if( ( p >= 0 )&&( p != i ) )	{	// available and not self
 
@@ -225,12 +144,12 @@ if( 1 )	{
 					adjacencies[ p ].push( i );
 
 					// invalidate both stubs
-					stub_vec[ c ] = -1;
+					stub_list[ c ] = -1;
 					let found = false;
-					for( let j=0; !found && ( j< stub_vec.length ); j++ )	{
+					for( let j=0; !found && ( j< stub_list.length ); j++ )	{
 
-						if( stub_vec[ j ] == i )	{ // remove first self stub found
-							stub_vec[ j ] = -1;
+						if( stub_list[ j ] == i )	{ // remove first self stub found
+							stub_list[ j ] = -1;
 							found = true;
 						}
 					}
@@ -240,56 +159,43 @@ if( 1 )	{
 		}
 	}
 
-	if( 0 )	{
-		console.log( "adjacencies:" );
-		for( let i=0; i< adjacencies.length; i++ )	{
-			console.log( adjacencies[ i ] );
-		}
-		console.log( "edges:" );
-		for( let i=0; i< edges.length; i++ )	{
-			console.log( edges[ i ] );
-		}
-	}
-
-/////////////////
-
-if( 1 )	{
 	let graph_data = {
+		degree_sequence: degree_sequence,
 		max_degree: max_degree,
 		nodes: [],
 		links: []
 	};
 
-	for( let i=0; i< N; i++ )	{
-
-		let d = adjacencies[ i ].length;
+	for( let i=0; i< num_nodes; i++ )	{
 
 		graph_data.nodes.push(
 			{
-				id: i, // redundant ?
+//				id: i, // redundant ?
 				group: 0,
 				adjacent: adjacencies[ i ]
-//				adjacent: []
 			}
 		);
 	}
 	for( let i=0; i< edges.length; i++ )	{
 
-if( 1 )	{
 		graph_data.links.push(
 			{
 				source: edges[ i ][ 0 ],
 				target: edges[ i ][ 1 ]
 			}
 		);
-}
 	}
 
-	dynamic_drag_graph( graph_data, 600, 600, graph_plot_id );
+	return( graph_data );
 }
-else	{
-	let graph_data = {
-		max_degree: 10,
+
+///////////////////////////////////////////////////////////////////////
+
+function build_test_graph()	{
+
+	return {
+		degree_sequence: [ 1, 1, 2, 2 ],
+		max_degree: 4,
 		nodes: [
 			{ id: 0, adjacent: [ 1, 2 ] },
 			{ id: 1, adjacent: [ 0 ] },
@@ -302,17 +208,49 @@ else	{
 			{ source: 0, target: 2 }
 		]
 	};
-
-	dynamic_drag_graph( graph_data, 200, 200, graph_plot_id );
 }
 
+function test_graph( log_id, graph_id, histo_id )	{
 
-//	ForceGraph( graph_data, { width: 400, height: 400 } );
+	output_log_id = log_id;
+	graph_plot_id = graph_id;
+	histo_plot_id = histo_id;
 
-	simple_histogram( num_histo_buckets, node_degrees, 300, 200 );
-//	observablehq_log_histo( num_histo_buckets, node_degrees );
-//	Histogram( node_degrees, { thresholds: num_histo_buckets, width: 340, height: 200 } );
+//	let min_degree = 0.25;
+//	let min_degree = 0.5;
+	let min_degree = 0.9;
+//	let min_degree = 1;
+//	let min_degree = 2;
+//	let min_degree = 4;
+	let max_degree = 12;
+	let num_nodes = 64;
 
+	if( 0 )	{
+		max_degree = 4;
+		num_nodes = 32;
+	}
+	else
+	if( 0 )	{
+		max_degree = 8;
+		num_nodes = 64;
+	}
+	else
+	if( 1 )	{
+		max_degree = 16;
+		num_nodes = 128;
+	}
+	else
+	if( 1 )	{
+		max_degree = 32;
+		num_nodes = 256;
+	}
+
+	let graph = build_power_graph( num_nodes, min_degree, max_degree );
+//	let graph = build_test_graph();
+
+	dynamic_drag_graph( graph, 600, 600, graph_plot_id );
+
+	simple_histogram( graph.max_degree + 1, graph.degree_sequence, 300, 200 );
 }
 
 ///////////////////////////////////////////////////////////////////////
@@ -361,8 +299,9 @@ function dynamic_drag_graph( graph, width, height, plot_div_id )	{
 			function rate_conversion( i, max )	{
 				return( 10 + 1000 * ( max - i ) / max );
 			}
-			interval = rate_conversion( this.value, Number( this.max ) );
-			if( interval <= 1000 )	{
+			if( this.value > 0 )	{
+
+				interval = rate_conversion( this.value, Number( this.max ) );
 
 				if( timeout_handle ) timeout_handle.stop();
 				mutate = true;
@@ -395,7 +334,7 @@ function dynamic_drag_graph( graph, width, height, plot_div_id )	{
 
 	let node_group = svg.append( "g" )
 		.attr( "stroke", d => "#000" )
-		.attr( "stroke-width", 0.5 )
+		.attr( "stroke-width", 1.0 )
 		.selectAll( "circle" );
 
 	function simulation_tick() {
@@ -463,10 +402,6 @@ function dynamic_drag_graph( graph, width, height, plot_div_id )	{
 	}
 	update_simulation();
 
-//	const link_edit_range = 8;
-	const link_edit_range = graph.max_degree;
-	const link_edit_min_range = graph.max_degree / 2;
-	const link_edit_max_range = graph.max_degree * 2;
 	let link_edit_balance = 0;
 
 	function auto_edit_graph()	{
@@ -476,7 +411,7 @@ function dynamic_drag_graph( graph, width, height, plot_div_id )	{
 		if( Math.random() < 0.5  )	{
 			// remove existing link
 
-			if( link_edit_balance > -link_edit_min_range )	{
+			if( link_edit_balance > -( graph.max_degree / 2 ) )	{
 
 				if( graph.links.length > 0 )	{
 
@@ -513,30 +448,11 @@ function dynamic_drag_graph( graph, width, height, plot_div_id )	{
 				let stub_counts = [];
 				for( let i=0; i< graph.nodes.length; i++ )	{
 
-let gamma = 1.0;
-if( 1 )	{
 					stub_counts.push( graph.nodes[ i ].adjacent.length + 1 );
-}
-else
-if( 1 )	{
-					let f = graph.nodes[ i ].adjacent.length / curr_max_deg;
-					let c = Math.pow( f, gamma ) * graph.max_degree;
-					stub_counts.push( c + 1 );
-} else {
-					let f = graph.nodes[ i ].adjacent.length / graph.max_degree;
-//					let f = graph.nodes[ i ].adjacent.length / curr_max_deg;
-					let c = Math.pow( f, gamma ) * graph.max_degree;
-//					let c = Math.pow( f, gamma ) * curr_max_deg;
-					stub_counts.push( c + 1 );
-}
-
 				}
+				let stubs = expand_stub_array( stub_counts );
 
-				let stubs = generate_stub_array( stub_counts );
-
-//				let r_src_id = rand_int_range( 0, graph.nodes.length );
 				let r_src_id = stubs[ rand_int_range( 0, stubs.length ) ];
-
 				let r_tgt_id = stubs[ rand_int_range( 0, stubs.length ) ];
 
 				if( r_src_id != r_tgt_id )	{
@@ -550,23 +466,16 @@ if( 1 )	{
 						graph.nodes[ r_tgt_id ].adjacent.push( r_src_id );
 
 					// choose copy method
-//						graph.links.push( { source: r_src_id, target: r_tgt_id } );
-						graph.links.push( { source: graph.nodes[ r_src_id ], target: graph.nodes[ r_tgt_id ] } );
+						graph.links.push( { source: r_src_id, target: r_tgt_id } );
+//						graph.links.push( { source: graph.nodes[ r_src_id ], target: graph.nodes[ r_tgt_id ] } );
 
 						link_edit_balance++;
 						edited = true;
 					}
-					else	{
-//						console.log( "redundant: " + r_src_id + " -> " + r_tgt_id );
-					}
 				}
 			}
 		}
-
 		if( edited )	{
-
-//  console.log( link_edit_balance );
-
 			update_simulation();
 		}
 	}
@@ -638,7 +547,7 @@ if( 1 )	{
 
 function simple_histogram( num_histo_buckets, data_arr, W, H )	{
 
-	let margin = { top: 5, right: 5, bottom: 30, left: 20 },
+	let margin = { left: 30, right: 10, top: 5, bottom: 30 },
 		width = W - margin.left - margin.right,
 		height = H - margin.top - margin.bottom;
 
