@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+ <html>
+ <head>
+	<script src="https://d3js.org/d3.v3.min.js"></script>
+     <style type="text/css">
+         p {
+             font-size: 20px;
+             color: blue;
+         }
+     </style>
+ </head>
+ <body>
+     <div id="example3">
+        <p>Already existing paragraph 1</p>
+        <p>Already existing paragraph 2</p>
+     </div>
+     <script type="text/javascript">
+
+//     http://knowledgestockpile.blogspot.com/2012/01/understanding-selectall-data-enter.html
+
+         pdata = [10,12,6,8,15];
+
+         selectDIV = d3.select("#example3");
+
+        selectDIV.selectAll("p")
+             .data(pdata) //, function(d){return d;})
+             .enter()
+             .append("p")
+             .text(function(d){return d;});
+     </script>
+ </body>
+ </html>

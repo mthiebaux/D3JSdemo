@@ -141,7 +141,7 @@ if( 1 )	{
 }
 else
 if( 1 )	{
-	max_degree = 16;
+	max_degree = 32;
 	num_nodes = 256;
 }
 
@@ -343,7 +343,7 @@ function dynamic_drag_graph( graph, width, height, plot_div_id )	{
 
 	const simulation = d3.forceSimulation()
 		.force( "link", d3.forceLink() )
-		.force( "charge", d3.forceManyBody().strength( -50 ) )
+		.force( "charge", d3.forceManyBody().strength( -35 ) )
 		.force( "center", d3.forceCenter( 0, 0 ) )
 		.force( "x", d3.forceX( 0 ) )
 		.force( "y", d3.forceY( 0 ) )
