@@ -262,7 +262,7 @@ function test_graph( log_id, graph_id, histo_id )	{
 		}
 	);
 
-	simple_histogram( graph.max_degree + 1, graph.degree_sequence, 300, 200 );
+	simple_histogram( graph.max_degree + 1, graph.degree_sequence, 300, 150 );
 }
 
 ///////////////////////////////////////////////////////////////////////
@@ -270,7 +270,7 @@ function test_graph( log_id, graph_id, histo_id )	{
 
 function execute_auto_edit( graph, reset_balance = false )	{
 
-  if( reset_balance ) console.log( "execute_auto_edit: reset_balance" );
+//  if( reset_balance ) console.log( "execute_auto_edit: reset_balance" );
 
 	// static variable
     if( ( this.balance === undefined )|| reset_balance ) {
@@ -373,18 +373,9 @@ function update_simulation( sim, graph )	{
 	sim.engine.stop();
 
 	sim.nodes = sim.nodes
-//		.data( graph.nodes, d => d.id ) // need key function for editing?
 		.data( graph.nodes )
 		.join(
 			enter => enter.append( "circle" )
-				.attr( "r",
-					d => degree_to_radius( d.adjacent.length, graph.max_degree )
-				)
-				.attr( "fill",
-					d => d3.interpolateTurbo(
-						degree_to_value( d.adjacent.length, graph.max_degree )
-					)
-				)
 				.on( "mousedown", mousedown )
 //				.on( "click", mouseclick ) // down and up
 				.on( "dblclick", mousedblclick )
@@ -395,11 +386,23 @@ function update_simulation( sim, graph )	{
 						.on( "start", dragstarted )
 						.on( "drag", dragging )
 						.on( "end", dragended )
-				),
+				)
+				.attr( "fill",
+					d => d3.interpolateTurbo(
+						degree_to_value( d.adjacent.length, graph.max_degree )
+					)
+				)
+				.attr( "r", 0.0 )
+				.transition().duration( 200 )
+				.attr( "r",
+					d => degree_to_radius( d.adjacent.length, graph.max_degree )
+				)
+				,
 			update => update
 				.attr( "r",
 					d => degree_to_radius( d.adjacent.length, graph.max_degree )
 				)
+				.transition().duration( 100 )
 				.attr( "fill",
 					d => d3.interpolateTurbo(
 						degree_to_value( d.adjacent.length, graph.max_degree )
@@ -408,12 +411,15 @@ function update_simulation( sim, graph )	{
 		);
 
 	sim.links = sim.links
-//		.data( graph.links, d => [ d.source, d.target ] )
 		.data( graph.links )
-//		.join( "line" );
 		.join(
 			enter => enter.append( "line" )
 				.on( "mousedown", mousedown_link )
+				.attr( "stroke-width", d => 0.0 )
+				.attr( "stroke-opacity", d => 0.0 )
+				.transition().duration( 1000 )
+				.attr( "stroke-width", d => 2.0 )
+				.attr( "stroke-opacity", d => 0.2 )
 		);
 
 	sim.engine.nodes( graph.nodes )
@@ -502,6 +508,7 @@ function create_sim_engine( width, height, plot_div_id )	{
 
 function init_sim_engine( sim, graph )	{
 
+	sim.reset = true;
 	if( sim.timeout ) sim.timeout.stop();
 	if( sim.engine ) sim.engine.stop();
 	if( sim.links ) sim.links.remove();
@@ -509,8 +516,8 @@ function init_sim_engine( sim, graph )	{
 
 	sim.links = sim.svg.append( "g" )
 			.attr( "stroke", d => "#000" )
-			.attr( "stroke-opacity", d => 0.2 )
-			.attr( "stroke-width", d => 2.0 )
+//			.attr( "stroke-opacity", d => 0.2 )
+//			.attr( "stroke-width", d => 2.0 )
 			.selectAll( "line" );
 
 	sim.nodes = sim.svg.append( "g" )
@@ -557,28 +564,27 @@ function init_sim_engine( sim, graph )	{
 	if( sim.auto )
 		sim.timeout = d3.timeout( timeout_callback, sim.ival );
 
-	d3.select( "#rate_slider" ).on(
-		"input",
-		function( event )	{
+	d3.select( "#rate_slider" )
+		.on( "input",
+			function( event )	{
 
-			function rate_conversion( i, max )	{
-				return( 10 + 1000 * ( max - i ) / max );
+				function rate_conversion( i, max )	{
+					return( 10 + 1000 * ( max - i ) / max );
+				}
+
+				if( this.value > 0 )	{
+
+					if( sim.timeout ) sim.timeout.stop();
+
+					sim.auto = true;
+					sim.ival = rate_conversion( this.value, Number( this.max ) );
+					sim.timeout = d3.timeout( timeout_callback, sim.ival );
+				}
+				else	{
+					sim.auto = false;
+				}
 			}
-
-			if( this.value > 0 )	{
-
-				if( sim.timeout ) sim.timeout.stop();
-
-				sim.ival = rate_conversion( this.value, Number( this.max ) );
-				sim.auto = true;
-
-				sim.timeout = d3.timeout( timeout_callback, sim.ival );
-			}
-			else	{
-				sim.auto = false;
-			}
-		}
-	);
+		);
 }
 
 ///////////////////////////////////////////////////////////////////////
