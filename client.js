@@ -256,26 +256,10 @@ function test_graph( log_id, graph_id, histo_id )	{
 ///////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////
 
-function degree_to_value( deg, max )	{
-//	return( 0.02 + 0.98 * deg / max );
-	return( 0.05 + deg / max );
-}
-
-function value_to_radius( v )	{
-//	return( 2 + 10 * v );
-	return( 4 + 8 * v );
-}
-
-function degree_to_radius( deg, max )	{
-	return( value_to_radius( degree_to_value( deg, max ) ) );
-}
-
-///////////////////////////////////////////////////////////////////////
-
-function exec_auto_edit_graph( graph )	{
+function execute_auto_edit( graph, reset = false )	{
 
 	// static variable
-    if( typeof this.balance == 'undefined' ) {
+    if( ( this.balance === undefined )|| reset ) {
          this.balance = 0;
     }
 	let edited = false;
@@ -307,8 +291,8 @@ function exec_auto_edit_graph( graph )	{
 	else	{
 		// add new link
 
-		if( 1 )	{
-//			if( this.balance < link_edit_max_range )	{
+//		if( 1 )	{
+		if( this.balance < ( graph.max_degree * 2 ) )	{
 
 			let curr_max_deg = 0;
 			for( let i=0; i< graph.nodes.length; i++ )	{
@@ -350,140 +334,77 @@ function exec_auto_edit_graph( graph )	{
 	return( edited );
 }
 
-function dynamic_drag_graph( graph, width, height, plot_div_id )	{
+///////////////////////////////////////////////////////////////////////
 
-	d3.select( "#restart_button" ).on(
-		"mousedown",
-		function( event )	{
-		}
-	);
+function degree_to_value( deg, max )	{
+//	return( 0.02 + 0.98 * deg / max );
+	return( 0.05 + deg / max );
+}
 
-	let mutate = false;
-	let interval = 1000;
-	let timeout_handle = null;
+function value_to_radius( v )	{
+//	return( 2 + 10 * v );
+	return( 4 + 8 * v );
+}
 
-	function timeout_callback( d )	{
+function degree_to_radius( deg, max )	{
+	return( value_to_radius( degree_to_value( deg, max ) ) );
+}
 
-//		auto_edit_graph();
-		if( exec_auto_edit_graph( graph ) )	{
+///////////////////////////////////////////////////////////////////////
 
-			update_simulation();
-		}
+function execute_simulation( graph, sim )	{
 
-		if( mutate )	{
-			timeout_handle = d3.timeout( timeout_callback, interval );
-		}
-	}
+// sim = { engine, nodes, links };
 
-	d3.select( "#rate_slider" ).on(
-		"input",
-		function( event )	{
+	sim.engine.stop();
 
-			function rate_conversion( i, max )	{
-				return( 10 + 1000 * ( max - i ) / max );
-			}
-			if( this.value > 0 )	{
-
-				interval = rate_conversion( this.value, Number( this.max ) );
-
-				if( timeout_handle ) timeout_handle.stop();
-				mutate = true;
-				timeout_handle = d3.timeout( timeout_callback, interval );
-			}
-			else	{
-				mutate = false;
-			}
-		}
-	);
-
-	let svg = d3.select( "#" + plot_div_id )
-		.append( "svg" )
-		.attr( "viewBox", [ -width / 2, -height / 2, width, height ] );
-
-	const simulation = d3.forceSimulation()
-		.force( "link", d3.forceLink() )
-		.force( "charge", d3.forceManyBody().strength( -50 ) )
-		.force( "center", d3.forceCenter( 0, 0 ) )
-		.force( "x", d3.forceX( 0 ) )
-		.force( "y", d3.forceY( 0 ) )
-		.on( "tick", simulation_tick );
-
-	let link_group = svg.append( "g" )
-		.attr( "stroke", d => "#000" )
-		.attr( "stroke-opacity", d => 0.2 )
-		.attr( "stroke-width", d => 2.0 )
-		.selectAll( "line" );
-
-	let node_group = svg.append( "g" )
-		.attr( "stroke", d => "#000" )
-		.attr( "stroke-width", 1.0 )
-		.selectAll( "circle" );
-
-	function simulation_tick() {
-		link_group
-			.attr( "x1", d => d.source.x )
-			.attr( "y1", d => d.source.y )
-			.attr( "x2", d => d.target.x )
-			.attr( "y2", d => d.target.y );
-		node_group
-			.attr( "cx", d => d.x )
-			.attr( "cy", d => d.y );
-	}
-
-	function update_simulation() {
-
-		simulation.stop();
-
-		node_group = node_group
-//			.data( graph.nodes, d => d.id ) // need key function for editing?
-			.data( graph.nodes )
-			.join(
-				enter => enter.append( "circle" )
-					.attr( "r",
-						d => degree_to_radius( d.adjacent.length, graph.max_degree )
+	sim.nodes = sim.nodes
+//		.data( graph.nodes, d => d.id ) // need key function for editing?
+		.data( graph.nodes )
+		.join(
+			enter => enter.append( "circle" )
+				.attr( "r",
+					d => degree_to_radius( d.adjacent.length, graph.max_degree )
+				)
+				.attr( "fill",
+					d => d3.interpolateTurbo(
+						degree_to_value( d.adjacent.length, graph.max_degree )
 					)
-					.attr( "fill",
-						d => d3.interpolateTurbo(
-							degree_to_value( d.adjacent.length, graph.max_degree )
-						)
+				)
+				.on( "mousedown", mousedown )
+//				.on( "click", mouseclick ) // down and up
+				.on( "dblclick", mousedblclick )
+//				.on( "mouseover", mouseover )
+//				.on( "mouseout", mouseout )
+				.call(
+					d3.drag()
+						.on( "start", dragstarted )
+						.on( "drag", dragging )
+						.on( "end", dragended )
+				),
+			update => update
+				.attr( "r",
+					d => degree_to_radius( d.adjacent.length, graph.max_degree )
+				)
+				.attr( "fill",
+					d => d3.interpolateTurbo(
+						degree_to_value( d.adjacent.length, graph.max_degree )
 					)
-					.on( "mousedown", mousedown )
-//					.on( "click", mouseclick ) // down and up
-					.on( "dblclick", mousedblclick )
-//					.on( "mouseover", mouseover )
-//					.on( "mouseout", mouseout )
-					.call(
-						d3.drag()
-							.on( "start", dragstarted )
-							.on( "drag", dragging )
-							.on( "end", dragended )
-					),
-				update => update
-					.attr( "r",
-						d => degree_to_radius( d.adjacent.length, graph.max_degree )
-					)
-					.attr( "fill",
-						d => d3.interpolateTurbo(
-							degree_to_value( d.adjacent.length, graph.max_degree )
-						)
-					)
-			);
+				)
+		);
 
-		link_group = link_group
-//			.data( graph.links, d => [ d.source, d.target ] )
-			.data( graph.links )
-//			.join( "line" );
-			.join(
-				enter => enter.append( "line" )
-					.on( "mousedown", mousedown_link )
-			);
+	sim.links = sim.links
+//		.data( graph.links, d => [ d.source, d.target ] )
+		.data( graph.links )
+//		.join( "line" );
+		.join(
+			enter => enter.append( "line" )
+				.on( "mousedown", mousedown_link )
+		);
 
-		simulation.nodes( graph.nodes )
-		simulation.force( "link" ).links( graph.links );
-		simulation.alphaTarget( 0.1 ).restart();
-	}
-	update_simulation();
-
+	sim.engine.nodes( graph.nodes )
+	sim.engine.force( "link" ).links( graph.links );
+	sim.engine.alphaTarget( 0.1 ).restart();
 
 	function mousedown_link( event, link )	{
 
@@ -526,7 +447,7 @@ function dynamic_drag_graph( graph, width, height, plot_div_id )	{
 //		console.log( "drag start node: " + JSON.stringify( node, null, 2 ) );
 
 		if ( !event.active )
-			simulation.alphaTarget( 0.9 ).restart(); // range [ 0, 1 ]
+			sim.engine.alphaTarget( 0.9 ).restart(); // range [ 0, 1 ]
 		event.subject.fx = event.subject.x;
 		event.subject.fy = event.subject.y;
 	}
@@ -538,10 +459,132 @@ function dynamic_drag_graph( graph, width, height, plot_div_id )	{
 	function dragended( event, node ) {
 
 		if ( !event.active )
-			simulation.alphaTarget ( 0 );
+			sim.engine.alphaTarget ( 0 );
 		event.subject.fx = null;
 		event.subject.fy = null;
 	}
+}
+
+function dynamic_drag_graph( graph, width, height, plot_div_id )	{
+
+	d3.select( "#restart_button" ).on(
+		"mousedown",
+		function( event )	{
+		}
+	);
+
+
+
+
+	let svg = d3.select( "#" + plot_div_id )
+		.append( "svg" )
+		.attr( "viewBox", [ -width / 2, -height / 2, width, height ] );
+
+	let sim = {
+		engine: null,
+		nodes: null,
+		links: null
+	};
+
+	sim.links = svg.append( "g" )
+		.attr( "stroke", d => "#000" )
+		.attr( "stroke-opacity", d => 0.2 )
+		.attr( "stroke-width", d => 2.0 )
+		.selectAll( "line" );
+
+	sim.nodes = svg.append( "g" )
+		.attr( "stroke", d => "#000" )
+		.attr( "stroke-width", 1.0 )
+		.selectAll( "circle" );
+
+	sim.engine = d3.forceSimulation()
+		.force( "link", d3.forceLink() )
+		.force( "charge", d3.forceManyBody().strength( -50 ) )
+		.force( "center", d3.forceCenter( 0, 0 ) )
+		.force( "x", d3.forceX( 0 ) )
+		.force( "y", d3.forceY( 0 ) )
+		.on( "tick",
+			() => {
+				sim.links
+					.attr( "x1", d => d.source.x )
+					.attr( "y1", d => d.source.y )
+					.attr( "x2", d => d.target.x )
+					.attr( "y2", d => d.target.y );
+				sim.nodes
+					.attr( "cx", d => d.x )
+					.attr( "cy", d => d.y );
+			}
+		);
+
+	execute_simulation( graph, sim );
+
+	let mutate = false;
+	let interval = 1000;
+	let timeout_handle = null;
+
+	function timeout_callback( d )	{
+
+		if( execute_auto_edit( graph, false ) )	{
+
+			execute_simulation( graph, sim );
+		}
+		if( mutate )	{
+
+			timeout_handle = d3.timeout( timeout_callback, interval );
+		}
+	}
+
+	d3.select( "#rate_slider" ).on(
+		"input",
+		function( event )	{
+
+			function rate_conversion( i, max )	{
+				return( 10 + 1000 * ( max - i ) / max );
+			}
+
+			if( this.value > 0 )	{
+
+				if( timeout_handle ) timeout_handle.stop();
+
+				interval = rate_conversion( this.value, Number( this.max ) );
+				mutate = true;
+
+				timeout_handle = d3.timeout( timeout_callback, interval );
+			}
+			else	{
+				mutate = false;
+			}
+		}
+	);
+
+/*
+	d3.timeout(
+		function(){
+
+			link_group.remove();
+			node_group.remove();
+
+		}, 1000
+	);
+	d3.timeout(
+		function(){
+
+			link_group = svg.append( "g" )
+				.attr( "stroke", d => "#000" )
+				.attr( "stroke-opacity", d => 0.2 )
+				.attr( "stroke-width", d => 2.0 )
+				.selectAll( "line" );
+
+			node_group = svg.append( "g" )
+				.attr( "stroke", d => "#000" )
+				.attr( "stroke-width", 1.0 )
+				.selectAll( "circle" );
+
+			update_simulation();
+
+		}, 2000
+	);
+*/
 }
 
 ///////////////////////////////////////////////////////////////////////
