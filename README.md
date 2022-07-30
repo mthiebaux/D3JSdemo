@@ -20,5 +20,6 @@ The graph shown here is grown using the *Configuration Model*, which applies a p
 
 ## D3 Web Visualization
 
-Using D3.js open source visualization tools, the resulting graph is displayed interactively within the web page. Each page refresh generates a new graph with the same properties. Each node can be touched and dragged around, rearranging the spatial configuration using force calculations (global gravitation and local repulsion). By "massaging" the layout, you can coerce it to relax and spread out, highlighting hidden structure.
+Using D3.js open source visualization tools, the resulting graph is displayed interactively within the web page. Each *restart* generates a new graph with the same properties. Each node can be touched and dragged around, rearranging the spatial configuration using force calculations (global gravitation and local repulsion). By "massaging" the layout, one can coerce it to relax, exposing hidden structure. The slider controls the random mutation rate, and the graph evolves.
 
+Knowing almost nothing about *SVG* tags and D3 visualization development, I set out by examining a dozen or more code examples demonstrating a variety of functionality. I then proceeded to migrate those examples from their v3 and v4 syntax into the latest v7, which is not backward compatible. Finally, I stress tested the results with a scalable, high performance set of operations, of some interest to graph theorists.
