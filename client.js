@@ -245,10 +245,22 @@ function test_graph( log_id, graph_id, histo_id )	{
 		num_nodes = 256;
 	}
 
-	let graph = build_power_graph( num_nodes, min_degree, max_degree );
 //	let graph = build_test_graph();
+	let graph = build_power_graph( num_nodes, min_degree, max_degree );
 
-	dynamic_drag_graph( graph, 600, 600, graph_plot_id );
+	let sim = create_sim_engine( 600, 600, graph_plot_id );
+	init_sim_engine( sim, graph );
+
+	d3.select( "#restart_button" ).on(
+		"mousedown",
+		function( event )	{
+
+			let N = rand_int_range( num_nodes / 4, num_nodes * 2 );
+
+			graph = build_power_graph( N, min_degree, max_degree );
+			init_sim_engine( sim, graph );
+		}
+	);
 
 	simple_histogram( graph.max_degree + 1, graph.degree_sequence, 300, 200 );
 }
@@ -256,10 +268,12 @@ function test_graph( log_id, graph_id, histo_id )	{
 ///////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////
 
-function execute_auto_edit( graph, reset = false )	{
+function execute_auto_edit( graph, reset_balance = false )	{
+
+  if( reset_balance ) console.log( "execute_auto_edit: reset_balance" );
 
 	// static variable
-    if( ( this.balance === undefined )|| reset ) {
+    if( ( this.balance === undefined )|| reset_balance ) {
          this.balance = 0;
     }
 	let edited = false;
@@ -352,7 +366,7 @@ function degree_to_radius( deg, max )	{
 
 ///////////////////////////////////////////////////////////////////////
 
-function execute_simulation( graph, sim )	{
+function update_simulation( sim, graph )	{
 
 // sim = { engine, nodes, links };
 
@@ -465,37 +479,44 @@ function execute_simulation( graph, sim )	{
 	}
 }
 
-function dynamic_drag_graph( graph, width, height, plot_div_id )	{
+///////////////////////////////////////////////////////////////////////
 
-	d3.select( "#restart_button" ).on(
-		"mousedown",
-		function( event )	{
-		}
-	);
-
-
-
+function create_sim_engine( width, height, plot_div_id )	{
 
 	let svg = d3.select( "#" + plot_div_id )
 		.append( "svg" )
-		.attr( "viewBox", [ -width / 2, -height / 2, width, height ] );
+			.attr( "viewBox", [ -width / 2, -height / 2, width, height ] );
 
 	let sim = {
+		svg,
 		engine: null,
 		nodes: null,
-		links: null
+		links: null,
+		timeout: null,
+		auto: false,
+		ival: 1000,
+		reset: true
 	};
+	return( sim );
+}
 
-	sim.links = svg.append( "g" )
-		.attr( "stroke", d => "#000" )
-		.attr( "stroke-opacity", d => 0.2 )
-		.attr( "stroke-width", d => 2.0 )
-		.selectAll( "line" );
+function init_sim_engine( sim, graph )	{
 
-	sim.nodes = svg.append( "g" )
-		.attr( "stroke", d => "#000" )
-		.attr( "stroke-width", 1.0 )
-		.selectAll( "circle" );
+	if( sim.timeout ) sim.timeout.stop();
+	if( sim.engine ) sim.engine.stop();
+	if( sim.links ) sim.links.remove();
+	if( sim.nodes ) sim.nodes.remove();
+
+	sim.links = sim.svg.append( "g" )
+			.attr( "stroke", d => "#000" )
+			.attr( "stroke-opacity", d => 0.2 )
+			.attr( "stroke-width", d => 2.0 )
+			.selectAll( "line" );
+
+	sim.nodes = sim.svg.append( "g" )
+			.attr( "stroke", d => "#000" )
+			.attr( "stroke-width", 1.0 )
+			.selectAll( "circle" );
 
 	sim.engine = d3.forceSimulation()
 		.force( "link", d3.forceLink() )
@@ -516,23 +537,25 @@ function dynamic_drag_graph( graph, width, height, plot_div_id )	{
 			}
 		);
 
-	execute_simulation( graph, sim );
-
-	let mutate = false;
-	let interval = 1000;
-	let timeout_handle = null;
+	update_simulation( sim, graph );
 
 	function timeout_callback( d )	{
 
-		if( execute_auto_edit( graph, false ) )	{
+		let update = execute_auto_edit( graph, sim.reset );
+		sim.reset = false;
 
-			execute_simulation( graph, sim );
+		if( update == true )	{
+
+			update_simulation( sim, graph );
 		}
-		if( mutate )	{
+		if( sim.auto )	{
 
-			timeout_handle = d3.timeout( timeout_callback, interval );
+			sim.timeout = d3.timeout( timeout_callback, sim.ival );
 		}
 	}
+
+	if( sim.auto )
+		sim.timeout = d3.timeout( timeout_callback, sim.ival );
 
 	d3.select( "#rate_slider" ).on(
 		"input",
@@ -544,48 +567,22 @@ function dynamic_drag_graph( graph, width, height, plot_div_id )	{
 
 			if( this.value > 0 )	{
 
-				if( timeout_handle ) timeout_handle.stop();
+				if( sim.timeout ) sim.timeout.stop();
 
-				interval = rate_conversion( this.value, Number( this.max ) );
-				mutate = true;
+				sim.ival = rate_conversion( this.value, Number( this.max ) );
+				sim.auto = true;
 
-				timeout_handle = d3.timeout( timeout_callback, interval );
+				sim.timeout = d3.timeout( timeout_callback, sim.ival );
 			}
 			else	{
-				mutate = false;
+				sim.auto = false;
 			}
 		}
 	);
-
-/*
-	d3.timeout(
-		function(){
-
-			link_group.remove();
-			node_group.remove();
-
-		}, 1000
-	);
-	d3.timeout(
-		function(){
-
-			link_group = svg.append( "g" )
-				.attr( "stroke", d => "#000" )
-				.attr( "stroke-opacity", d => 0.2 )
-				.attr( "stroke-width", d => 2.0 )
-				.selectAll( "line" );
-
-			node_group = svg.append( "g" )
-				.attr( "stroke", d => "#000" )
-				.attr( "stroke-width", 1.0 )
-				.selectAll( "circle" );
-
-			update_simulation();
-
-		}, 2000
-	);
-*/
 }
+
+///////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////
@@ -765,8 +762,8 @@ function Histogram(data, {
   yType = d3.scaleLinear, // type of y-scale
   yDomain, // [ymin, ymax]
   yRange = [height - marginBottom, marginTop], // [bottom, top]
-  yLabel = "↑ Frequency", // a label for the y-axis
-  yFormat = normalize ? "%" : undefined, // a format specifier string for the y-axis
+   yLabel = "+ Frequency", // a label for the y-axis
+ yFormat = normalize ? "%" : undefined, // a format specifier string for the y-axis
   color = "steelblue" // bar fill color
 } = {}) {
 
@@ -826,7 +823,7 @@ function Histogram(data, {
 	  .attr("y", (d, i) => yScale(Y[i]))
 	  .attr("height", (d, i) => yScale(0) - yScale(Y[i]))
 	.append("title")
-	  .text((d, i) => [`${d.x0} ≤ x < ${d.x1}`, yFormat(Y[i])].join("\n"));
+	  .text((d, i) => [`${d.x0} � x < ${d.x1}`, yFormat(Y[i])].join("\n"));
 
   svg.append("g")
 	  .attr("transform", `translate(0,${height - marginBottom})`)
