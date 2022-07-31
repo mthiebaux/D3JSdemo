@@ -26,6 +26,6 @@ Using D3.js open source visualization tools, the resulting graph is displayed in
 
 ## Learning Curve
 
-Knowing almost nothing about *SVG* tags and D3 visualization development, I set examining a dozen or more code examples demonstrating a variety of functionality, and outdated tutorials. I then migrated those codes from their v3 and v4 syntax into the latest v7, which is not backward compatible. A problem of reverse engineering.
+Knowing almost nothing about *SVG* tags and D3 visualization development, I set out examining a dozen or more code examples demonstrating a variety of functionality, and outdated tutorials. I then migrated those codes from their v3 and v4 syntax into the latest v7, which is not backward compatible. A problem of reverse engineering.
 
 Finally, I stress test the resulting code with a scalable, high performance set of operations, of some interest to graph theorists. A histogram of cumulative mutations shows consistent power law distribution of node degree, while sensitive to initial conditions. Style transition chains are seductive, and troublesome when the graph is being edited.
