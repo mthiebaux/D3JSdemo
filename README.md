@@ -8,7 +8,7 @@
 
 ## Scale-Free Graphs
 
-If you are going to practice tree and graph algorithms for traversal and feature detection, you will want tools to view and validate the results, and also a way to generate a variety of interesting graphs to test on. This demo attempts to address both of these.
+If you are going to practice tree and graph algorithms for traversal and feature detection, you will want tools to view and validate the results, and also a way to generate a variety of interesting graphs to test on. This project attempts to address both of these.
 
 Scale-free networks are so called because they exhibit characteristics in common with natural networks found in the real world. In particular, the *degree distribution*, or distribution of edge counts among nodes, follows a *power law*, with most nodes having only a few edges (the boonies) and a few nodes having many (the hubs), regardless of size.
 
@@ -22,4 +22,8 @@ The graph shown here is grown using the *Configuration Model*, which applies a p
 
 Using D3.js open source visualization tools, the resulting graph is displayed interactively within the web page. Each *restart* generates a new graph with the same properties. Each node can be touched and dragged around, rearranging the spatial configuration using force calculations (global gravitation and local repulsion). By "massaging" the layout, you can coerce it to relax, exposing hidden structure. The slider controls the random mutation rate, and the graph evolves.
 
-Knowing almost nothing about *SVG* tags and D3 visualization development, I set out by examining a dozen or more code examples demonstrating a variety of functionality. I then proceeded to migrate those examples from their v3 and v4 syntax into the latest v7, which is not backward compatible. Finally, I stress tested the results with a scalable, high performance set of operations, of some interest to graph theorists.
+<img src="./images/screencap3.png" width="200">
+
+## Learning Curve
+
+Knowing almost nothing about *SVG* tags and D3 visualization development, I set out by examining a dozen or more code examples demonstrating a variety of functionality, and outdated tutorials. I then migrated those codes from their v3 and v4 syntax into the latest v7, which is not backward compatible. Finally, I stress test the results with a scalable, high performance set of operations, of some interest to graph theorists. A histogram of cumulative mutations shows consistent power law distribution.

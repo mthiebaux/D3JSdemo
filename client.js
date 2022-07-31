@@ -160,7 +160,7 @@ function build_power_graph( num_nodes, min_degree, max_degree )	{
 
 	let graph_data = {
 		max_degree: max_degree,
-//		degrees: degree_sequence, // may have been adjusted for balance
+//		degrees: degree_sequence, // NO, may have been adjusted for balance
 		degrees: [],
 		nodes: [],
 		links: []
@@ -197,15 +197,18 @@ function build_test_graph()	{
 
 	return {
 		max_degree: 4,
-		degrees: [ 2, 1, 2, 1 ],
+		degrees: [ 1, 0, 2, 1 ],
+//		degrees: [ 2, 1, 2, 1 ],
 		nodes: [
-			{ id: 0, adjacent: [ 1, 2 ] },
-			{ id: 1, adjacent: [ 0 ] },
+			{ id: 0, adjacent: [ 2 ] },
+			{ id: 1, adjacent: [  ] },
+//			{ id: 0, adjacent: [ 1, 2 ] },
+//			{ id: 1, adjacent: [ 0 ] },
 			{ id: 2, adjacent: [ 3, 0 ] },
 			{ id: 3, adjacent: [ 2 ] }
 		],
 		links: [
-			{ source: 0, target: 1 }, // sorted
+//			{ source: 0, target: 1 }, // sorted
 			{ source: 2, target: 3 },
 			{ source: 0, target: 2 }
 		]
@@ -228,7 +231,7 @@ function test_graph_sim( log_id, graph_id, histo_id )	{
 	let num_nodes = 64;
 
 	if( 0 )	{
-		max_degree = 4;
+		max_degree = 6;
 		num_nodes = 32;
 	}
 	else
@@ -237,23 +240,28 @@ function test_graph_sim( log_id, graph_id, histo_id )	{
 		num_nodes = 64;
 	}
 	else
-	if( 1 )	{
-		max_degree = 16;
+	if( 0 )	{
+		max_degree = 12;
 		num_nodes = 128;
 	}
 	else
 	if( 1 )	{
-		max_degree = 32;
+		max_degree = 20;
 		num_nodes = 256;
 	}
 
-//	let graph = build_test_graph();
-	let graph = build_power_graph( num_nodes, min_degree, max_degree );
+	let graph = {};
 
-	let sim = create_sim_engine( 600, 600, graph_plot_id );
+	if( 0 )	{
+		graph = build_test_graph();
+	} else {
+		graph = build_power_graph( num_nodes, min_degree, max_degree );
+	}
+
+	let sim = create_simulation( 600, 600, graph_plot_id );
 	let hist = create_histogram( 300, 150, histo_plot_id );
 
-	init_sim_engine( sim, hist, graph );
+	init_simulation( sim, hist, graph );
 	init_histogram( hist, graph.degrees, graph.max_degree );
 
 	d3.select( "#restart_button" ).on(
@@ -263,9 +271,8 @@ function test_graph_sim( log_id, graph_id, histo_id )	{
 			let N = rand_int_range( num_nodes / 4, num_nodes * 2 );
 			graph = build_power_graph( N, min_degree, max_degree );
 
-			init_sim_engine( sim, hist, graph );
+			init_simulation( sim, hist, graph );
 			init_histogram( hist, graph.degrees, graph.max_degree );
-
 		}
 	);
 }
@@ -298,9 +305,14 @@ function execute_auto_edit( graph, reset_balance = false )	{
 				let src_adj_id = graph.nodes[ src_id ].adjacent.indexOf( tgt_id );
 				let tgt_adj_id = graph.nodes[ tgt_id ].adjacent.indexOf( src_id );
 
+			// update node adjacencies
 				graph.nodes[ src_id ].adjacent.splice( src_adj_id, 1 );
 				graph.nodes[ tgt_id ].adjacent.splice( tgt_adj_id, 1 );
+
+
+			// this is a risky maneuver:
 				graph.links.splice( r_link_id, 1 );
+
 
 				graph.degrees[ src_id ] = graph.nodes[ src_id ].adjacent.length;
 				graph.degrees[ tgt_id ] = graph.nodes[ tgt_id ].adjacent.length;;
@@ -344,8 +356,8 @@ function execute_auto_edit( graph, reset_balance = false )	{
 					graph.nodes[ r_tgt_id ].adjacent.push( r_src_id );
 
 				// choose copy method
-					graph.links.push( { source: r_src_id, target: r_tgt_id } );
-//					graph.links.push( { source: graph.nodes[ r_src_id ], target: graph.nodes[ r_tgt_id ] } );
+//					graph.links.push( { source: r_src_id, target: r_tgt_id } );
+					graph.links.push( { source: graph.nodes[ r_src_id ], target: graph.nodes[ r_tgt_id ] } );
 
 					graph.degrees[ r_src_id ] = graph.nodes[ r_src_id ].adjacent.length;
 					graph.degrees[ r_tgt_id ] = graph.nodes[ r_tgt_id ].adjacent.length;;
@@ -362,16 +374,17 @@ function execute_auto_edit( graph, reset_balance = false )	{
 ///////////////////////////////////////////////////////////////////////
 
 function degree_to_value( deg, max )	{
-//	return( 0.02 + 0.98 * deg / max );
-	return( 0.05 + deg / max );
+
+	return( 0.1 + deg / max );
 }
 
 function value_to_radius( v )	{
-//	return( 2 + 10 * v );
+
 	return( 4 + 8 * v );
 }
 
 function degree_to_radius( deg, max )	{
+
 	return( value_to_radius( degree_to_value( deg, max ) ) );
 }
 
@@ -379,7 +392,7 @@ function degree_to_radius( deg, max )	{
 
 function update_simulation( sim, graph )	{
 
-// sim = { engine, nodes, links };
+// sim = { engine, nodes, links, ... };
 
 	sim.engine.stop();
 
@@ -387,9 +400,9 @@ function update_simulation( sim, graph )	{
 		.data( graph.nodes )
 		.join(
 			enter => enter.append( "circle" )
-				.on( "mousedown", mousedown )
+				.on( "mousedown", mousedown_node )
 //				.on( "click", mouseclick ) // down and up
-				.on( "dblclick", mousedblclick )
+				.on( "dblclick", mousedblclick_node )
 //				.on( "mouseover", mouseover )
 //				.on( "mouseout", mouseout )
 				.call(
@@ -426,17 +439,44 @@ function update_simulation( sim, graph )	{
 		.join(
 			enter => enter.append( "line" )
 				.on( "mousedown", mousedown_link )
+				.on( "dblclick", mousedblclick_link )
 				.attr( "stroke-width", d => 0.0 )
 				.attr( "stroke-opacity", d => 0.0 )
 				.transition().duration( 1000 )
 				.attr( "stroke-width", d => 2.0 )
 				.attr( "stroke-opacity", d => 0.2 )
+
 		);
 
 	sim.engine.nodes( graph.nodes )
 	sim.engine.force( "link" ).links( graph.links );
 	sim.engine.alphaTarget( 0.1 ).restart();
 
+	function mousedown_node( event, node )	{
+
+//		console.log( "drag start event: " + JSON.stringify( event, null, 2 ) ); // bupkis
+//		console.log( "down node: " + JSON.stringify( node, null, 2 ) );
+
+		console.log( "node index: " + node.index );
+
+		let rad = degree_to_radius( node.adjacent.length, graph.max_degree );
+		d3.select( this )
+			.attr( "stroke-width", d => 4.0 )
+			.attr( "r", 2 * rad )
+			.transition()
+			.duration( 1000 )
+			.attr( "stroke-width", d => 1.0 )
+			.attr( "r", rad );
+	}
+	function mousedblclick_node( event, node )	{
+
+		let rad = degree_to_radius( node.adjacent.length, graph.max_degree );
+		d3.select( this )
+			.transition()
+			.duration( 1000 )
+			.attr( "stroke-width", d => 0.0 )
+			.attr( "r", 2 * rad );
+	}
 	function mousedown_link( event, link )	{
 
 //		console.log( "down event: " + JSON.stringify( event, null, 2 ) ); // bupkis
@@ -447,34 +487,19 @@ function update_simulation( sim, graph )	{
 		d3.select( this )
 			.transition()
 			.duration( 1000 )
-			.attr( "stroke-width", 2.0 );
+			.attr( "stroke-width", 2.0 )
+			.attr( "stroke-opacity", d => 0.2 )
+			;
 	}
-	function mousedown( event, node )	{
+	function mousedblclick_link( event, link )	{
 
-//		console.log( "drag start event: " + JSON.stringify( event, null, 2 ) ); // bupkis
-//		console.log( "down node: " + JSON.stringify( node, null, 2 ) );
-
-		let rad = degree_to_radius( node.adjacent.length, graph.max_degree );
-		d3.select( this )
-			.attr( "stroke-width", d => 4.0 )
-			.attr( "r", 2 * rad )
-//			;
-//		d3.select( this )
-			.transition()
-			.duration( 1000 )
-			.attr( "stroke-width", d => 1.0 )
-			.attr( "r", rad );
-	}
-	function mousedblclick( event, node )	{
-
-		let rad = degree_to_radius( node.adjacent.length, graph.max_degree );
-//		d3.select( this )
-//			.attr( "stroke-width", d => 0.0 );
 		d3.select( this )
 			.transition()
-			.duration( 1000 )
-			.attr( "stroke-width", d => 0.0 )
-			.attr( "r", 2 * rad );
+			.duration( 500 )
+			.attr( "stroke", "#000" )
+			.attr( "stroke-width", d => 5.0 )
+			.attr( "stroke-opacity", d => 1.0 )
+			;
 	}
 
 	function dragstarted( event, node ) {
@@ -504,7 +529,7 @@ function update_simulation( sim, graph )	{
 
 ///////////////////////////////////////////////////////////////////////
 
-function create_sim_engine( width, height, plot_div_id )	{
+function create_simulation( width, height, plot_div_id )	{
 
 	let svg = d3.select( "#" + plot_div_id )
 		.append( "svg" )
@@ -523,7 +548,7 @@ function create_sim_engine( width, height, plot_div_id )	{
 	return( sim );
 }
 
-function init_sim_engine( sim, hist, graph )	{
+function init_simulation( sim, hist, graph )	{
 
 	sim.reset = true;
 	if( sim.timeout ) sim.timeout.stop();
@@ -533,7 +558,7 @@ function init_sim_engine( sim, hist, graph )	{
 
 	sim.links = sim.svg.append( "g" )
 		.attr( "stroke", d => "#000" )
-//		.attr( "stroke-opacity", d => 0.2 )
+//		.attr( "stroke-opacity", d => 0.2 ) // subject to transition
 //		.attr( "stroke-width", d => 2.0 )
 		.selectAll( "line" );
 
@@ -626,24 +651,44 @@ function create_histogram( W, H, histo_div_id )	{
 		svg,
 		width,
 		height,
+		accum: [],
 		xaxis: null,
-		yaxis: null
+		yaxis: null,
+		path: null
 	};
 	return( hist );
 }
 
-function init_histogram( hist, data_arr, num_buckets )	{
+function accumulate_bins( bins, accum )	{
+
+
+	while( accum.length < bins.length ) accum.push( 0 );
+
+	for( let i=0; i< bins.length; i++ )	{
+		accum[ i ] += bins[ i ].length;
+	}
+//console.log( accum );
+
+	return( accum );
+}
+
+function init_histogram( hist, degrees, num_buckets )	{
 
 	if( hist.xaxis ) hist.xaxis.remove();
 	if( hist.yaxis ) hist.yaxis.remove();
+	if( hist.path ) hist.path.remove();
 
 	let X_scale = d3.scaleLinear()
 		.domain( [ 0, num_buckets + 1 ] )
-		.range( [ 0, hist.width ] );
+//		.domain( [ -0.5, num_buckets + 0.5 ] )
+		.range( [ 0, hist.width ] )
+		;
 
+if( 0 )	{
 	hist.xaxis = hist.svg.append( "g" )
 		.attr( "transform", "translate(0," + hist.height + ")" )
-		.call( d3.axisBottom( X_scale ) );
+		.call( d3.axisBottom( X_scale ).ticks( 5 ) );
+}
 
 	let histogram = d3.histogram()
 		.value(
@@ -651,10 +696,16 @@ function init_histogram( hist, data_arr, num_buckets )	{
 				return element;
 			}
 		)
-		.domain( X_scale.domain() )  // then the domain of the graphic
-		.thresholds( X_scale.ticks( num_buckets + 1 ) ); // then the numbers of bins
+//		.domain( X_scale.domain() )  // then the domain of the graphic
+		.domain( [ 0, num_buckets + 1 ] )
+		.thresholds( num_buckets ); // X_scale.ticks( num_buckets ) ); // then the numbers of bins
 
-	let bins = histogram( data_arr );
+//console.log( JSON.stringify( X_scale.domain(), null, 2 ) );
+
+//console.log( degrees );
+	let bins = histogram( degrees );
+//console.log( bins );
+
 
 	let Y_scale = d3.scaleLinear()
 		.domain(
@@ -665,10 +716,12 @@ function init_histogram( hist, data_arr, num_buckets )	{
 		)
 		.range( [ hist.height, 0 ] );
 
+if( 0 )	{
 	hist.yaxis = hist.svg.append( "g" )
-		.call( d3.axisLeft( Y_scale ) );
+		.call( d3.axisLeft( Y_scale ).ticks( 5 ) );
+}
 
-	hist.svg.selectAll("rect")
+	hist.svg.selectAll( "rect" )
 		.data( bins )
 		.join( "rect" )
 		.attr( "x", 1 )
@@ -690,12 +743,41 @@ function init_histogram( hist, data_arr, num_buckets )	{
 				return( hist.height - Y_scale( d.length ) );
 			}
 		)
-//		.style( "fill", "#69b3a2" ); // map from degree here
-		.style( "fill",
+		.attr( "fill",
 			d => d3.interpolateTurbo(
 				degree_to_value( d.length ? d[ 0 ] : 0, num_buckets )
 			)
 		);
+
+	hist.accum = accumulate_bins( bins, hist.accum );
+
+	let max = 1; // in case of no data
+	for( let i=0; i< hist.accum.length; i++ )	{
+
+		if( max < hist.accum[ i ] ) max = hist.accum[ i ];
+	}
+
+	let norm = [];
+	for( let i=0; i< hist.accum.length; i++ )	{
+
+		norm.push( [ i, hist.accum[ i ] / max ] );
+	}
+
+	hist.path = hist.svg.append( "path" )
+        .datum( norm ) // single selection
+			.attr( "class", "line" )
+			.attr( "d", d3.line()
+				.curve( d3.curveLinear )
+				.x( d => X_scale( d[ 0 ] + 0.5 ) )
+				.y( d => hist.height - d[ 1 ] * hist.height )
+			)
+			.attr( "fill", "none" )
+//			.attr( "stroke-dasharray", ( "3, 3" ) )
+//			.attr( "stroke", "#bbb" )
+//			.attr( "stroke-width", 3 );
+			.attr( "stroke-dasharray", ( "2, 2" ) )
+			.attr( "stroke", "#000" )
+			.attr( "stroke-width", 2 );
 }
 
 ///////////////////////////////////////////////////////////////////////
