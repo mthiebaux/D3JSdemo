@@ -240,8 +240,8 @@ function test_graph_sim( log_id, graph_id, histo_id )	{
 		num_nodes = 64;
 	}
 	else
-	if( 0 )	{
-		max_degree = 12;
+	if( 1 )	{
+		max_degree = 16;
 		num_nodes = 128;
 	}
 	else
@@ -259,7 +259,8 @@ function test_graph_sim( log_id, graph_id, histo_id )	{
 	}
 
 	let sim = create_simulation( 600, 600, graph_plot_id );
-	let hist = create_histogram( 300, 150, histo_plot_id );
+	let hist = create_histogram( 300, 100, histo_plot_id );
+//	let hist = create_histogram( 300, 100, graph_plot_id );
 
 	init_simulation( sim, hist, graph );
 	init_histogram( hist, graph.degrees, graph.max_degree );
@@ -457,7 +458,7 @@ function update_simulation( sim, graph )	{
 //		console.log( "drag start event: " + JSON.stringify( event, null, 2 ) ); // bupkis
 //		console.log( "down node: " + JSON.stringify( node, null, 2 ) );
 
-		console.log( "node index: " + node.index );
+//		console.log( "node index: " + node.index );
 
 		let rad = degree_to_radius( node.adjacent.length, graph.max_degree );
 		d3.select( this )
@@ -634,7 +635,26 @@ function init_simulation( sim, hist, graph )	{
 ///////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////
 
-function create_histogram( W, H, histo_div_id )	{
+function create_histogram( width, height, histo_div_id )	{
+
+	let svg = d3.select( "#" + histo_div_id )
+		.append( "svg" )
+		.attr( "width", width )
+		.attr( "height", height );
+
+	let hist = {
+		svg,
+		width,
+		height,
+		accum: [],
+		xaxis: null,
+		yaxis: null,
+		path: null
+	};
+	return( hist );
+}
+
+function create_histogram_ticks( W, H, histo_div_id )	{
 
 	let margin = { left: 30, right: 10, top: 5, bottom: 30 };
 	let width = W - margin.left - margin.right;
@@ -680,11 +700,92 @@ function init_histogram( hist, degrees, num_buckets )	{
 
 	let X_scale = d3.scaleLinear()
 		.domain( [ 0, num_buckets + 1 ] )
+		.range( [ 0, hist.width ] );
+
+	let histogram = d3.histogram()
+		.value(
+			function( element, index, data ) {
+				return element;
+			}
+		)
+		.domain( [ 0, num_buckets + 1 ] )
+		.thresholds( num_buckets );
+
+	let bins = histogram( degrees );
+
+	let Y_scale = d3.scaleLinear()
+		.domain( [ 0, d3.max( bins, (d) => d.length ) ] )
+		.range( [ hist.height, 0 ] );
+
+	hist.svg.selectAll( "rect" )
+		.data( bins )
+		.join( "rect" )
+			.attr( "x", 1 )
+			.attr( "transform",
+				function( d ) {
+					return "translate(" + X_scale( d.x0 ) + "," + Y_scale( d.length ) + ")";
+				}
+			)
+			.attr( "width",
+				function( d ) {
+					if( d.x1 > d.x0 )	{
+						return( X_scale( d.x1 ) - X_scale( d.x0 ) - 1 );
+					}
+					return( 0 );
+				}
+			)
+			.attr( "height",
+				function( d ) {
+					return( hist.height - Y_scale( d.length ) );
+				}
+			)
+			.attr( "fill",
+				d => d3.interpolateTurbo(
+					degree_to_value( d.length ? d[ 0 ] : 0, num_buckets )
+				)
+			);
+
+	hist.accum = accumulate_bins( bins, hist.accum );
+
+	let max = 1; // in case of no data
+	for( let i=0; i< hist.accum.length; i++ )	{
+
+		if( max < hist.accum[ i ] ) max = hist.accum[ i ];
+	}
+
+	let norm = [];
+	for( let i=0; i< hist.accum.length; i++ )	{
+
+		norm.push( [ i, hist.accum[ i ] / max ] );
+	}
+
+	hist.path = hist.svg.append( "path" )
+        .datum( norm ) // single selection
+			.attr( "class", "line" )
+			.attr( "d", d3.line()
+				.curve( d3.curveLinear )
+				.x( d => X_scale( d[ 0 ] + 0.5 ) ) // mid top of bar, zero indexing
+				.y( d => hist.height - d[ 1 ] * hist.height )
+			)
+			.attr( "fill", "none" )
+			.attr( "stroke-dasharray", ( "2, 5" ) )
+			.attr( "stroke", "#000" )
+			.attr( "stroke-width", 2 );
+}
+
+function init_histogram_ticks( hist, degrees, num_buckets )	{
+
+	if( hist.xaxis ) hist.xaxis.remove();
+	if( hist.yaxis ) hist.yaxis.remove();
+	if( hist.path ) hist.path.remove();
+
+	let X_scale = d3.scaleLinear()
+		.domain( [ 0, num_buckets + 1 ] )
 //		.domain( [ -0.5, num_buckets + 0.5 ] )
 		.range( [ 0, hist.width ] )
 		;
 
-if( 0 )	{
+if( 1 )	{
 	hist.xaxis = hist.svg.append( "g" )
 		.attr( "transform", "translate(0," + hist.height + ")" )
 		.call( d3.axisBottom( X_scale ).ticks( 5 ) );
@@ -716,7 +817,7 @@ if( 0 )	{
 		)
 		.range( [ hist.height, 0 ] );
 
-if( 0 )	{
+if( 1 )	{
 	hist.yaxis = hist.svg.append( "g" )
 		.call( d3.axisLeft( Y_scale ).ticks( 5 ) );
 }
