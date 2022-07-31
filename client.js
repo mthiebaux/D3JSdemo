@@ -215,6 +215,32 @@ function build_test_graph()	{
 	};
 }
 
+function build_seed_graph( n = 16, w = 2 )	{
+
+	let D = new Array( n ).fill( w * w );
+	let A = [];
+	for( let i=0; i< n; i++ )	{
+		A.push( { adjacent: [] } );
+		for( let j=0; j< w; j++ )	{
+			A[ i ].adjacent.push( ( i + j + 1 ) % n );
+		}
+	}
+	let L = [];
+	for( let i=0; i< n; i++ )	{
+		for( let j=0; j< w; j++ )	{
+			let [ s, t ] = [ i,( i + j + 1 ) % n ].sort( ( a, b ) => a - b );
+			L.push( { source: s, target: t } );
+//			L.push( { source: i, target: ( i + j + 1 ) % n } );
+		}
+	}
+	return {
+		max_degree: 20,
+		degrees: D,
+		nodes: A,
+		links: L
+	};
+}
+
 function test_graph_sim( log_id, graph_id, histo_id )	{
 
 	output_log_id = log_id;
@@ -254,7 +280,13 @@ function test_graph_sim( log_id, graph_id, histo_id )	{
 
 	if( 0 )	{
 		graph = build_test_graph();
-	} else {
+	} else
+	if( 0 ) {
+		graph = build_seed_graph( 128, 2 );
+//		graph = build_seed_graph( 12, 3 );
+//		console.log( JSON.stringify( graph, null, 2 ) );
+	} else
+	{
 		graph = build_power_graph( num_nodes, min_degree, max_degree );
 	}
 
@@ -273,7 +305,7 @@ function test_graph_sim( log_id, graph_id, histo_id )	{
 			graph = build_power_graph( N, min_degree, max_degree );
 
 			init_simulation( sim, hist, graph );
-			init_histogram( hist, graph.degrees, graph.max_degree );
+			init_histogram( hist, graph.degrees, graph.max_degree, true );
 		}
 	);
 }
@@ -443,7 +475,7 @@ function update_simulation( sim, graph )	{
 				.on( "dblclick", mousedblclick_link )
 				.attr( "stroke-width", d => 0.0 )
 				.attr( "stroke-opacity", d => 0.0 )
-				.transition().duration( 1000 )
+				.transition().duration( 200 )
 				.attr( "stroke-width", d => 2.0 )
 				.attr( "stroke-opacity", d => 0.2 )
 
@@ -672,8 +704,8 @@ function create_histogram_ticks( W, H, histo_div_id )	{
 		width,
 		height,
 		accum: [],
-		xaxis: null,
-		yaxis: null,
+//		xaxis: null,
+//		yaxis: null,
 		path: null
 	};
 	return( hist );
@@ -692,10 +724,13 @@ function accumulate_bins( bins, accum )	{
 	return( accum );
 }
 
-function init_histogram( hist, degrees, num_buckets )	{
+function init_histogram( hist, degrees, num_buckets, reset_history = false )	{
 
-	if( hist.xaxis ) hist.xaxis.remove();
-	if( hist.yaxis ) hist.yaxis.remove();
+	if( reset_history )
+		hist.accum = [];
+
+//	if( hist.xaxis ) hist.xaxis.remove();
+//	if( hist.yaxis ) hist.yaxis.remove();
 	if( hist.path ) hist.path.remove();
 
 	let X_scale = d3.scaleLinear()
@@ -768,9 +803,9 @@ function init_histogram( hist, degrees, num_buckets )	{
 				.y( d => hist.height - d[ 1 ] * hist.height )
 			)
 			.attr( "fill", "none" )
-			.attr( "stroke-dasharray", ( "2, 5" ) )
 			.attr( "stroke", "#000" )
-			.attr( "stroke-width", 2 );
+			.attr( "stroke-dasharray", ( "3, 6" ) )
+			.attr( "stroke-width", 3 );
 }
 
 function init_histogram_ticks( hist, degrees, num_buckets )	{
