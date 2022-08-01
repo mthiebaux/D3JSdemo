@@ -65,10 +65,15 @@ function init_simulation( sim, graph )	{
 					.attr( "x2", d => d.target.x )
 					.attr( "y2", d => d.target.y );
 				sim.nodes
-					.attr( "cx", d => ( d.x + 0.0 ) ) // bug appears here !!
-					.attr( "cy", d => ( d.y + 0.0 ) )
+					.attr( "cx", d => d.x ) // bug appears here !!
+					.attr( "cy", d => d.y )
+//					.attr( "cx", d => ( 0 + d.x ) ) // bug appears here !!
+//					.attr( "cy", d => ( 0 + d.y ) )
+
 //					.attr( "cx", d => ( d.x + 0.000000001 ) ) // fixed!
 //					.attr( "cy", d => ( d.y + 0.000000001 ) )
+//					.attr( "cx", d => d.x.toFixed( 100 ) )
+//					.attr( "cy", d => d.y.toFixed( 100 ) ) // Safari browser patch
 				;
 			}
 		);

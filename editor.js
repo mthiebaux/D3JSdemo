@@ -226,13 +226,13 @@ function init_simulation( sim, graph )	{
 		.on( "tick",
 			() => {
 				sim.links
-					.attr( "x1", d => d.source.x )
-					.attr( "y1", d => d.source.y )
-					.attr( "x2", d => d.target.x )
-					.attr( "y2", d => d.target.y );
+					.attr( "x1", d => d.source.x.toFixed( 100 ) )
+					.attr( "y1", d => d.source.y.toFixed( 100 ) )
+					.attr( "x2", d => d.target.x.toFixed( 100 ) )
+					.attr( "y2", d => d.target.y.toFixed( 100 ) );
 				sim.nodes
-					.attr( "cx", d => d.x + 0.00001 ) // this prevents a 'near-zero' bug
-					.attr( "cy", d => d.y + 0.00001 );
+					.attr( "cx", d => d.x.toFixed( 100 ) )
+					.attr( "cy", d => d.y.toFixed( 100 ) ) // Safari browser patch
 			}
 		);
 
@@ -245,9 +245,6 @@ function update_simulation( sim, graph )	{
 	d3.select( "#action_button" ).on(
 		"mousedown",
 		function( event )	{
-
-//console.log( "action: " + JSON.stringify( sim.edit_link ) );
-//console.log( "action: " + sim.edit_link.html );
 
 			if( sim.select_link >= 0 )	{
 
