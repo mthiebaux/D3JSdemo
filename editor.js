@@ -31,8 +31,8 @@ function build_ring_graph_naked( n, w )	{
 	for( let i=0; i< n; i++ )	{
 		N.push( {} );
 	}
-	let L = [];
 
+	let L = [];
 	for( let i=0; i< n; i++ )	{
 		for( let j=0; j< w; j++ )	{
 
@@ -156,7 +156,7 @@ function test_graph_sim( log_id, graph_plot_id )	{
 
 	let graph = {};
 	if( 1 )	{
-		graph = build_ring_graph_naked( 12, 2 );
+		graph = build_ring_graph_naked( 16, 3 );
 //		graph = build_ring_graph_naked( 2, 0 );
 		print_graph_naked( graph );
 	}
