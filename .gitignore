@@ -1,3 +1,4 @@
-./dump/
-./hold/
 .DS_store
+
+dump/
+hold/

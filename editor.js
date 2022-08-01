@@ -13,6 +13,16 @@ function output_log_response( s )	{
 	log_area.scrollTop = log_area.scrollHeight;
 }
 
+function log( o )	{
+
+	output_log_response( JSON.stringify( o, null, 2 ) );
+}
+
+function clog( o )	{
+
+	console.log( JSON.stringify( o, null, 2 ) );
+}
+
 ///////////////////////////////////////////////////////////////////////
 
 function build_ring_graph_naked( n, w )	{
@@ -241,45 +251,6 @@ function init_simulation( sim, graph )	{
 
 function update_simulation( sim, graph )	{
 
-
-	d3.select( "#action_button" ).on(
-		"mousedown",
-		function( event )	{
-
-			if( sim.select_link >= 0 )	{
-
-				graph.links.splice( sim.select_link, 1 );
-				sim.select_link = -1;
-
-				update_simulation( sim, graph );
-			}
-			if( sim.select_node >= 0 )	{
-
-				let remove = [];
-				for( let i=0; i< graph.links.length; i++ )	{
-
-					if(
-						graph.links[ i ].source.index == sim.select_node ||
-						graph.links[ i ].target.index == sim.select_node
-					)	{
-						remove.push( i );
-					}
-				}
-
-				// start from far end for multiple splice
-				for( let i= remove.length - 1; i >= 0; i-- )	{
-
-					graph.links.splice( remove[ i ], 1 );
-				}
-
-				graph.nodes.splice( sim.select_node, 1 );
-				sim.select_node = -1;
-
-				update_simulation( sim, graph );
-			}
-		}
-	);
-
 	sim.engine.stop();
 
 	sim.nodes = sim.nodes
@@ -325,7 +296,48 @@ function update_simulation( sim, graph )	{
 	sim.engine.force( "link" ).links( graph.links );
 	sim.engine.alphaTarget( 0.1 ).restart();
 
-	function mousedown_node( event, node )	{
+
+	d3.select( "#action_button" ).on(
+		"mousedown",
+		function( event )	{
+
+			// delete selected links first, and then nodes
+
+			if( sim.select_link >= 0 )	{
+
+				graph.links.splice( sim.select_link, 1 );
+				sim.select_link = -1;
+
+				update_simulation( sim, graph );
+			}
+
+			if( sim.select_node >= 0 )	{
+
+				let remove = [];
+				for( let i=0; i< graph.links.length; i++ )	{
+					if(
+						graph.links[ i ].source.index == sim.select_node ||
+						graph.links[ i ].target.index == sim.select_node
+					)	{
+						remove.push( i );
+					}
+				}
+				// start from far end for multiple splice
+
+				for( let i= remove.length - 1; i >= 0; i-- )	{
+					graph.links.splice( remove[ i ], 1 );
+				}
+
+				graph.nodes.splice( sim.select_node, 1 );
+				sim.select_node = -1;
+
+				update_simulation( sim, graph );
+			}
+		}
+	);
+
+
+	function mousedown_node( event, node )	{ //// NODE
 
 //		console.log( "drag start event: " + JSON.stringify( event, null, 2 ) ); // bupkis
 //		console.log( "down node: " + JSON.stringify( node, null, 2 ) );
@@ -346,19 +358,32 @@ function update_simulation( sim, graph )	{
 
 		sim.nodes
 			.attr( "stroke-width", 1.0 );
-
-
 		d3.select( this )
 			.attr( "stroke-width", d => 2.0 )
 
+		log( node );
+		clog( node );
+		log( "node: " + node.index );
+		clog( "node: " + node.index );
 		console.log( "node: " + node.index );
 		sim.select_node = node.index;
 	}
-	function mousedown_link( event, link )	{
+
+	function mousedown_link( event, link )	{ //// LINK
 
 //		console.log( "down event: " + JSON.stringify( event, null, 2 ) ); // bupkis
 //		console.log( "down link: " + JSON.stringify( link, null, 2 ) );
 //		console.log( this );
+
+		if( sim.select_link == link.index )	{
+
+			d3.select( this )
+				.attr( "stroke", "#777" )
+				.attr( "stroke-width", 2.0 );
+
+			sim.select_link = -1;
+			return;
+		}
 
 		sim.select_node = -1;
 		sim.nodes
@@ -367,11 +392,11 @@ function update_simulation( sim, graph )	{
 		sim.links
 			.attr( "stroke", "#777" )
 			.attr( "stroke-width", 2.0 );
-
 		d3.select( this )
 			.attr( "stroke", "#000" )
 			.attr( "stroke-width", 4.0 );
 
+		log( "link: " + link.index + " [ " + link.source.index + ", " + link.target.index + " ]" );
 		console.log( "link: " + link.index + " [ " + link.source.index + ", " + link.target.index + " ]" );
 		sim.select_link = link.index;
 	}

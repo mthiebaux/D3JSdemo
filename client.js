@@ -215,30 +215,90 @@ function build_test_graph()	{
 	};
 }
 
-function build_seed_graph( n = 16, w = 2 )	{
+function build_ring_graph( n, w )	{
 
-	let D = new Array( n ).fill( w * w );
-	let A = [];
+	let D = new Array( n ).fill( 2 * w );
+
+	let N = [];
 	for( let i=0; i< n; i++ )	{
-		A.push( { adjacent: [] } );
-		for( let j=0; j< w; j++ )	{
-			A[ i ].adjacent.push( ( i + j + 1 ) % n );
-		}
+		N.push( { adjacent: [] } );
 	}
 	let L = [];
+
 	for( let i=0; i< n; i++ )	{
 		for( let j=0; j< w; j++ )	{
-			let [ s, t ] = [ i,( i + j + 1 ) % n ].sort( ( a, b ) => a - b );
+
+			let k = ( i + j + 1 ) % n;
+
+			N[ i ].adjacent.push( k );
+			N[ k ].adjacent.push( i );
+
+			let [ s, t ] = [ i, k ].sort( ( a, b ) => a - b );
 			L.push( { source: s, target: t } );
-//			L.push( { source: i, target: ( i + j + 1 ) % n } );
 		}
 	}
+
 	return {
 		max_degree: 20,
 		degrees: D,
-		nodes: A,
+		nodes: N,
 		links: L
 	};
+}
+
+function build_ring_graph_expanded( n, w )	{
+
+	let D = new Array( n ).fill( 2 * w );
+
+	let N = [];
+	for( let i=0; i< n; i++ )	{
+		N.push( { adjacent: [], index: i } );
+	}
+	let L = [];
+
+	for( let i=0; i< n; i++ )	{
+		for( let j=0; j< w; j++ )	{
+
+			let k = ( i + j + 1 ) % n;
+
+			N[ i ].adjacent.push( k );
+			N[ k ].adjacent.push( i );
+
+			let [ s, t ] = [ i, k ].sort( ( a, b ) => a - b );
+			L.push( { source: N[ s ], target: N[ t ], index: i } );
+		}
+	}
+
+	return {
+		max_degree: 20,
+		degrees: D,
+		nodes: N,
+		links: L
+	};
+}
+
+function print_graph( G )	{
+
+	console.log( "degrees: [ " + G.degrees + " ]" );
+
+	for( let i=0; i< G.nodes.length; i++ )	{
+		console.log( "nodes: " + i + " [ " + G.nodes[ i ].adjacent + " ]" );
+	}
+	for( let i=0; i< G.links.length; i++ )	{
+		console.log( "links: " + i + " [ " + G.links[ i ].source + ", " + G.links[ i ].target + " ]" );
+	}
+}
+
+function print_graph_expanded( G )	{
+
+	console.log( "degrees: [ " + G.degrees + " ]" );
+
+	for( let i=0; i< G.nodes.length; i++ )	{
+		console.log( "nodes: " + i + " [ " + G.nodes[ i ].adjacent + " ] " + G.nodes[ i ].index );
+	}
+	for( let i=0; i< G.links.length; i++ )	{
+		console.log( "links: " + i + " [ " + G.links[ i ].source.index + ", " + G.links[ i ].target.index + " ] " + G.links[ i ].index );
+	}
 }
 
 function test_graph_sim( log_id, graph_id, histo_id )	{
@@ -281,10 +341,17 @@ function test_graph_sim( log_id, graph_id, histo_id )	{
 	if( 0 )	{
 		graph = build_test_graph();
 	} else
-	if( 0 ) {
-		graph = build_seed_graph( 128, 2 );
-//		graph = build_seed_graph( 12, 3 );
-//		console.log( JSON.stringify( graph, null, 2 ) );
+	if( 1 ) {
+
+//		graph = build_ring_graph( 128, 2 );
+//		graph = build_ring_graph( 32, 3 );
+//		graph = build_ring_graph( 3, 1 );
+		graph = build_ring_graph_expanded( 3, 1 );
+
+		console.log( JSON.stringify( graph, null, 2 ) );
+//		print_graph( graph );
+		print_graph_expanded( graph );
+
 	} else
 	{
 		graph = build_power_graph( num_nodes, min_degree, max_degree );
@@ -306,6 +373,15 @@ function test_graph_sim( log_id, graph_id, histo_id )	{
 
 			init_simulation( sim, hist, graph );
 			init_histogram( hist, graph.degrees, graph.max_degree, true );
+		}
+	);
+
+	d3.select( "#step_button" ).on(
+		"mousedown",
+		function( event )	{
+
+			console.log( JSON.stringify( graph, null, 2 ) );
+			print_graph_expanded( graph );
 		}
 	);
 }
@@ -475,7 +551,8 @@ function update_simulation( sim, graph )	{
 				.on( "dblclick", mousedblclick_link )
 				.attr( "stroke-width", d => 0.0 )
 				.attr( "stroke-opacity", d => 0.0 )
-				.transition().duration( 200 )
+				.transition()
+				.duration( 200 )
 				.attr( "stroke-width", d => 2.0 )
 				.attr( "stroke-opacity", d => 0.2 )
 
@@ -490,7 +567,7 @@ function update_simulation( sim, graph )	{
 //		console.log( "drag start event: " + JSON.stringify( event, null, 2 ) ); // bupkis
 //		console.log( "down node: " + JSON.stringify( node, null, 2 ) );
 
-//		console.log( "node index: " + node.index );
+		console.log( "node: " + node.index );
 
 		let rad = degree_to_radius( node.adjacent.length, graph.max_degree );
 		d3.select( this )
@@ -514,6 +591,8 @@ function update_simulation( sim, graph )	{
 
 //		console.log( "down event: " + JSON.stringify( event, null, 2 ) ); // bupkis
 //		console.log( "down link: " + JSON.stringify( link, null, 2 ) );
+
+		console.log( "link: " + link.index + " [ " + link.source.index + ", " + link.target.index + " ]" );
 
 		d3.select( this )
 			.attr( "stroke-width", 8.0 );
@@ -609,13 +688,15 @@ function init_simulation( sim, hist, graph )	{
 		.on( "tick",
 			() => {
 				sim.links
-					.attr( "x1", d => d.source.x )
-					.attr( "y1", d => d.source.y )
-					.attr( "x2", d => d.target.x )
-					.attr( "y2", d => d.target.y );
+					.attr( "x1", d => d.source.x.toFixed( 100 ) )
+					.attr( "y1", d => d.source.y.toFixed( 100 ) )
+					.attr( "x2", d => d.target.x.toFixed( 100 ) )
+					.attr( "y2", d => d.target.y.toFixed( 100 ) )
+					;
 				sim.nodes
-					.attr( "cx", d => d.x )
-					.attr( "cy", d => d.y );
+					.attr( "cx", d => d.x.toFixed( 100 ) )
+					.attr( "cy", d => d.y.toFixed( 100 ) ) // Safari browser patch
+					;
 			}
 		);
 
