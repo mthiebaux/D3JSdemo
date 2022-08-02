@@ -696,6 +696,7 @@ function init_simulation( sim, hist, graph )	{
 		.force( "link", d3.forceLink() )
 		.force( "charge", d3.forceManyBody().strength( -50 ) )
 		.force( "center", d3.forceCenter( 0, 0 ) )
+		.force( "collision", d3.forceCollide().radius( (d) => d.radius ) )
 		.force( "x", d3.forceX( 0 ) )
 		.force( "y", d3.forceY( 0 ) )
 		.on( "tick",
