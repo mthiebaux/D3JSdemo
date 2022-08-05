@@ -134,8 +134,8 @@ function test_graph_sim( log_id, graph_plot_id )	{
 
 	let graph = {};
 
-//	graph = build_test_graph();
-	graph = build_ring_graph( n, w );
+	graph = build_test_graph();
+//	graph = build_ring_graph( n, w );
 
 	let sim = create_simulation( 300, 150, graph_plot_id );
 	init_simulation( sim, graph );
@@ -144,8 +144,8 @@ function test_graph_sim( log_id, graph_plot_id )	{
 		"mousedown",
 		function( event )	{
 
-//			graph = build_test_graph();
-			graph = build_ring_graph( n, w );
+			graph = build_test_graph();
+//			graph = build_ring_graph( n, w );
 
 			init_simulation( sim, graph );
 		}
@@ -164,16 +164,15 @@ function test_graph_sim( log_id, graph_plot_id )	{
 ///////////////////////////////////////////////////////////////////////
 
 /*
-	select 1 node:
-		del: delete node
 
-	select 2 nodes
-		del: delete nodes
-		add: make link if does not exist
+	add:
+		If no nodes are selected, add a new loose node.
+		If one is selected, add a new node and link to it.
+		If more are selected, link them together in order.
 
-	select links
-		del: delete links
-		add: no-op
+	del:
+		Delete all selected elements
+
 */
 
 ///////////////////////////////////////////////////////////////////////
@@ -240,6 +239,57 @@ function execute_graph_delete( graph, select_links, select_nodes )	{
 
 	graph.map = build_node_map( graph.nodes );
 //	return( edited );
+}
+
+///////////////////////////////////////////////////////////////////////
+
+function add_new_node( graph )	{
+
+	let new_id = 10; // 0; for testing
+	while( graph.map.has( new_id ) ) new_id++;
+	let new_i = graph.nodes.length;
+
+	graph.nodes.push( { id: new_id, adjacent: [] } );
+	graph.map.set( new_id, new_i );
+	graph.degrees.push( 0 );
+
+	return( new_i );
+}
+
+function add_new_link( graph, src_index, tgt_index )	{
+
+	let src_id = graph.nodes[ src_index ].id;
+	let tgt_id = graph.nodes[ tgt_index ].id ;
+
+	if( graph.nodes[ src_index ].adjacent.includes( tgt_id ) == false )	{
+
+		graph.nodes[ src_index ].adjacent.push( tgt_id );
+		graph.nodes[ tgt_index ].adjacent.push( src_id );
+
+		let [ s, t ] = [ src_id, tgt_id ].sort( ( a, b ) => a - b );
+		graph.links.push( { source: s, target: t } );
+
+		graph.degrees[ src_index ]++;
+		graph.degrees[ tgt_index ]++;
+	}
+}
+
+function execute_graph_add( graph, select_nodes )	{
+
+	if( select_nodes.length == 0 )	{
+		add_new_node( graph );
+	}
+
+	if( select_nodes.length == 1 )	{ // make new node, link
+		select_nodes.push( add_new_node( graph ) );
+	}
+
+	if( select_nodes.length > 1 )	{ // link nodes in order
+		for( let i=0; i< select_nodes.length - 1; i++ )	{
+
+			add_new_link( graph, select_nodes[ i ], select_nodes[ i + 1 ] );
+		}
+	}
 }
 
 ///////////////////////////////////////////////////////////////////////
@@ -396,6 +446,19 @@ function update_simulation( sim, graph )	{
 	sim.engine.nodes( graph.nodes )
 	sim.engine.force( "link" ).links( graph.links );
 	sim.engine.alphaTarget( 0.1 ).restart();
+
+	d3.select( "#add_button" ).on(
+		"mousedown",
+		function( event )	{
+
+			execute_graph_add( graph, sim.select_nodes );
+
+			sim.select_links = [];
+			sim.select_nodes = [];
+
+			update_simulation( sim, graph );
+		}
+	);
 
 	d3.select( "#delete_button" ).on(
 		"mousedown",
