@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+
+		<title> graph editor </title>
+
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+		<script src="https://d3js.org/d3.v7.min.js"></script>
+		<script src="./editor.js"></script>
+
+	</head>
+	<body>
+
+		<div class="page_header">
+
+			<h1> D3 Graph Editor </h1>
+
+		</div>
+
+		<div id="page_contents">
+
+			Initialize:
+			<p>
+			<input
+				type="button"
+				id="restart_simple_button"
+				value="simple">
+			<input
+				type="button"
+				id="restart_ring_button"
+				value="ring">
+			<input
+				type="button"
+				id="restart_chain_button"
+				value="chain">
+			<p>
+
+			Add:<br>
+				- If no nodes selected, add new loose node.<br>
+				- If one is selected, add new node and link to it.<br>
+				- If more are selected, link them together in order.
+			<p>
+			Del:<br>
+				- Remove all selected elements.
+			<p>
+
+			<input
+				type="button"
+				id="add_button"
+				value="add">
+			<input
+				type="button"
+				id="delete_button"
+				value="del">
+			<br>
+
+			<div id="graph_plot_div" style="border:1px solid lightgrey;">
+			</div>
+			<p>
+			<input
+				type="button"
+				id="print_button"
+				value="print">
+			<p>
+			<textarea id="output_log" readonly=true rows="10" cols="40"></textarea>
+			<p>
+
+		</div>
+
+		<div class="page_footer">
+			<p>
+			<em> © thiebaux 2022 </em>
+		</div>
+
+	</body>
+	<script type="text/javascript">
+
+		test_graph_editor( "output_log", "graph_plot_div" );
+
+	</script>
+
+</html>

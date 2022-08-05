@@ -36,17 +36,18 @@ function build_node_map( nodes )	{
 
 function build_test_graph()	{
 
-	let max_degree = 5;
+	let max_degree = 10;
 	let degrees = [ 1, 2, 1 ];
 	let nodes = [
-		{ id: 10, adjacent: [ 11 ] },
-		{ id: 11, adjacent: [ 10, 12 ] },
-		{ id: 12, adjacent: [ 11 ] }
+		{ id: 0, adjacent: [ 1 ] },
+		{ id: 1, adjacent: [ 0, 2 ] },
+		{ id: 2, adjacent: [ 1 ] },
+		{ id: 3, adjacent: [] }
 	];
 	let map = build_node_map( nodes );
 	let links = [
-		{ source: 10, target: 11 },
-		{ source: 11, target: 12 }
+		{ source: 0, target: 1 },
+		{ source: 1, target: 2 }
 	];
 
 	return {
@@ -65,8 +66,7 @@ function build_ring_graph( n, w )	{
 
 	let nodes = [];
 	for( let i=0; i< n; i++ )	{
-//		nodes.push( { id: i, adjacent: [] } );
-		nodes.push( { id: i + 10, adjacent: [] } );
+		nodes.push( { id: i, adjacent: [] } );
 	}
 	let map = build_node_map( nodes );
 
@@ -76,14 +76,11 @@ function build_ring_graph( n, w )	{
 
 			let k = ( i + j + 1 ) % n;
 
-//			nodes[ i ].adjacent.push( k );
-//			nodes[ k ].adjacent.push( i );
-			nodes[ i ].adjacent.push( k + 10 );
-			nodes[ k ].adjacent.push( i + 10 );
+			nodes[ i ].adjacent.push( k );
+			nodes[ k ].adjacent.push( i );
 
 			let [ s, t ] = [ i, k ].sort( ( a, b ) => a - b );
-//			links.push( { source: s, target: t } );
-			links.push( { source: s + 10, target: t + 10 } );
+			links.push( { source: s, target: t } );
 		}
 	}
 
@@ -124,29 +121,40 @@ function log_graph( G )	{
 
 ///////////////////////////////////////////////////////////////////////
 
-function test_graph_sim( log_id, graph_plot_id )	{
+// https://thiebaux.site44.com/D3JSdemo/editor.html
+
+function test_graph_editor( log_id, graph_plot_id )	{
 
 	output_log_id = log_id;
 
-	let n = 3, w = 1;
-//	let n = 6, w = 2;
-//	let n = 12, w = 2;
+	let graph = build_test_graph();
 
-	let graph = {};
-
-	graph = build_test_graph();
-//	graph = build_ring_graph( n, w );
-
-	let sim = create_simulation( 300, 150, graph_plot_id );
+	let sim = create_simulation( 200, 200, graph_plot_id );
 	init_simulation( sim, graph );
 
-	d3.select( "#restart_button" ).on(
+	d3.select( "#restart_simple_button" ).on(
 		"mousedown",
 		function( event )	{
 
 			graph = build_test_graph();
-//			graph = build_ring_graph( n, w );
+			init_simulation( sim, graph );
+		}
+	);
 
+	d3.select( "#restart_ring_button" ).on(
+		"mousedown",
+		function( event )	{
+
+			graph = build_ring_graph( 6, 1 );
+			init_simulation( sim, graph );
+		}
+	);
+
+	d3.select( "#restart_chain_button" ).on(
+		"mousedown",
+		function( event )	{
+
+			graph = build_ring_graph( 12, 2 );
 			init_simulation( sim, graph );
 		}
 	);
@@ -155,26 +163,12 @@ function test_graph_sim( log_id, graph_plot_id )	{
 		"mousedown",
 		function( event )	{
 
-//			print_graph( graph );
 			log_graph( graph );
 		}
 	);
 }
 
 ///////////////////////////////////////////////////////////////////////
-
-/*
-
-	add:
-		If no nodes are selected, add a new loose node.
-		If one is selected, add a new node and link to it.
-		If more are selected, link them together in order.
-
-	del:
-		Delete all selected elements
-
-*/
-
 ///////////////////////////////////////////////////////////////////////
 
 function collect_links( graph, node_index )	{
@@ -395,14 +389,14 @@ function update_simulation( sim, graph )	{
 				.attr( "stroke", d => "#000" )
 				.attr( "stroke-width", d => 1.0 )
 
-				.attr( "fill", d => extend_color_scheme( d.id ) )
-/*
+//				.attr( "fill", d => extend_color_scheme( d.id ) )
+///*
 				.attr( "fill",
 					d => d3.interpolateTurbo(
 						degree_to_value( d.adjacent.length, graph.max_degree )
 					)
 				)
-*/
+//*/
 				.attr( "r", d => 5.0 )
 				.on( "mousedown", mousedown_node )
 				.call(
@@ -414,14 +408,14 @@ function update_simulation( sim, graph )	{
 			,
 			update => update
 				.attr( "stroke-width", d => 1.0 )
-				.attr( "fill", d => extend_color_scheme( d.id ) )
-/*
+//				.attr( "fill", d => extend_color_scheme( d.id ) )
+///*
 				.attr( "fill",
 					d => d3.interpolateTurbo(
 						degree_to_value( d.adjacent.length, graph.max_degree )
 					)
 				)
-*/
+//*/
 			,
 			exit => exit
 				.remove()
@@ -432,12 +426,12 @@ function update_simulation( sim, graph )	{
 		.join(
 			enter => enter.append( "line" )
 				.attr( "stroke", d => "#999" )
-				.attr( "stroke-width", d => 2.0 )
+				.attr( "stroke-width", d => 3.0 )
 				.on( "mousedown", mousedown_link )
 			,
 			update => update
 				.attr( "stroke", d => "#999" )
-				.attr( "stroke-width", d => 2.0 )
+				.attr( "stroke-width", d => 3.0 )
 			,
 			exit => exit
 				.remove()
@@ -488,7 +482,7 @@ function update_simulation( sim, graph )	{
 		}
 
 		d3.select( this )
-			.attr( "stroke-width", 2.0 )
+			.attr( "stroke-width", 3.0 )
 
 		sim.select_nodes.push( node.index );
 
@@ -508,13 +502,13 @@ function update_simulation( sim, graph )	{
 			sim.select_links.splice( arr_i, 1 );
 			d3.select( this )
 				.attr( "stroke", "#999" )
-				.attr( "stroke-width", 2.0 );
+				.attr( "stroke-width", 3.0 );
 			return;
 		}
 
 		d3.select( this )
 			.attr( "stroke", "#000" )
-			.attr( "stroke-width", 4.0 );
+			.attr( "stroke-width", 5.0 );
 
 		sim.select_links.push( link.index );
 
