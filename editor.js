@@ -25,126 +25,100 @@ function clog( o )	{
 
 ///////////////////////////////////////////////////////////////////////
 
-function build_ring_graph_naked( n, w )	{
+function build_node_map( nodes )	{
 
-	let N = [];
-	for( let i=0; i< n; i++ )	{
-		N.push( {} );
+	let map = new Map();
+	for( let i=0; i< nodes.length; i++ )	{
+		map.set( nodes[ i ].id, i );
 	}
+	return( map );
+}
 
-	let L = [];
-	for( let i=0; i< n; i++ )	{
-		for( let j=0; j< w; j++ )	{
+function build_test_graph()	{
 
-			let k = ( i + j + 1 ) % n;
-
-			let [ s, t ] = [ i, k ].sort( ( a, b ) => a - b );
-			L.push( { source: s, target: t } );
-		}
-	}
+	let max_degree = 5;
+	let degrees = [ 1, 2, 1 ];
+	let nodes = [
+		{ id: 10, adjacent: [ 11 ] },
+		{ id: 11, adjacent: [ 10, 12 ] },
+		{ id: 12, adjacent: [ 11 ] }
+	];
+	let map = build_node_map( nodes );
+	let links = [
+		{ source: 10, target: 11 },
+		{ source: 11, target: 12 }
+	];
 
 	return {
-		nodes: N,
-		links: L
+		max_degree,
+		degrees,
+		map,
+		nodes,
+		links
 	};
 }
 
 function build_ring_graph( n, w )	{
 
-	let D = new Array( n ).fill( 2 * w );
+	let max_degree = 10;
+	let degrees = new Array( n ).fill( 2 * w );
 
-	let N = [];
+	let nodes = [];
 	for( let i=0; i< n; i++ )	{
-		N.push( { adjacent: [] } );
+//		nodes.push( { id: i, adjacent: [] } );
+		nodes.push( { id: i + 10, adjacent: [] } );
 	}
-	let L = [];
+	let map = build_node_map( nodes );
 
-	for( let i=0; i< n; i++ )	{
-		for( let j=0; j< w; j++ )	{
-
-			let k = ( i + j + 1 ) % n;
-
-			N[ i ].adjacent.push( k );
-			N[ k ].adjacent.push( i );
-
-			let [ s, t ] = [ i, k ].sort( ( a, b ) => a - b );
-			L.push( { source: s, target: t } );
-		}
-	}
-
-	return {
-		max_degree: 20,
-		degrees: D,
-		nodes: N,
-		links: L
-	};
-}
-
-function build_ring_graph_expanded( n, w )	{
-
-	let D = new Array( n ).fill( 2 * w );
-
-	let N = [];
-	for( let i=0; i< n; i++ )	{
-		N.push( { adjacent: [], index: i } );
-	}
-	let L = [];
-
+	let links = [];
 	for( let i=0; i< n; i++ )	{
 		for( let j=0; j< w; j++ )	{
 
 			let k = ( i + j + 1 ) % n;
 
-			N[ i ].adjacent.push( k );
-			N[ k ].adjacent.push( i );
+//			nodes[ i ].adjacent.push( k );
+//			nodes[ k ].adjacent.push( i );
+			nodes[ i ].adjacent.push( k + 10 );
+			nodes[ k ].adjacent.push( i + 10 );
 
 			let [ s, t ] = [ i, k ].sort( ( a, b ) => a - b );
-			L.push( { source: N[ s ], target: N[ t ], index: i } );
+//			links.push( { source: s, target: t } );
+			links.push( { source: s + 10, target: t + 10 } );
 		}
 	}
 
 	return {
-		max_degree: 20,
-		degrees: D,
-		nodes: N,
-		links: L
+		max_degree,
+		degrees,
+		map,
+		nodes,
+		links
 	};
-}
-
-///////////////////////////////////////////////////////////////////////
-
-function print_graph_naked( G )	{
-
-	for( let i=0; i< G.nodes.length; i++ )	{
-		console.log( "nodes: " + i + " : " + JSON.stringify( G.nodes[ i ] ) );
-	}
-	for( let i=0; i< G.links.length; i++ )	{
-		console.log( "links: " + i + " [ " + G.links[ i ].source + ", " + G.links[ i ].target + " ]" );
-	}
 }
 
 function print_graph( G )	{
 
-//	console.log( "degrees: [ " + G.degrees + " ]" );
-
+	console.log( "max_degree: " + G.max_degree );
+	console.log( "degrees: [ " + G.degrees + " ]" );
+	console.log( "map: ", [ ...( G.map.entries() ) ] );
 	for( let i=0; i< G.nodes.length; i++ )	{
-		console.log( "nodes: " + i + " [ " + G.nodes[ i ].adjacent + " ]" );
+		console.log( "nodes: " + G.nodes[ i ].id + " [ " + G.nodes[ i ].adjacent + " ] " );
 	}
 	for( let i=0; i< G.links.length; i++ )	{
-		console.log( "links: " + i + " [ " + G.links[ i ].source + ", " + G.links[ i ].target + " ]" );
+		console.log( "links: [ " + G.links[ i ].source + ", " + G.links[ i ].target + " ] " );
 	}
 }
 
-function print_graph_expanded( G )	{
+function log_graph( G )	{
 
-//	console.log( "degrees: [ " + G.degrees + " ]" );
-
+	log( "max_degree: " + G.max_degree );
+	log( "degrees: [ " + G.degrees + " ]" );
+	log( "map: " + JSON.stringify( [ ...( G.map.entries() ) ] ) );
 	for( let i=0; i< G.nodes.length; i++ )	{
-//		console.log( "nodes: " + i + " [ " + G.nodes[ i ].adjacent + " ] " + G.nodes[ i ].index );
-		console.log( "nodes: " + i + " : " + G.nodes[ i ].index );
+		log( "nodes: " + G.nodes[ i ].id + " [ " + G.nodes[ i ].adjacent + " ]" );
 	}
 	for( let i=0; i< G.links.length; i++ )	{
-		console.log( "links: " + i + " [ " + G.links[ i ].source.index + ", " + G.links[ i ].target.index + " ] " + G.links[ i ].index );
+		log( "links: [ " + G.links[ i ].source.id + ", " + G.links[ i ].target.id + " ]" );
 	}
 }
 
@@ -154,31 +128,24 @@ function test_graph_sim( log_id, graph_plot_id )	{
 
 	output_log_id = log_id;
 
+	let n = 3, w = 1;
+//	let n = 6, w = 2;
+//	let n = 12, w = 2;
+
 	let graph = {};
-	if( 1 )	{
-		graph = build_ring_graph_naked( 16, 3 );
-//		graph = build_ring_graph_naked( 2, 0 );
-		print_graph_naked( graph );
-	}
-	else
-	if( 1 )	{
-		graph = build_ring_graph( 3, 1 );
-		print_graph( graph );
-	}
-	else	{
-		graph = build_ring_graph_expanded( 3, 1 );
-		print_graph_expanded( graph );
-	}
+
+//	graph = build_test_graph();
+	graph = build_ring_graph( n, w );
 
 	let sim = create_simulation( 300, 150, graph_plot_id );
-
 	init_simulation( sim, graph );
 
 	d3.select( "#restart_button" ).on(
 		"mousedown",
 		function( event )	{
 
-			graph = build_ring_graph( 3, 1 );
+//			graph = build_test_graph();
+			graph = build_ring_graph( n, w );
 
 			init_simulation( sim, graph );
 		}
@@ -188,14 +155,94 @@ function test_graph_sim( log_id, graph_plot_id )	{
 		"mousedown",
 		function( event )	{
 
-//			console.log( JSON.stringify( graph, null, 2 ) );
-//			print_graph_naked( graph );
 //			print_graph( graph );
-			print_graph_expanded( graph );
+			log_graph( graph );
 		}
 	);
 }
 
+///////////////////////////////////////////////////////////////////////
+
+/*
+	select 1 node:
+		del: delete node
+
+	select 2 nodes
+		del: delete nodes
+		add: make link if does not exist
+
+	select links
+		del: delete links
+		add: no-op
+*/
+
+///////////////////////////////////////////////////////////////////////
+
+function collect_links( graph, node_index )	{
+
+	let links = [];
+	for( let i=0; i< graph.links.length; i++ )	{
+		if(
+			graph.links[ i ].source.index == node_index ||
+			graph.links[ i ].target.index == node_index
+		)	{
+			links.push( i );
+		}
+	}
+	return( links );
+}
+
+function detach_link( graph, link_index )	{
+
+	let src_i = graph.links[ link_index ].source.index;
+	let src_id = graph.links[ link_index ].source.id;
+
+	let tgt_i = graph.links[ link_index ].target.index;
+	let tgt_id = graph.links[ link_index ].target.id;
+
+	let src_adj_i = graph.nodes[ src_i ].adjacent.indexOf( tgt_id );
+	let tgt_adj_i = graph.nodes[ tgt_i ].adjacent.indexOf( src_id );
+
+	graph.nodes[ src_i ].adjacent.splice( src_adj_i, 1 );
+	graph.nodes[ tgt_i ].adjacent.splice( tgt_adj_i, 1 );
+}
+
+function execute_graph_delete( graph, select_links, select_nodes )	{
+
+	let link_set = new Set( select_links );
+	for( let i=0; i< select_nodes.length; i++ )	{
+
+		let arr = collect_links( graph, select_nodes[ i ] );
+		arr.forEach( l => link_set.add( l ) );
+	}
+
+	let link_arr = [ ...link_set ].sort( ( a, b ) => b - a  ); // descending
+	for( let i=0; i< link_arr.length; i++ )	{
+
+		detach_link( graph, link_arr[ i ] );
+	}
+	for( let i=0; i< link_arr.length; i++ )	{
+
+		graph.links.splice( link_arr[ i ], 1 );
+	}
+
+	select_nodes.sort( ( a, b ) => b - a ); // descending
+	for( let i=0; i< select_nodes.length; i++ )	{
+
+		graph.nodes.splice( select_nodes[ i ], 1 );
+	}
+
+	graph.degrees = [];
+	for( let i=0; i< graph.nodes.length; i++ )	{
+
+		graph.degrees.push( graph.nodes[ i ].adjacent.length );
+	}
+
+	graph.map = build_node_map( graph.nodes );
+//	return( edited );
+}
+
+///////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////
 
 function create_simulation( width, height, plot_div_id )	{
@@ -209,6 +256,10 @@ function create_simulation( width, height, plot_div_id )	{
 		engine: null,
 		nodes: null,
 		links: null,
+
+		// status:
+		select_nodes: [],
+		select_links: [],
 		select_node: -1,
 		select_link: -1
 	};
@@ -227,8 +278,13 @@ function init_simulation( sim, graph )	{
 	sim.nodes = sim.svg.append( "g" )
 		.selectAll( "circle" );
 
+	// ID-based link references: d3.forceLink().id( d => d.id )
+	// 	otherwise defaults to .index array offset
+	// https://groups.google.com/g/d3-js/c/LWuhBeEipz4
+
 	sim.engine = d3.forceSimulation()
-		.force( "link", d3.forceLink() )
+//		.force( "link", d3.forceLink() )
+		.force( "link", d3.forceLink().id( d => d.id ) )
 		.force( "charge", d3.forceManyBody().strength( -50 ) )
 		.force( "center", d3.forceCenter( 0, 0 ) )
 		.force( "x", d3.forceX( 0 ) )
@@ -249,6 +305,34 @@ function init_simulation( sim, graph )	{
 	update_simulation( sim, graph );
 }
 
+///////////////////////////////////////////////////////////////////////
+
+function degree_to_value( deg, max )	{
+
+	return( 0.1 + deg / max );
+}
+
+function value_to_radius( v )	{
+
+	return( 4 + 8 * v );
+}
+
+function degree_to_radius( deg, max )	{
+
+	return( value_to_radius( degree_to_value( deg, max ) ) );
+}
+
+// https://github.com/d3/d3-scale-chromatic/blob/main/README.md
+function extend_color_scheme( id )	{
+
+	let i = id % 32;
+	if( i < 10 ) return( d3.schemeCategory10[ i ] );
+	if( i < 20 ) return( d3.schemeTableau10[ i - 10 ] );
+	return( d3.schemeSet3[ i - 20 ] );
+}
+
+///////////////////////////////////////////////////////////////////////
+
 function update_simulation( sim, graph )	{
 
 	sim.engine.stop();
@@ -257,9 +341,18 @@ function update_simulation( sim, graph )	{
 		.data( graph.nodes )
 		.join(
 			enter => enter.append( "circle" )
-				.attr( "fill", d => "#48f" )
+
 				.attr( "stroke", d => "#000" )
 				.attr( "stroke-width", d => 1.0 )
+
+				.attr( "fill", d => extend_color_scheme( d.id ) )
+/*
+				.attr( "fill",
+					d => d3.interpolateTurbo(
+						degree_to_value( d.adjacent.length, graph.max_degree )
+					)
+				)
+*/
 				.attr( "r", d => 5.0 )
 				.on( "mousedown", mousedown_node )
 				.call(
@@ -271,6 +364,14 @@ function update_simulation( sim, graph )	{
 			,
 			update => update
 				.attr( "stroke-width", d => 1.0 )
+				.attr( "fill", d => extend_color_scheme( d.id ) )
+/*
+				.attr( "fill",
+					d => d3.interpolateTurbo(
+						degree_to_value( d.adjacent.length, graph.max_degree )
+					)
+				)
+*/
 			,
 			exit => exit
 				.remove()
@@ -280,12 +381,12 @@ function update_simulation( sim, graph )	{
 		.data( graph.links )
 		.join(
 			enter => enter.append( "line" )
-				.attr( "stroke", d => "#777" )
+				.attr( "stroke", d => "#999" )
 				.attr( "stroke-width", d => 2.0 )
 				.on( "mousedown", mousedown_link )
 			,
 			update => update
-				.attr( "stroke", d => "#777" )
+				.attr( "stroke", d => "#999" )
 				.attr( "stroke-width", d => 2.0 )
 			,
 			exit => exit
@@ -296,77 +397,40 @@ function update_simulation( sim, graph )	{
 	sim.engine.force( "link" ).links( graph.links );
 	sim.engine.alphaTarget( 0.1 ).restart();
 
-
-	d3.select( "#action_button" ).on(
+	d3.select( "#delete_button" ).on(
 		"mousedown",
 		function( event )	{
 
-			// delete selected links first, and then nodes
+			execute_graph_delete( graph, sim.select_links, sim.select_nodes );
 
-			if( sim.select_link >= 0 )	{
+			sim.select_links = [];
+			sim.select_nodes = [];
 
-				graph.links.splice( sim.select_link, 1 );
-				sim.select_link = -1;
-
-				update_simulation( sim, graph );
-			}
-
-			if( sim.select_node >= 0 )	{
-
-				let remove = [];
-				for( let i=0; i< graph.links.length; i++ )	{
-					if(
-						graph.links[ i ].source.index == sim.select_node ||
-						graph.links[ i ].target.index == sim.select_node
-					)	{
-						remove.push( i );
-					}
-				}
-				// start from far end for multiple splice
-
-				for( let i= remove.length - 1; i >= 0; i-- )	{
-					graph.links.splice( remove[ i ], 1 );
-				}
-
-				graph.nodes.splice( sim.select_node, 1 );
-				sim.select_node = -1;
-
-				update_simulation( sim, graph );
-			}
+			update_simulation( sim, graph );
 		}
 	);
-
 
 	function mousedown_node( event, node )	{ //// NODE
 
 //		console.log( "drag start event: " + JSON.stringify( event, null, 2 ) ); // bupkis
 //		console.log( "down node: " + JSON.stringify( node, null, 2 ) );
 
-		if( sim.select_node == node.index )	{
+		let arr_i = sim.select_nodes.indexOf( node.index );
+		if( arr_i != -1 )	{ // de-select
 
+			sim.select_nodes.splice( arr_i, 1 );
 			d3.select( this )
 				.attr( "stroke-width", 1.0 );
-
-			sim.select_node = -1;
 			return;
 		}
 
-		sim.select_link = -1;
-		sim.links
-			.attr( "stroke", "#777" )
-			.attr( "stroke-width", 2.0 );
-
-		sim.nodes
-			.attr( "stroke-width", 1.0 );
 		d3.select( this )
-			.attr( "stroke-width", d => 2.0 )
+			.attr( "stroke-width", 2.0 )
 
-		log( node );
-		clog( node );
-		log( "node: " + node.index );
-		clog( "node: " + node.index );
-		console.log( "node: " + node.index );
-		sim.select_node = node.index;
+		sim.select_nodes.push( node.index );
+
+//		console.log( "node: " + node.id + " [ " + node.adjacent + " ] " + node.index );
+		log( "node: " + node.id + " [ " + node.adjacent + " ] " + node.index );
 	}
 
 	function mousedown_link( event, link )	{ //// LINK
@@ -375,31 +439,26 @@ function update_simulation( sim, graph )	{
 //		console.log( "down link: " + JSON.stringify( link, null, 2 ) );
 //		console.log( this );
 
-		if( sim.select_link == link.index )	{
+		let arr_i = sim.select_links.indexOf( link.index );
+		if( arr_i != -1 )	{ // de-select
 
+			sim.select_links.splice( arr_i, 1 );
 			d3.select( this )
-				.attr( "stroke", "#777" )
+				.attr( "stroke", "#999" )
 				.attr( "stroke-width", 2.0 );
-
-			sim.select_link = -1;
 			return;
 		}
 
-		sim.select_node = -1;
-		sim.nodes
-			.attr( "stroke-width", 1.0 );
-
-		sim.links
-			.attr( "stroke", "#777" )
-			.attr( "stroke-width", 2.0 );
 		d3.select( this )
 			.attr( "stroke", "#000" )
 			.attr( "stroke-width", 4.0 );
 
-		log( "link: " + link.index + " [ " + link.source.index + ", " + link.target.index + " ]" );
-		console.log( "link: " + link.index + " [ " + link.source.index + ", " + link.target.index + " ]" );
-		sim.select_link = link.index;
+		sim.select_links.push( link.index );
+
+//		console.log( "link: [ " + link.source.id + ", " + link.target.id + " ] " + link.index );
+		log( "link: [ " + link.source.id + ", " + link.target.id + " ] " + link.index );
 	}
+
 
 	function dragstarted( event, node ) {
 

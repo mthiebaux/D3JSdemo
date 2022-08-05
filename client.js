@@ -431,10 +431,7 @@ function execute_auto_edit( graph, reset_balance = false )	{
 				graph.nodes[ src_id ].adjacent.splice( src_adj_id, 1 );
 				graph.nodes[ tgt_id ].adjacent.splice( tgt_adj_id, 1 );
 
-
-			// this is a risky maneuver:
 				graph.links.splice( r_link_id, 1 );
-
 
 				graph.degrees[ src_id ] = graph.nodes[ src_id ].adjacent.length;
 				graph.degrees[ tgt_id ] = graph.nodes[ tgt_id ].adjacent.length;;
@@ -665,6 +662,9 @@ function create_simulation( width, height, plot_div_id )	{
 		engine: null,
 		nodes: null,
 		links: null,
+
+		// status:
+
 		timeout: null,
 		auto: false,
 		ival: 1000,
@@ -696,7 +696,7 @@ function init_simulation( sim, hist, graph )	{
 		.force( "link", d3.forceLink() )
 		.force( "charge", d3.forceManyBody().strength( -50 ) )
 		.force( "center", d3.forceCenter( 0, 0 ) )
-		.force( "collision", d3.forceCollide().radius( (d) => d.radius ) )
+		.force( "collision", d3.forceCollide().radius( (d) => d.radius ) ) // defaults to 1
 		.force( "x", d3.forceX( 0 ) )
 		.force( "y", d3.forceY( 0 ) )
 		.on( "tick",
