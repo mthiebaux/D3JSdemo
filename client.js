@@ -511,8 +511,6 @@ function degree_to_radius( deg, max )	{
 
 function update_simulation( sim, graph )	{
 
-// sim = { engine, nodes, links, ... };
-
 	sim.engine.stop();
 
 	sim.nodes = sim.nodes
@@ -658,6 +656,7 @@ function create_simulation( width, height, plot_div_id )	{
 			.attr( "viewBox", [ -width / 2, -height / 2, width, height ] );
 
 	let sim = {
+
 		svg,
 		engine: null,
 		nodes: null,

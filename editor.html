@@ -26,17 +26,23 @@
 			<input
 				type="button"
 				id="restart_simple_button"
-				value="simple">
+				value="simple"
+				style="color:black">
 			<input
 				type="button"
 				id="restart_ring_button"
-				value="ring">
+				value="ring"
+				style="color:black">
 			<input
 				type="button"
 				id="restart_chain_button"
-				value="chain">
+				value="chain"
+				style="color:black">
 			<p>
 
+			Links:<br>
+				- For each node selected, select its links.
+			<p>
 			Add:<br>
 				- If no nodes selected, add new loose node.<br>
 				- If one is selected, add new node and link to it.<br>
@@ -46,23 +52,31 @@
 				- Remove all selected elements.
 			<p>
 
-			<input
-				type="button"
-				id="add_button"
-				value="add">
-			<input
-				type="button"
-				id="delete_button"
-				value="del">
-			<br>
-
 			<div id="graph_plot_div" style="border:1px solid lightgrey;">
+				<input
+					type="button"
+					id="links_button"
+					value="links"
+					style="color:black">
+				<input
+					type="button"
+					id="add_button"
+					value="add"
+					style="color:black">
+				<input
+					type="button"
+					id="delete_button"
+					value="del"
+					style="color:black">
+				<br>
 			</div>
+
 			<p>
 			<input
 				type="button"
 				id="print_button"
-				value="print">
+				value="print"
+				style="color:black">
 			<p>
 			<textarea id="output_log" readonly=true rows="10" cols="40"></textarea>
 			<p>
@@ -77,7 +91,40 @@
 	</body>
 	<script type="text/javascript">
 
-		test_graph_editor( "output_log", "graph_plot_div" );
+		const view_obj = {
+
+			elements:	{
+				graphic:	"graph_plot_div",
+				simple:		"restart_simple_button",
+				ring: 		"restart_ring_button",
+				chain:		"restart_chain_button",
+				links:		"links_button",
+				add:		"add_button",
+				del:		"delete_button",
+				print:		"print_button",
+				log:		"output_log"
+			},
+			select( id )	{
+				return( "#" + this.elements[ id ] );
+			},
+
+			log_str( str )	{
+				let log_area = document.getElementById( this.elements[ "log" ] );
+				log_area.value += str;
+				log_area.value += '\n';
+				log_area.scrollTop = log_area.scrollHeight;
+			},
+			log( input )	{
+				if( typeof input === "string" )	{
+					this.log_str( input );
+				}
+				else	{
+					this.log_str( JSON.stringify( input, null, 2 ) );
+				}
+			}
+		};
+
+		test_graph_editor( view_obj );
 
 	</script>
 

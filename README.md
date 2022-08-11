@@ -36,3 +36,17 @@ Finally, I stress test the resulting code with a scalable, high performance set 
 
 * Live hosting at [thiebaux.site44.com](https://thiebaux.site44.com/D3JSdemo/editor.html)
 
+
+...
+Each node maintains a separate list of its neighbors (adjacency array), for ease of traversal. When a node is deleted, there is a lot of book-keeping to keep straight. We can’t just use the simplest graph representation typically used for a search task. We also need maintain a separate edge list curated for the D3 visualizer. To support deletion, each node must be referred to by unique name, rather than its position in the array. These are kept in a hash map.
+
+While testing degenerate cases, I discovered a rare error message streaming from the D3 force engine, dealing with numeric precision handling in the Safari browser. When you are down to two nodes and then delete one of them, after ten seconds the position coordinates of the remaining node fall under 1.0e-100, which can't be mapped from a numeric string to a raw number for the SVG element. Too close to zero without being zero. This can go unnoticed because *undefined* resolves to zero.
+
+
+
+
+
+
+
+
+

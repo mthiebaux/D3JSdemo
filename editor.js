@@ -1,28 +1,178 @@
 
 ///////////////////////////////////////////////////////////////////////
 
-let output_log_id = "";
+function log_graph( graph, view )	{
 
-function output_log_response( s )	{
+	view.log( "LOG: " );
+//	view.log( graph );
 
-	let log_area = document.getElementById( output_log_id );
-
-	log_area.value += s;
-	log_area.value += '\n';
-
-	log_area.scrollTop = log_area.scrollHeight;
+	view.log( "degrees: [ " + graph.degrees.join( ", " ) + " ]" );
+	view.log( "map: " + JSON.stringify( [ ...( graph.map.entries() ) ] ) );
+	for( let i=0; i< graph.nodes.length; i++ )	{
+		view.log( "nodes: " + graph.nodes[ i ].id + " [ " + graph.nodes[ i ].adjacent.join( ", " ) + " ]" );
+	}
+	for( let i=0; i< graph.links.length; i++ )	{
+		view.log( "links: [ " + graph.links[ i ].source.id + ", " + graph.links[ i ].target.id + " ]" );
+	}
 }
 
-function log( o )	{
+function create_graph_editor( view )	{
 
-	output_log_response( JSON.stringify( o, null, 2 ) );
+	let sim = create_simulation( view, 300, 300 );
+	let graph = build_test_graph();
+	let attr = attributes( 10 );
+
+	sim.init( graph, attr );
+	sim.update();
+
+	let editor = {
+		view,
+		attr,
+		graph,
+		sim
+	};
+	return( editor );
 }
 
-function clog( o )	{
+function test_graph_editor( view )	{
 
-	console.log( JSON.stringify( o, null, 2 ) );
+	let editor = create_graph_editor( view );
+	register_editor_events( editor );
 }
 
+///////////////////////////////////////////////////////////////////////
+
+function attributes( max_degree )	{
+
+	function ext( id )	{
+		// extended_color_scheme # 32
+		// https://github.com/d3/d3-scale-chromatic/blob/main/README.md
+		let i = id % 32;
+		if( i < 10 ) return( d3.schemeCategory10[ i ] );
+		if( i < 20 ) return( d3.schemeTableau10[ i - 10 ] );
+		return( d3.schemeSet3[ i - 20 ] );
+	}
+	function v2r( v )	{	// value to radius
+		return( 4 + 8 * v );
+	}
+	function d2v( deg, max )	{ // degree_to_value
+		return( 0.1 + deg / max );
+	}
+	function d2r( deg, max )	{ // degree to radius
+		return( v2r( d2v( deg, max ) ) );
+	}
+
+	let attr = {
+
+		node_border( node )	{
+			if( node.group == 1 ) return( 3.0 );
+			return( 1.0 );
+		},
+		node_radius( node )	{
+			return( d2r( node.adjacent.length, max_degree ) );
+		},
+		node_color( node )	{
+		//	if( node.group == 1 ) return(  );
+		//	return( ext( node.id ) );
+			return( d3.interpolateTurbo( d2v( node.adjacent.length, max_degree ) ) );
+		},
+		link_color( node )	{
+			if( node.group == 1 ) return( "#000" );
+			return( "#999" );
+		},
+		link_width( node )	{
+			if( node.group == 1 ) return( 4.0 );
+			return( 3.0 );
+		}
+	};
+	return( attr );
+}
+
+function register_editor_events( editor )	{
+
+	d3.select( editor.view.select( "simple" ) ).on(
+		"mousedown",
+		function( event )	{
+
+			editor.graph = build_test_graph();
+			editor.sim.init( editor.graph, editor.attr );
+			editor.sim.update();
+		}
+	);
+	d3.select( editor.view.select( "ring" ) ).on(
+		"mousedown",
+		function( event )	{
+
+			editor.graph = build_ring_graph( 6, 1 );
+			editor.sim.init( editor.graph, editor.attr );
+			editor.sim.update();
+		}
+	);
+	d3.select( editor.view.select( "chain" ) ).on(
+		"mousedown",
+		function( event )	{
+
+			editor.graph = build_ring_graph( 12, 2 );
+			editor.sim.init( editor.graph, editor.attr );
+			editor.sim.update();
+		}
+	);
+
+	function ungroup( arr )	{
+		for( let i=0; i< arr.length; i++ )	{
+			arr[ i ].group = 0;
+		}
+	}
+
+	d3.select( editor.view.select( "links" ) ).on(
+		"mousedown",
+		function( event )	{
+
+			ungroup( editor.graph.links );
+			editor.sim.select_links = execute_graph_select_links( editor.graph, editor.sim.select_nodes );
+
+			ungroup( editor.graph.nodes );
+			editor.sim.select_nodes = [];
+			editor.sim.update();
+		}
+	);
+	d3.select( editor.view.select( "add" ) ).on(
+		"mousedown",
+		function( event )	{
+
+			execute_graph_add( editor.graph, editor.sim.select_nodes );
+			ungroup( editor.graph.links );
+			ungroup( editor.graph.nodes );
+
+			editor.sim.select_links = [];
+			editor.sim.select_nodes = [];
+			editor.sim.update();
+		}
+	);
+	d3.select( editor.view.select( "del" ) ).on(
+		"mousedown",
+		function( event )	{
+
+			execute_graph_delete( editor.graph, editor.sim.select_links, editor.sim.select_nodes );
+			ungroup( editor.graph.links );
+			ungroup( editor.graph.nodes );
+
+			editor.sim.select_links = [];
+			editor.sim.select_nodes = [];
+			editor.sim.update();
+		}
+	);
+
+	d3.select( editor.view.select( "print" ) ).on(
+		"mousedown",
+		function( event )	{
+
+			log_graph( editor.graph, editor.view );
+		}
+	);
+}
+
+///////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////
 
 function build_node_map( nodes )	{
@@ -36,22 +186,22 @@ function build_node_map( nodes )	{
 
 function build_test_graph()	{
 
-	let max_degree = 10;
+//	let max_degree = 10;
 	let degrees = [ 1, 2, 1 ];
 	let nodes = [
-		{ id: 0, adjacent: [ 1 ] },
-		{ id: 1, adjacent: [ 0, 2 ] },
-		{ id: 2, adjacent: [ 1 ] },
-		{ id: 3, adjacent: [] }
+		{ id: 0, adjacent: [ 1 ], group: 0 },
+		{ id: 1, adjacent: [ 0, 2 ], group: 0 },
+		{ id: 2, adjacent: [ 1 ], group: 0 },
+		{ id: 3, adjacent: [], group: 0 }
 	];
 	let map = build_node_map( nodes );
 	let links = [
-		{ source: 0, target: 1 },
-		{ source: 1, target: 2 }
+		{ source: 0, target: 1, group: 0 },
+		{ source: 1, target: 2, group: 0 }
 	];
 
 	return {
-		max_degree,
+//		max_degree,
 		degrees,
 		map,
 		nodes,
@@ -61,12 +211,12 @@ function build_test_graph()	{
 
 function build_ring_graph( n, w )	{
 
-	let max_degree = 10;
+//	let max_degree = 10;
 	let degrees = new Array( n ).fill( 2 * w );
 
 	let nodes = [];
 	for( let i=0; i< n; i++ )	{
-		nodes.push( { id: i, adjacent: [] } );
+		nodes.push( { id: i, adjacent: [], group: 0 } );
 	}
 	let map = build_node_map( nodes );
 
@@ -80,12 +230,18 @@ function build_ring_graph( n, w )	{
 			nodes[ k ].adjacent.push( i );
 
 			let [ s, t ] = [ i, k ].sort( ( a, b ) => a - b );
-			links.push( { source: s, target: t } );
+			links.push(
+				{
+					source: s,
+					target: t,
+					group: 0
+				}
+			);
 		}
 	}
 
 	return {
-		max_degree,
+//		max_degree,
 		degrees,
 		map,
 		nodes,
@@ -93,82 +249,76 @@ function build_ring_graph( n, w )	{
 	};
 }
 
-function print_graph( G )	{
+///////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////
 
-	console.log( "max_degree: " + G.max_degree );
-	console.log( "degrees: [ " + G.degrees + " ]" );
-	console.log( "map: ", [ ...( G.map.entries() ) ] );
-	for( let i=0; i< G.nodes.length; i++ )	{
-		console.log( "nodes: " + G.nodes[ i ].id + " [ " + G.nodes[ i ].adjacent + " ] " );
-	}
-	for( let i=0; i< G.links.length; i++ )	{
-		console.log( "links: [ " + G.links[ i ].source + ", " + G.links[ i ].target + " ] " );
-	}
-}
+function execute_graph_select_links( graph, select_nodes )	{
 
-function log_graph( G )	{
+	let set = new Set( [ ...select_nodes ] );
+	let links = [];
 
-	log( "max_degree: " + G.max_degree );
-	log( "degrees: [ " + G.degrees + " ]" );
-	log( "map: " + JSON.stringify( [ ...( G.map.entries() ) ] ) );
-	for( let i=0; i< G.nodes.length; i++ )	{
-		log( "nodes: " + G.nodes[ i ].id + " [ " + G.nodes[ i ].adjacent + " ]" );
+	for( let i=0; i< graph.links.length; i++ )	{
+		if( set.has( graph.links[ i ].source.index ) ||
+			set.has( graph.links[ i ].target.index ) )	{
+
+			links.push( i );
+			graph.links[ i ].group = 1;
+		}
 	}
-	for( let i=0; i< G.links.length; i++ )	{
-		log( "links: [ " + G.links[ i ].source.id + ", " + G.links[ i ].target.id + " ]" );
-	}
+	return( links );
 }
 
 ///////////////////////////////////////////////////////////////////////
 
-// https://thiebaux.site44.com/D3JSdemo/editor.html
+function add_new_node( graph )	{
 
-function test_graph_editor( log_id, graph_plot_id )	{
+	let new_id = 10; // 0; for testing
+	while( graph.map.has( new_id ) ) new_id++;
+	let new_i = graph.nodes.length;
 
-	output_log_id = log_id;
+	graph.nodes.push( { id: new_id, adjacent: [] } );
+	graph.map.set( new_id, new_i );
+	graph.degrees.push( 0 );
 
-	let graph = build_test_graph();
-
-	let sim = create_simulation( 200, 200, graph_plot_id );
-	init_simulation( sim, graph );
-
-	d3.select( "#restart_simple_button" ).on(
-		"mousedown",
-		function( event )	{
-
-			graph = build_test_graph();
-			init_simulation( sim, graph );
-		}
-	);
-
-	d3.select( "#restart_ring_button" ).on(
-		"mousedown",
-		function( event )	{
-
-			graph = build_ring_graph( 6, 1 );
-			init_simulation( sim, graph );
-		}
-	);
-
-	d3.select( "#restart_chain_button" ).on(
-		"mousedown",
-		function( event )	{
-
-			graph = build_ring_graph( 12, 2 );
-			init_simulation( sim, graph );
-		}
-	);
-
-	d3.select( "#print_button" ).on(
-		"mousedown",
-		function( event )	{
-
-			log_graph( graph );
-		}
-	);
+	return( new_i );
 }
 
-///////////////////////////////////////////////////////////////////////
+function add_new_link( graph, src_index, tgt_index )	{
+
+	let src_id = graph.nodes[ src_index ].id;
+	let tgt_id = graph.nodes[ tgt_index ].id ;
+
+	if( graph.nodes[ src_index ].adjacent.includes( tgt_id ) == false )	{
+
+		graph.nodes[ src_index ].adjacent.push( tgt_id );
+		graph.nodes[ tgt_index ].adjacent.push( src_id );
+
+		let [ s, t ] = [ src_id, tgt_id ].sort( ( a, b ) => a - b );
+		graph.links.push( { source: s, target: t, group: 0 } );
+
+		graph.degrees[ src_index ]++;
+		graph.degrees[ tgt_index ]++;
+	}
+}
+
+function execute_graph_add( graph, select_nodes )	{
+
+	if( select_nodes.length == 0 )	{
+		add_new_node( graph );
+	}
+
+	if( select_nodes.length == 1 )	{ // make new node, link
+		select_nodes.push( add_new_node( graph ) );
+	}
+
+	if( select_nodes.length > 1 )	{ // link nodes in order
+		for( let i=0; i< select_nodes.length - 1; i++ )	{
+
+			add_new_link( graph, select_nodes[ i ], select_nodes[ i + 1 ] );
+		}
+	}
+}
+
 ///////////////////////////////////////////////////////////////////////
 
 function collect_links( graph, node_index )	{
@@ -232,85 +382,56 @@ function execute_graph_delete( graph, select_links, select_nodes )	{
 	}
 
 	graph.map = build_node_map( graph.nodes );
-//	return( edited );
-}
-
-///////////////////////////////////////////////////////////////////////
-
-function add_new_node( graph )	{
-
-	let new_id = 10; // 0; for testing
-	while( graph.map.has( new_id ) ) new_id++;
-	let new_i = graph.nodes.length;
-
-	graph.nodes.push( { id: new_id, adjacent: [] } );
-	graph.map.set( new_id, new_i );
-	graph.degrees.push( 0 );
-
-	return( new_i );
-}
-
-function add_new_link( graph, src_index, tgt_index )	{
-
-	let src_id = graph.nodes[ src_index ].id;
-	let tgt_id = graph.nodes[ tgt_index ].id ;
-
-	if( graph.nodes[ src_index ].adjacent.includes( tgt_id ) == false )	{
-
-		graph.nodes[ src_index ].adjacent.push( tgt_id );
-		graph.nodes[ tgt_index ].adjacent.push( src_id );
-
-		let [ s, t ] = [ src_id, tgt_id ].sort( ( a, b ) => a - b );
-		graph.links.push( { source: s, target: t } );
-
-		graph.degrees[ src_index ]++;
-		graph.degrees[ tgt_index ]++;
-	}
-}
-
-function execute_graph_add( graph, select_nodes )	{
-
-	if( select_nodes.length == 0 )	{
-		add_new_node( graph );
-	}
-
-	if( select_nodes.length == 1 )	{ // make new node, link
-		select_nodes.push( add_new_node( graph ) );
-	}
-
-	if( select_nodes.length > 1 )	{ // link nodes in order
-		for( let i=0; i< select_nodes.length - 1; i++ )	{
-
-			add_new_link( graph, select_nodes[ i ], select_nodes[ i + 1 ] );
-		}
-	}
 }
 
 ///////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////
 
-function create_simulation( width, height, plot_div_id )	{
+function create_simulation( view, width, height )	{
 
-	let svg = d3.select( "#" + plot_div_id )
+	let svg = d3.select( view.select( "graphic" ) )
 		.append( "svg" )
 			.attr( "viewBox", [ -width / 2, -height / 2, width, height ] );
 
-	let sim = {
-		svg,
-		engine: null,
-		nodes: null,
-		links: null,
+	let dfl_attr = {
+		node_border()	{ return( 1.0 ); },
+		node_radius()	{ return( 4.0 ); },
+		node_color()	{ return( "#00f" ); },
+		link_color()	{ return( "#999" ); },
+		link_width()	{ return( 1.0 ); }
+	};
 
-		// status:
+	let sim = {
+
+		svg,
+		view: view,
+		attr: dfl_attr,
+		graph: null,
+		engine: null,
+		nodes: null, // these are not graph.nodes, these are sim.nodes
+		links: null, // these are not graph.links, these are sim.links
+
+		// export funcs
+		init( graph, attr, view ) {
+			init_simulation( this, graph, attr, view );
+		},
+		update() {
+			update_simulation( this );
+		},
+
+		// edit status:
 		select_nodes: [],
-		select_links: [],
-		select_node: -1,
-		select_link: -1
+		select_links: []
 	};
 	return( sim );
 }
 
-function init_simulation( sim, graph )	{
+///////////////////////////////////////////////////////////////////////
+
+function init_simulation( sim, graph, attr )	{
+
+	sim.attr = attr;
+	sim.graph = graph;
 
 	if( sim.engine ) sim.engine.stop();
 	if( sim.links ) sim.links.remove();
@@ -331,6 +452,7 @@ function init_simulation( sim, graph )	{
 		.force( "link", d3.forceLink().id( d => d.id ) )
 		.force( "charge", d3.forceManyBody().strength( -50 ) )
 		.force( "center", d3.forceCenter( 0, 0 ) )
+		.force( "collision", d3.forceCollide().radius( (d) => d.radius ) ) // defaults to 1
 		.force( "x", d3.forceX( 0 ) )
 		.force( "y", d3.forceY( 0 ) )
 		.on( "tick",
@@ -345,59 +467,20 @@ function init_simulation( sim, graph )	{
 					.attr( "cy", d => d.y.toFixed( 100 ) ) // Safari browser patch
 			}
 		);
-
-	update_simulation( sim, graph );
 }
 
-///////////////////////////////////////////////////////////////////////
-
-function degree_to_value( deg, max )	{
-
-	return( 0.1 + deg / max );
-}
-
-function value_to_radius( v )	{
-
-	return( 4 + 8 * v );
-}
-
-function degree_to_radius( deg, max )	{
-
-	return( value_to_radius( degree_to_value( deg, max ) ) );
-}
-
-// https://github.com/d3/d3-scale-chromatic/blob/main/README.md
-function extend_color_scheme( id )	{
-
-	let i = id % 32;
-	if( i < 10 ) return( d3.schemeCategory10[ i ] );
-	if( i < 20 ) return( d3.schemeTableau10[ i - 10 ] );
-	return( d3.schemeSet3[ i - 20 ] );
-}
-
-///////////////////////////////////////////////////////////////////////
-
-function update_simulation( sim, graph )	{
+function update_simulation( sim )	{
 
 	sim.engine.stop();
 
 	sim.nodes = sim.nodes
-		.data( graph.nodes )
+		.data( sim.graph.nodes )
 		.join(
 			enter => enter.append( "circle" )
-
 				.attr( "stroke", d => "#000" )
-				.attr( "stroke-width", d => 1.0 )
-
-//				.attr( "fill", d => extend_color_scheme( d.id ) )
-///*
-				.attr( "fill",
-					d => d3.interpolateTurbo(
-						degree_to_value( d.adjacent.length, graph.max_degree )
-					)
-				)
-//*/
-				.attr( "r", d => 5.0 )
+				.attr( "stroke-width", d => sim.attr.node_border( d ) )
+				.attr( "fill", d => sim.attr.node_color( d ) )
+				.attr( "r", d => sim.attr.node_radius( d ) )
 				.on( "mousedown", mousedown_node )
 				.call(
 					d3.drag()
@@ -407,115 +490,76 @@ function update_simulation( sim, graph )	{
 				)
 			,
 			update => update
-				.attr( "stroke-width", d => 1.0 )
-//				.attr( "fill", d => extend_color_scheme( d.id ) )
-///*
-				.attr( "fill",
-					d => d3.interpolateTurbo(
-						degree_to_value( d.adjacent.length, graph.max_degree )
-					)
-				)
-//*/
+				.attr( "stroke-width", d => sim.attr.node_border( d ) )
+				.attr( "fill", d => sim.attr.node_color( d ) )
+				.attr( "r", d => sim.attr.node_radius( d ) )
 			,
 			exit => exit
 				.remove()
 		);
 
 	sim.links = sim.links
-		.data( graph.links )
+		.data( sim.graph.links )
 		.join(
 			enter => enter.append( "line" )
-				.attr( "stroke", d => "#999" )
-				.attr( "stroke-width", d => 3.0 )
+				.attr( "stroke", d => sim.attr.link_color( d ) )
+				.attr( "stroke-width", d => sim.attr.link_width( d ) )
 				.on( "mousedown", mousedown_link )
 			,
 			update => update
-				.attr( "stroke", d => "#999" )
-				.attr( "stroke-width", d => 3.0 )
+				.attr( "stroke", d => sim.attr.link_color( d ) )
+				.attr( "stroke-width", d => sim.attr.link_width( d ) )
 			,
 			exit => exit
 				.remove()
 		);
 
-	sim.engine.nodes( graph.nodes )
-	sim.engine.force( "link" ).links( graph.links );
+	sim.engine.nodes( sim.graph.nodes )
+	sim.engine.force( "link" ).links( sim.graph.links );
 	sim.engine.alphaTarget( 0.1 ).restart();
 
-	d3.select( "#add_button" ).on(
-		"mousedown",
-		function( event )	{
-
-			execute_graph_add( graph, sim.select_nodes );
-
-			sim.select_links = [];
-			sim.select_nodes = [];
-
-			update_simulation( sim, graph );
-		}
-	);
-
-	d3.select( "#delete_button" ).on(
-		"mousedown",
-		function( event )	{
-
-			execute_graph_delete( graph, sim.select_links, sim.select_nodes );
-
-			sim.select_links = [];
-			sim.select_nodes = [];
-
-			update_simulation( sim, graph );
-		}
-	);
-
-	function mousedown_node( event, node )	{ //// NODE
+	function mousedown_node( event, node )	{
 
 //		console.log( "drag start event: " + JSON.stringify( event, null, 2 ) ); // bupkis
 //		console.log( "down node: " + JSON.stringify( node, null, 2 ) );
 
 		let arr_i = sim.select_nodes.indexOf( node.index );
-		if( arr_i != -1 )	{ // de-select
+		if( arr_i == -1 )	{
+
+			sim.select_nodes.push( node.index );
+			node.group = 1;
+		}
+		else	{ // de-select
 
 			sim.select_nodes.splice( arr_i, 1 );
-			d3.select( this )
-				.attr( "stroke-width", 1.0 );
-			return;
+			node.group = 0;
 		}
 
-		d3.select( this )
-			.attr( "stroke-width", 3.0 )
-
-		sim.select_nodes.push( node.index );
-
-//		console.log( "node: " + node.id + " [ " + node.adjacent + " ] " + node.index );
-		log( "node: " + node.id + " [ " + node.adjacent + " ] " + node.index );
+		sim.update();
+		sim.view.log( "node: " + node.id + " [ " + node.adjacent.join( ", " ) + " ] " + node.index );
 	}
 
-	function mousedown_link( event, link )	{ //// LINK
+	function mousedown_link( event, link )	{
 
 //		console.log( "down event: " + JSON.stringify( event, null, 2 ) ); // bupkis
 //		console.log( "down link: " + JSON.stringify( link, null, 2 ) );
 //		console.log( this );
 
 		let arr_i = sim.select_links.indexOf( link.index );
-		if( arr_i != -1 )	{ // de-select
+		if( arr_i == -1 )	{
+
+			sim.select_links.push( link.index );
+			link.group = 1;
+		}
+		else	{ // de-select
 
 			sim.select_links.splice( arr_i, 1 );
-			d3.select( this )
-				.attr( "stroke", "#999" )
-				.attr( "stroke-width", 3.0 );
-			return;
+			link.group = 0;
 		}
 
-		d3.select( this )
-			.attr( "stroke", "#000" )
-			.attr( "stroke-width", 5.0 );
-
-		sim.select_links.push( link.index );
-
-//		console.log( "link: [ " + link.source.id + ", " + link.target.id + " ] " + link.index );
-		log( "link: [ " + link.source.id + ", " + link.target.id + " ] " + link.index );
+		sim.update();
+		sim.view.log( "link: [ " + link.source.id + ", " + link.target.id + " ] " + link.index );
 	}
-
 
 	function dragstarted( event, node ) {
 
@@ -536,7 +580,7 @@ function update_simulation( sim, graph )	{
 	function dragended( event, node ) {
 
 		if ( !event.active )
-			sim.engine.alphaTarget ( 0 );
+			sim.engine.alphaTarget( 0 );
 		event.subject.fx = null;
 		event.subject.fy = null;
 	}
