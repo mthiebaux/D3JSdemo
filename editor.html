@@ -2,7 +2,7 @@
 <html lang="en">
 	<head>
 
-		<title> graph editor </title>
+		<title> graph editor module </title>
 
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,48 +11,54 @@
 		<script src="./editor.js"></script-->
 
 	</head>
-	<body>
+	<body style="font-family:helvetica; font-weight:lighter; background:linear-gradient( 60deg, #ffffff, #c4dfee );">
 
 		<div class="page_header">
 
-			<h1> D3 Graph Editor Module </h1>
+			<h2> D3 Graph Editor Module </h2>
 
 		</div>
 
 		<div id="page_contents">
 
 			Initialize:
-			<p>
+			<br>
 			<input
 				type="button"
-				id="restart_simple_button"
+				id="init_simple_button"
 				value="simple"
 				style="color:black">
 			<input
 				type="button"
-				id="restart_ring_button"
+				id="init_ring_button"
 				value="ring"
 				style="color:black">
 			<input
 				type="button"
-				id="restart_chain_button"
+				id="init_chain_button"
 				value="chain"
+				style="color:black">
+			<input
+				type="button"
+				id="init_power_button"
+				value="power"
 				style="color:black">
 			<p>
 
 			Links:<br>
-				- For each node selected, select its links.
+				&#8226; For each node selected, select its links.
 			<p>
 			Add:<br>
-				- If no nodes selected, add new loose node.<br>
-				- If one is selected, add new node and link to it.<br>
-				- If more are selected, link them together in order.
+				&#8226; If no nodes selected, add new loose node.<br>
+				&#8226; If one is selected, add new node and link to it.<br>
+				&#8226; If more are selected, link them together in order.
 			<p>
 			Del:<br>
-				- Remove all selected elements.
+				&#8226; Remove all selected elements.
 			<p>
 
-			<div id="graph_plot_div" style="border:1px solid lightgrey; padding: 5px">
+			<div style="border:1px solid lightgrey; background:white; padding:5px">
+
 				<input
 					type="button"
 					id="links_button"
@@ -69,9 +75,19 @@
 					value="del"
 					style="color:black">
 				<br>
-			</div>
 
+				<div id="graph_plot_div"></div>
+
+				<input id="rate_slider" type="range"
+					min="0" max="100" value="0"
+					style="width:98%; height:10px;">
+
+			</div>
 			<p>
+
+			<div id="histo_plot_div" ></div>
+			<p>
+
 			<input
 				type="button"
 				id="print_button"
@@ -97,12 +113,15 @@
 
 			elements:	{
 				graphic:	"graph_plot_div",
-				simple:		"restart_simple_button",
-				ring: 		"restart_ring_button",
-				chain:		"restart_chain_button",
+				histo:		"histo_plot_div",
+				simple:		"init_simple_button",
+				ring: 		"init_ring_button",
+				chain:		"init_chain_button",
+				power:		"init_power_button",
 				links:		"links_button",
 				add:		"add_button",
 				del:		"delete_button",
+				rate:		"rate_slider",
 				print:		"print_button",
 				log:		"output_log"
 			},

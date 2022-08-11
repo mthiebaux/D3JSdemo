@@ -29,30 +29,19 @@ function init( view )	{
 	sim.update();
 
 	let app = {
+
 		view,
 		attr,
 		graph,
-		sim
+		sim,
+
+		timeout: null,
+		auto: false,
+		ival: 1000,
+		reset: true
 	};
 
 	register_events( app );
-}
-
-///////////////////////////////////////////////////////////////////////
-
-function log_graph( graph, view )	{
-
-	view.log( "LOG: " );
-//	view.log( graph );
-
-	view.log( "degrees: [ " + graph.degrees.join( ", " ) + " ]" );
-	view.log( "map: " + JSON.stringify( [ ...( graph.map.entries() ) ] ) );
-	for( let i=0; i< graph.nodes.length; i++ )	{
-		view.log( "nodes: " + graph.nodes[ i ].id + " [ " + graph.nodes[ i ].adjacent.join( ", " ) + " ]" );
-	}
-	for( let i=0; i< graph.links.length; i++ )	{
-		view.log( "links: [ " + graph.links[ i ].source.id + ", " + graph.links[ i ].target.id + " ]" );
-	}
 }
 
 ///////////////////////////////////////////////////////////////////////
@@ -105,12 +94,30 @@ function attributes( max_degree )	{
 
 ///////////////////////////////////////////////////////////////////////
 
+function log_graph( graph, view )	{
+
+	view.log( "LOG: " );
+//	view.log( graph );
+
+	view.log( "degrees: [ " + graph.degrees.join( ", " ) + " ]" );
+	view.log( "map: " + JSON.stringify( [ ...( graph.map.entries() ) ] ) );
+	for( let i=0; i< graph.nodes.length; i++ )	{
+		view.log( "nodes: " + graph.nodes[ i ].id + " [ " + graph.nodes[ i ].adjacent.join( ", " ) + " ]" );
+	}
+	for( let i=0; i< graph.links.length; i++ )	{
+		view.log( "links: [ " + graph.links[ i ].source.id + ", " + graph.links[ i ].target.id + " ]" );
+	}
+}
+
+///////////////////////////////////////////////////////////////////////
+
 function register_events( app )	{
 
 	d3.select( app.view.select( "simple" ) ).on(
 		"mousedown",
 		function( event )	{
 
+			app.reset = true; // auto-edit balace reset
 			app.graph = graph_gen.simple_graph();
 			app.sim.init( app.graph, app.attr );
 			app.sim.update();
@@ -120,6 +127,7 @@ function register_events( app )	{
 		"mousedown",
 		function( event )	{
 
+			app.reset = true;
 			app.graph = graph_gen.ring_graph( 6, 1 );
 			app.sim.init( app.graph, app.attr );
 			app.sim.update();
@@ -129,7 +137,18 @@ function register_events( app )	{
 		"mousedown",
 		function( event )	{
 
+			app.reset = true;
 			app.graph = graph_gen.ring_graph( 12, 2 );
+			app.sim.init( app.graph, app.attr );
+			app.sim.update();
+		}
+	);
+	d3.select( app.view.select( "power" ) ).on(
+		"mousedown",
+		function( event )	{
+
+			app.reset = true;
+			app.graph = graph_gen.power_graph( 32, 0.9, 10 );
 			app.sim.init( app.graph, app.attr );
 			app.sim.update();
 		}
@@ -170,13 +189,49 @@ function register_events( app )	{
 		"mousedown",
 		function( event )	{
 
-			graph_edit.del_elems( app.graph, app.sim.select_links, app.sim.select_nodes );
+			graph_edit.delete_elems( app.graph, app.sim.select_links, app.sim.select_nodes );
 			ungroup( app.graph.links );
 			ungroup( app.graph.nodes );
 
 			app.sim.select_links = [];
 			app.sim.select_nodes = [];
 			app.sim.update();
+		}
+	);
+
+	function mutate_timeout_callback( d )	{
+
+		let update = graph_edit.auto_edit( app.graph, 10, app.reset );
+		app.reset = false;
+
+		if( update == true )	{
+
+//			init_histogram( hist, graph.degrees, graph.max_degree );
+			app.sim.update();
+		}
+		if( app.auto )	{
+			app.timeout = d3.timeout( mutate_timeout_callback, app.ival );
+		}
+	}
+
+	d3.select( app.view.select( "rate" ) ).on(
+		"input",
+		function( event )	{
+
+			if( this.value > 0 )	{
+
+				function rate_conversion( i, max )	{
+					return( 10 + 1000 * ( max - i ) / max );
+				}
+
+				if( app.timeout ) app.timeout.stop();
+				app.auto = true;
+				app.ival = rate_conversion( this.value, Number( this.max ) );
+				app.timeout = d3.timeout( mutate_timeout_callback, app.ival );
+			}
+			else	{
+				app.auto = false;
+			}
 		}
 	);
 

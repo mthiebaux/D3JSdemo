@@ -4,7 +4,8 @@ import * as graph_gen from './graph_gen.js';
 export {
 	select_links,
 	add_elems,
-	del_elems
+	delete_elems,
+	auto_edit
 };
 
 ///////////////////////////////////////////////////////////////////////
@@ -56,7 +57,10 @@ function add_new_link( graph, src_index, tgt_index )	{
 
 		graph.degrees[ src_index ]++;
 		graph.degrees[ tgt_index ]++;
+
+		return( true );
 	}
+	return( false );
 }
 
 function add_elems( graph, select_nodes )	{
@@ -108,7 +112,7 @@ function detach_link( graph, link_index )	{
 	graph.nodes[ tgt_i ].adjacent.splice( tgt_adj_i, 1 );
 }
 
-function del_elems( graph, select_links, select_nodes )	{
+function delete_elems( graph, select_links, select_nodes )	{
 
 	let link_set = new Set( select_links );
 	for( let i=0; i< select_nodes.length; i++ )	{
@@ -143,4 +147,67 @@ function del_elems( graph, select_links, select_nodes )	{
 }
 
 ///////////////////////////////////////////////////////////////////////
+
+function auto_edit( graph, max_degree, reset_balance = false )	{
+
+//	if( reset_balance ) console.log( "auto_edit: reset_balance" );
+
+	// static variable
+    if( ( auto_edit.balance === undefined )|| reset_balance ) {
+         auto_edit.balance = 0;
+    }
+	let edited = false;
+
+	if( Math.random() < 0.5  )	{
+		// remove existing link
+
+		if( auto_edit.balance > -( max_degree / 2 ) )	{
+
+			if( graph.links.length > 0 )	{
+
+				let r_link_id = graph_gen.rand_int_range( 0, graph.links.length );
+
+				delete_elems( graph, [ r_link_id  ], [] );
+
+				auto_edit.balance--;
+				edited = true;
+			}
+		}
+	}
+	else	{
+		// add new link
+
+		if( auto_edit.balance < ( max_degree * 2 ) )	{
+
+			let curr_max_deg = 0;
+			for( let i=0; i< graph.nodes.length; i++ )	{
+
+				let len = graph.nodes[ i ].adjacent.length;
+				if( len > curr_max_deg ) curr_max_deg = len;
+			}
+
+			let stub_counts = [];
+			for( let i=0; i< graph.nodes.length; i++ )	{
+
+				stub_counts.push( graph.nodes[ i ].adjacent.length + 1 );
+			}
+			let stubs = graph_gen.expand_stub_array( stub_counts );
+
+			let r_src_id = stubs[ graph_gen.rand_int_range( 0, stubs.length ) ];
+			let r_tgt_id = stubs[ graph_gen.rand_int_range( 0, stubs.length ) ];
+
+			if( r_src_id != r_tgt_id )	{
+
+				if( add_new_link( graph, r_src_id, r_tgt_id ) )	{
+
+					auto_edit.balance++;
+					edited = true;
+				}
+			}
+		}
+	}
+
+//	console.log( "auto_edit.balance: " + auto_edit.balance );
+	return( edited );
+}
 
