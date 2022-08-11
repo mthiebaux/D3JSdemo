@@ -7,15 +7,15 @@
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-		<script src="https://d3js.org/d3.v7.min.js"></script>
-		<script src="./editor.js"></script>
+		<!--script src="https://d3js.org/d3.v7.min.js"></script>
+		<script src="./editor.js"></script-->
 
 	</head>
 	<body>
 
 		<div class="page_header">
 
-			<h1> D3 Graph Editor </h1>
+			<h1> D3 Graph Editor Module </h1>
 
 		</div>
 
@@ -89,7 +89,9 @@
 		</div>
 
 	</body>
-	<script type="text/javascript">
+	<script type="module">
+
+		import * as editor from './editor.js';
 
 		const view_obj = {
 
@@ -124,7 +126,7 @@
 			}
 		};
 
-		test_graph_editor( view_obj );
+		editor.init( view_obj );
 
 	</script>
 
