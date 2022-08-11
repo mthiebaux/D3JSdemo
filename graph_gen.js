@@ -232,8 +232,6 @@ function power_graph( num_nodes, min_degree, max_degree )	{
 
 
 	let graph_data = {
-//		max_degree: max_degree,
-//		degrees: degree_sequence, // NO, may have been adjusted for balance
 		degrees: [],
 		map: null,
 		nodes: [],
