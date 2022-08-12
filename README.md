@@ -30,14 +30,15 @@ Knowing almost nothing about *SVG* tags and D3 visualization development, I set 
 
 Finally, I stress test the resulting code with a scalable, high performance set of operations, of some interest to graph theorists. A histogram of cumulative mutations shows consistent power law distribution of node degree, while sensitive to initial conditions. Style transition chains are seductive, and troublesome when large graphs are edited.
 
-While testing degenerate cases, I found a rare error message streaming from the D3 force engine, dealing with numeric precision handling in the Safari browser. When you are down to two nodes and delete one of them, after ten seconds the position coordinates of the remaining node fall under 1.0e-100, which can't be mapped to a raw number from a numeric string for the internal SVG element. This can go unnoticed because *undefined* resolves to zero. This is fixed with the following patch to boilerplate sim initialization:
+While testing degenerate cases, I found a rare error message streaming from the D3 force engine, dealing with numeric precision handling in the Safari browser. When you are down to two nodes and delete one of them, after ten seconds the position coordinates of the remaining node fall under 1.0e-100, which can't be mapped to a raw number from a numeric string for the internal SVG element. This can go unnoticed because *undefined* resolves to zero. This is patched with the following boilerplate sim initialization:
 
 ```
 d3.forceSimulation()
-    .on( "tick", () => {
-        nodes.attr( "cx", d.x.toFixed( 100 ) )
+  .on( "tick",
+    () => {
+      nodes.attr( "cx", d.x.toFixed( 100 ) )
     }
-);
+  );
 ```
 
 <img src="./images/screencap4.png" width="200">
@@ -46,9 +47,9 @@ d3.forceSimulation()
 
 * Live hosting at [thiebaux.site44.com](https://thiebaux.site44.com/D3JSdemo/editor.html)
 
-Building on lessons learned from implementing link mutations, the project developed further into a general graph editor, allowing insertion and deletion of both links and nodes, with a variety of initialization options. With deep refactoring and modularization of the various components, it becomes much easier to customize the client code for specific purposes, such as animated graph traversal and feature detection.
+Building on lessons learned from implementing link mutations, the project developed into a general graph editor, allowing insertion and deletion of both links and nodes, with a variety of initialization options. With deep refactoring and modularization of the various components, it becomes easier to customize the client code for specific purposes, such as animated graph traversal and feature detection.
 
-Each node maintains a separate list of its neighbors (adjacency array), for ease of traversal. When a node is deleted, there is a lot of book-keeping to keep straight. We can’t just use the simplest graph representation typically used for a search task. We must also maintain a node degree list, and a separate edge list curated for the D3 visualizer. To support deletion, each node must be referred to by unique name, rather than its position in the array. These are kept in a hash map.
+Each node maintains a separate list of its neighbors (adjacency array), for ease of traversal. When a node is deleted, there is a lot of book-keeping. We must maintain a node degree list, and a separate edge list curated for the D3 visualizer. To support deletion, each node must be referred to by unique name, rather than its position in the array. These are kept in a hash map. The degree vector is used to color nodes and update the histogram.
 
 A very simple graph has the following properties at minumum, with the map initialized to identity values:
 

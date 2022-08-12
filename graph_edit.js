@@ -2,7 +2,8 @@
 import * as graph_gen from './graph_gen.js';
 
 export {
-	select_links,
+
+	select_links, // rename this
 	add_elems,
 	delete_elems,
 	auto_edit
@@ -21,6 +22,20 @@ function select_links( graph, select_nodes )	{
 
 			links.push( i );
 			graph.links[ i ].group = 1;
+		}
+	}
+	return( links );
+}
+
+function collect_links( graph, node_index )	{
+
+	let links = [];
+	for( let i=0; i< graph.links.length; i++ )	{
+		if(
+			graph.links[ i ].source.index == node_index ||
+			graph.links[ i ].target.index == node_index
+		)	{
+			links.push( i );
 		}
 	}
 	return( links );
@@ -82,20 +97,6 @@ function add_elems( graph, select_nodes )	{
 }
 
 ///////////////////////////////////////////////////////////////////////
-
-function collect_links( graph, node_index )	{
-
-	let links = [];
-	for( let i=0; i< graph.links.length; i++ )	{
-		if(
-			graph.links[ i ].source.index == node_index ||
-			graph.links[ i ].target.index == node_index
-		)	{
-			links.push( i );
-		}
-	}
-	return( links );
-}
 
 function detach_link( graph, link_index )	{
 

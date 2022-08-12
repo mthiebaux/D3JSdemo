@@ -1,9 +1,11 @@
 
 export {
-	build_node_map,
+
 	simple_graph,
 	ring_graph,
 	power_graph,
+
+	build_node_map,
 	rand_int_range,
 	expand_stub_array
 };

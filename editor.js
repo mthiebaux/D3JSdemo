@@ -46,15 +46,15 @@ function init( view_elements )	{
 
 		histo: null,
 		attr: null,
-		max_degree: 10,
 
+		max_degree: 10,
 		select_nodes: [],
 		select_links: [],
 
 		timeout: null,
 		auto: false,
 		ival: 1000,
-		reset: true // auto-edit balace reset
+		reset: true // auto-edit balance reset:
 	};
 
 	app.attr = attribute_handlers( app );
@@ -187,9 +187,10 @@ function register_reset_handlers( app )	{
 		"mousedown",
 		function( event )	{
 
-			app.max_degree = 10;
 			app.reset = true;
+			app.max_degree = 10;
 			app.graph = graph_gen.simple_graph();
+
 			app.sim.init( app.graph, app.attr );
 			app.sim.update();
 			app.histo.update( app.graph.degrees, app.max_degree, true );
@@ -199,9 +200,10 @@ function register_reset_handlers( app )	{
 		"mousedown",
 		function( event )	{
 
-			app.max_degree = 10;
 			app.reset = true;
+			app.max_degree = 10;
 			app.graph = graph_gen.ring_graph( 12, 1 );
+
 			app.sim.init( app.graph, app.attr );
 			app.sim.update();
 			app.histo.update( app.graph.degrees, app.max_degree, true );
@@ -211,9 +213,10 @@ function register_reset_handlers( app )	{
 		"mousedown",
 		function( event )	{
 
-			app.max_degree = 15;
 			app.reset = true;
+			app.max_degree = 15;
 			app.graph = graph_gen.ring_graph( 18, 3 );
+
 			app.sim.init( app.graph, app.attr );
 			app.sim.update();
 			app.histo.update( app.graph.degrees, app.max_degree, true );
@@ -223,9 +226,10 @@ function register_reset_handlers( app )	{
 		"mousedown",
 		function( event )	{
 
-			app.max_degree = 20;
 			app.reset = true;
+			app.max_degree = 20;
 			app.graph = graph_gen.power_graph( 42, 0.9, app.max_degree );
+
 			app.sim.init( app.graph, app.attr );
 			app.sim.update();
 			app.histo.update( app.graph.degrees, app.max_degree, true );
