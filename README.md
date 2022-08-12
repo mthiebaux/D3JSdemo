@@ -50,7 +50,7 @@ Building on lessons learned from implementing link mutations, the project develo
 
 Each node maintains a separate list of its neighbors (adjacency array), for ease of traversal. When a node is deleted, there is a lot of book-keeping to keep straight. We can’t just use the simplest graph representation typically used for a search task. We must also maintain a node degree list, and a separate edge list curated for the D3 visualizer. To support deletion, each node must be referred to by unique name, rather than its position in the array. These are kept in a hash map.
 
-A very simple graph has the following properties at a minumum, with the map initialized to identity values:
+A very simple graph has the following properties at minumum, with the map initialized to identity values:
 
 ```
 graph: {
