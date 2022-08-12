@@ -48,7 +48,26 @@ d3.forceSimulation()
 
 Building on lessons learned from implementing link mutations, the project developed further into a general graph editor, allowing insertion and deletion of both links and nodes, with a variety of initialization options. With deep refactoring and modularization of the various components, it becomes much easier to customize the client code for specific purposes, such as animated graph traversal and feature detection.
 
-Each node maintains a separate list of its neighbors (adjacency array), for ease of traversal. When a node is deleted, there is a lot of book-keeping to keep straight. We can’t just use the simplest graph representation typically used for a search task. We also need to maintain a node degree list, and a separate edge list curated for the D3 visualizer. To support deletion, each node must be referred to by unique name, rather than its position in the array. These are kept in a hash map.
+Each node maintains a separate list of its neighbors (adjacency array), for ease of traversal. When a node is deleted, there is a lot of book-keeping to keep straight. We can’t just use the simplest graph representation typically used for a search task. We must also maintain a node degree list, and a separate edge list curated for the D3 visualizer. To support deletion, each node must be referred to by unique name, rather than its position in the array. These are kept in a hash map.
+
+A very simple graph has the following properties at a minumum, with the map initialized to identity values:
+
+```
+graph: {
+    degrees: [ 1, 2, 1, 0 ],
+    map: [ [0,0], [1,1], [2,2], [3,3] ],
+    nodes: [
+        { id: 0, adjacent: [ 1 ] },
+        { id: 1, adjacent: [ 0, 2 ] },
+        { id: 2, adjacent: [ 1 ] },
+        { id: 3, adjacent: [] }
+    ],
+    links: [
+        { source: 0, target: 1 },
+        { source: 1, target: 2 }
+    ]
+}
+```
 
 Manual editing operations are supported with 3 custom action buttons: *links*, *add*, and *del*. These are sufficient to allow intuitive modification and building of unique graphs.
 
