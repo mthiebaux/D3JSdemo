@@ -46,13 +46,17 @@ d3.forceSimulation()
 
 * Live hosting at [thiebaux.site44.com](https://thiebaux.site44.com/D3JSdemo/editor.html)
 
+Building on lessons learned from implementing link mutations, the project developed further into a general graph editor, allowing insertion and deletion of both links and nodes, with a variety of initialization options. With deep refactoring and modularization of the various components, it becomes much easier to customize the client code for specific purposes, such as animated graph traversal and feature detection.
 
-...
-Each node maintains a separate list of its neighbors (adjacency array), for ease of traversal. When a node is deleted, there is a lot of book-keeping to keep straight. We can’t just use the simplest graph representation typically used for a search task. We also need maintain a separate edge list curated for the D3 visualizer. To support deletion, each node must be referred to by unique name, rather than its position in the array. These are kept in a hash map.
+Each node maintains a separate list of its neighbors (adjacency array), for ease of traversal. When a node is deleted, there is a lot of book-keeping to keep straight. We can’t just use the simplest graph representation typically used for a search task. We also need to maintain a node degree list, and a separate edge list curated for the D3 visualizer. To support deletion, each node must be referred to by unique name, rather than its position in the array. These are kept in a hash map.
 
+Manual editing operations are supported with 3 custom action buttons: *links*, *add*, and *del*. These are sufficient to allow intuitive modification and building of unique graphs.
 
+* **links**: For each selected node, select its links and then unselect the node. This logic allows all elements to be unselected by clicking twice.
 
+* **add**: If no nodes are selected, a new unconnected node is added. If one node is selected, a new node is added and linked to it. When multiple nodes are selected, they are linked together in order of selection.
 
+* **del**: Remove all selected links and nodes from the graph.
 
 
 
