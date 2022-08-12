@@ -5,7 +5,7 @@ export { create };
 
 ///////////////////////////////////////////////////////////////////////
 
-function create( view, width, height )	{
+function create( view, attr, width, height )	{
 
 	let svg = d3.select( view.select( "histo" ) )
 		.append( "svg" )
@@ -15,6 +15,7 @@ function create( view, width, height )	{
 	let hist = {
 
 		svg,
+		attr,
 		width,
 		height,
 
@@ -60,7 +61,9 @@ function update_histogram( hist, degrees, num_buckets, reset_history = false )	{
 		.domain( [ 0, num_buckets + 1 ] )
 		.thresholds( num_buckets );
 
+//console.log( degrees );
 	let bins = histo_bins( degrees );
+//console.log( bins );
 
 	let Y_scale = d3.scaleLinear()
 		.domain( [ 0, d3.max( bins, (d) => d.length ) ] )
@@ -89,9 +92,11 @@ function update_histogram( hist, degrees, num_buckets, reset_history = false )	{
 				}
 			)
 			.attr( "fill",
-				d => d3.interpolateTurbo(
-					degree_to_value( d.length ? d[ 0 ] : 0, num_buckets )
-				)
+				d => hist.attr.bin_color( d.length ? d[ 0 ] : 0 )
+
+// 				d3.interpolateTurbo(
+// 					degree_to_value( d.length ? d[ 0 ] : 0, num_buckets )
+// 				)
 			);
 
 	hist.accum = accumulate_bins( bins, hist.accum );

@@ -21,15 +21,16 @@ export { init };
 function init( view )	{
 
 	let sim = graph_sim.create( view, 300, 300 );
-//	let histo = histogram.create( view, 300, 100 );
 
 	let graph = graph_gen.simple_graph();
 	let attr = attributes( 10 );
 
+	let histo = histogram.create( view, attr, 300, 50 );
+	histo.update( graph.degrees, 10, true );
+
 	sim.init( graph, attr );
 	sim.update();
 
-//	histo.update( graph.degrees, 10, true );
 
 	let app = {
 
@@ -37,7 +38,7 @@ function init( view )	{
 		attr,
 		graph,
 		sim,
-//		histo,
+		histo,
 
 		timeout: null,
 		auto: false,
@@ -72,6 +73,9 @@ function attributes( max_degree )	{
 
 	let attr = {
 
+		bin_color( degree )	{
+			return( d3.interpolateTurbo( d2v( degree, max_degree ) ) );
+		},
 		node_border( node )	{
 			if( node.group == 1 ) return( 3.0 );
 //			return( 1.0 );
@@ -83,14 +87,15 @@ function attributes( max_degree )	{
 		node_color( node )	{
 		//	if( node.group == 1 ) return(  );
 		//	return( ext( node.id ) );
-			return( d3.interpolateTurbo( d2v( node.adjacent.length, max_degree ) ) );
+//			return( d3.interpolateTurbo( d2v( node.adjacent.length, max_degree ) ) );
+			return( this.bin_color( node.adjacent.length ) );
 		},
-		link_color( node )	{
-			if( node.group == 1 ) return( "#000" );
+		link_color( link )	{
+			if( link.group == 1 ) return( "#000" );
 			return( "#bbb" );
 		},
-		link_width( node )	{
-			if( node.group == 1 ) return( 4.0 );
+		link_width( link )	{
+			if( link.group == 1 ) return( 4.0 );
 			return( 3.0 );
 		}
 	};
@@ -110,6 +115,7 @@ function register_events( app )	{
 			app.sim.init( app.graph, app.attr );
 			app.sim.update();
 //			app.histo.update( app.graph.degrees, app.max_degree, true );
+			app.histo.update( app.graph.degrees, 10, true );
 		}
 	);
 	d3.select( app.view.select( "ring" ) ).on(
@@ -122,6 +128,7 @@ function register_events( app )	{
 			app.sim.init( app.graph, app.attr );
 			app.sim.update();
 //			app.histo.update( app.graph.degrees, app.max_degree, true );
+			app.histo.update( app.graph.degrees, 10, true );
 		}
 	);
 	d3.select( app.view.select( "chain" ) ).on(
@@ -134,6 +141,7 @@ function register_events( app )	{
 			app.sim.init( app.graph, app.attr );
 			app.sim.update();
 //			app.histo.update( app.graph.degrees, app.max_degree, true );
+			app.histo.update( app.graph.degrees, 10, true );
 		}
 	);
 	d3.select( app.view.select( "power" ) ).on(
@@ -145,6 +153,7 @@ function register_events( app )	{
 			app.sim.init( app.graph, app.attr );
 			app.sim.update();
 //			app.histo.update( app.graph.degrees, app.max_degree, true );
+			app.histo.update( app.graph.degrees, 10, true );
 		}
 	);
 
@@ -165,6 +174,7 @@ function register_events( app )	{
 			app.sim.select_nodes = [];
 			app.sim.update();
 //			app.histo.update( app.graph.degrees, app.max_degree, false );
+			app.histo.update( app.graph.degrees, 10, false );
 		}
 	);
 	d3.select( app.view.select( "add" ) ).on(
@@ -179,6 +189,7 @@ function register_events( app )	{
 			app.sim.select_nodes = [];
 			app.sim.update();
 //			app.histo.update( app.graph.degrees, app.max_degree, false );
+			app.histo.update( app.graph.degrees, 10, false );
 		}
 	);
 	d3.select( app.view.select( "del" ) ).on(
@@ -193,6 +204,7 @@ function register_events( app )	{
 			app.sim.select_nodes = [];
 			app.sim.update();
 //			app.histo.update( app.graph.degrees, app.max_degree, false );
+			app.histo.update( app.graph.degrees, 10, false );
 		}
 	);
 
@@ -210,6 +222,7 @@ function register_events( app )	{
 					if( update == true )	{
 						app.sim.update();
 //						app.histo.update( app.graph.degrees, app.max_degree, false );
+						app.histo.update( app.graph.degrees, 10, false );
 					}
 					if( app.auto )	{
 						app.timeout = d3.timeout( mutate_timeout_callback, app.ival );
