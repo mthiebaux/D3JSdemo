@@ -22,7 +22,7 @@ function create( view, width, height )	{
 	let sim = {
 
 		svg,
-		view: view,
+		view,
 		attr: dfl_attr,
 		graph: null,
 		engine: null,

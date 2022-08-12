@@ -12,6 +12,7 @@ import * as d3 from "https://cdn.skypack.dev/d3@7"; // GitHub recommended
 import * as graph_gen from './graph_gen.js';
 import * as graph_edit from './graph_edit.js';
 import * as graph_sim from './graph_sim.js';
+import * as histogram from './histogram.js';
 
 export { init };
 
@@ -19,14 +20,16 @@ export { init };
 
 function init( view )	{
 
-//	let app = create_graph_editor( view );
-
 	let sim = graph_sim.create( view, 300, 300 );
+//	let histo = histogram.create( view, 300, 100 );
+
 	let graph = graph_gen.simple_graph();
 	let attr = attributes( 10 );
 
 	sim.init( graph, attr );
 	sim.update();
+
+//	histo.update( graph.degrees, 10, true );
 
 	let app = {
 
@@ -34,6 +37,7 @@ function init( view )	{
 		attr,
 		graph,
 		sim,
+//		histo,
 
 		timeout: null,
 		auto: false,
@@ -70,7 +74,8 @@ function attributes( max_degree )	{
 
 		node_border( node )	{
 			if( node.group == 1 ) return( 3.0 );
-			return( 1.0 );
+//			return( 1.0 );
+			return( 0 );
 		},
 		node_radius( node )	{
 			return( d2r( node.adjacent.length, max_degree ) );
@@ -82,7 +87,7 @@ function attributes( max_degree )	{
 		},
 		link_color( node )	{
 			if( node.group == 1 ) return( "#000" );
-			return( "#999" );
+			return( "#bbb" );
 		},
 		link_width( node )	{
 			if( node.group == 1 ) return( 4.0 );
@@ -90,23 +95,6 @@ function attributes( max_degree )	{
 		}
 	};
 	return( attr );
-}
-
-///////////////////////////////////////////////////////////////////////
-
-function log_graph( graph, view )	{
-
-	view.log( "LOG: " );
-//	view.log( graph );
-
-	view.log( "degrees: [ " + graph.degrees.join( ", " ) + " ]" );
-	view.log( "map: " + JSON.stringify( [ ...( graph.map.entries() ) ] ) );
-	for( let i=0; i< graph.nodes.length; i++ )	{
-		view.log( "nodes: " + graph.nodes[ i ].id + " [ " + graph.nodes[ i ].adjacent.join( ", " ) + " ]" );
-	}
-	for( let i=0; i< graph.links.length; i++ )	{
-		view.log( "links: [ " + graph.links[ i ].source.id + ", " + graph.links[ i ].target.id + " ]" );
-	}
 }
 
 ///////////////////////////////////////////////////////////////////////
@@ -121,6 +109,7 @@ function register_events( app )	{
 			app.graph = graph_gen.simple_graph();
 			app.sim.init( app.graph, app.attr );
 			app.sim.update();
+//			app.histo.update( app.graph.degrees, app.max_degree, true );
 		}
 	);
 	d3.select( app.view.select( "ring" ) ).on(
@@ -128,9 +117,11 @@ function register_events( app )	{
 		function( event )	{
 
 			app.reset = true;
-			app.graph = graph_gen.ring_graph( 6, 1 );
+//			app.graph = graph_gen.ring_graph( 6, 1 );
+			app.graph = graph_gen.ring_graph( 12, 1 );
 			app.sim.init( app.graph, app.attr );
 			app.sim.update();
+//			app.histo.update( app.graph.degrees, app.max_degree, true );
 		}
 	);
 	d3.select( app.view.select( "chain" ) ).on(
@@ -138,9 +129,11 @@ function register_events( app )	{
 		function( event )	{
 
 			app.reset = true;
-			app.graph = graph_gen.ring_graph( 12, 2 );
+//			app.graph = graph_gen.ring_graph( 12, 2 );
+			app.graph = graph_gen.ring_graph( 18, 3 );
 			app.sim.init( app.graph, app.attr );
 			app.sim.update();
+//			app.histo.update( app.graph.degrees, app.max_degree, true );
 		}
 	);
 	d3.select( app.view.select( "power" ) ).on(
@@ -151,6 +144,7 @@ function register_events( app )	{
 			app.graph = graph_gen.power_graph( 32, 0.9, 10 );
 			app.sim.init( app.graph, app.attr );
 			app.sim.update();
+//			app.histo.update( app.graph.degrees, app.max_degree, true );
 		}
 	);
 
@@ -170,6 +164,7 @@ function register_events( app )	{
 			ungroup( app.graph.nodes );
 			app.sim.select_nodes = [];
 			app.sim.update();
+//			app.histo.update( app.graph.degrees, app.max_degree, false );
 		}
 	);
 	d3.select( app.view.select( "add" ) ).on(
@@ -183,6 +178,7 @@ function register_events( app )	{
 			app.sim.select_links = [];
 			app.sim.select_nodes = [];
 			app.sim.update();
+//			app.histo.update( app.graph.degrees, app.max_degree, false );
 		}
 	);
 	d3.select( app.view.select( "del" ) ).on(
@@ -196,29 +192,29 @@ function register_events( app )	{
 			app.sim.select_links = [];
 			app.sim.select_nodes = [];
 			app.sim.update();
+//			app.histo.update( app.graph.degrees, app.max_degree, false );
 		}
 	);
-
-	function mutate_timeout_callback( d )	{
-
-		let update = graph_edit.auto_edit( app.graph, 10, app.reset );
-		app.reset = false;
-
-		if( update == true )	{
-
-//			init_histogram( hist, graph.degrees, graph.max_degree );
-			app.sim.update();
-		}
-		if( app.auto )	{
-			app.timeout = d3.timeout( mutate_timeout_callback, app.ival );
-		}
-	}
 
 	d3.select( app.view.select( "rate" ) ).on(
 		"input",
 		function( event )	{
 
 			if( this.value > 0 )	{
+
+				function mutate_timeout_callback( d )	{
+
+					let update = graph_edit.auto_edit( app.graph, 10, app.reset );
+					app.reset = false;
+
+					if( update == true )	{
+						app.sim.update();
+//						app.histo.update( app.graph.degrees, app.max_degree, false );
+					}
+					if( app.auto )	{
+						app.timeout = d3.timeout( mutate_timeout_callback, app.ival );
+					}
+				}
 
 				function rate_conversion( i, max )	{
 					return( 10 + 1000 * ( max - i ) / max );
@@ -243,5 +239,23 @@ function register_events( app )	{
 		}
 	);
 }
+
+///////////////////////////////////////////////////////////////////////
+
+function log_graph( graph, view )	{
+
+	view.log( "LOG: " );
+//	view.log( graph );
+
+	view.log( "degrees: [ " + graph.degrees.join( ", " ) + " ]" );
+	view.log( "map: " + JSON.stringify( [ ...( graph.map.entries() ) ] ) );
+	for( let i=0; i< graph.nodes.length; i++ )	{
+		view.log( "nodes: " + graph.nodes[ i ].id + " [ " + graph.nodes[ i ].adjacent.join( ", " ) + " ]" );
+	}
+	for( let i=0; i< graph.links.length; i++ )	{
+		view.log( "links: [ " + graph.links[ i ].source.id + ", " + graph.links[ i ].target.id + " ]" );
+	}
+}
+
 
 ///////////////////////////////////////////////////////////////////////

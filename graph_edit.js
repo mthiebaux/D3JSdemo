@@ -161,7 +161,7 @@ function auto_edit( graph, max_degree, reset_balance = false )	{
 	if( Math.random() < 0.5  )	{
 		// remove existing link
 
-		if( auto_edit.balance > -( max_degree / 2 ) )	{
+		if( auto_edit.balance > -( max_degree / 2 ) )	{ // this is just a heuristic band-aid
 
 			if( graph.links.length > 0 )	{
 

@@ -1,6 +1,6 @@
 # D3JSdemo
 
- **D3.js Demo with scale-free graph generation**
+ **D3.js Editor with scale-free graph generation**
 
 * Live hosting at [thiebaux.site44.com](https://thiebaux.site44.com/D3JSdemo/index.html)
 
