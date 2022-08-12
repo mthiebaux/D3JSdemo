@@ -1,13 +1,7 @@
 
-// d3.select is not a function:
-//import * as d3 from './d3.v7.min.js'
-//import * as d3 from 'https://d3js.org/d3.v7.min.js'
-//import * as d3 from 'https://d3js.org/d3.v7.js'
-
-import * as d3 from "https://cdn.skypack.dev/d3@7"; // GitHub recommended
-
 //import * as d3 from 'https://unpkg.com/d3?module' // slower to load?
 
+import * as d3 from "https://cdn.skypack.dev/d3@7"; // GitHub recommended
 
 import * as graph_gen from './graph_gen.js';
 import * as graph_edit from './graph_edit.js';
@@ -18,40 +12,66 @@ export { init };
 
 ///////////////////////////////////////////////////////////////////////
 
-function init( view )	{
+function init( view_elements )	{
 
-	let sim = graph_sim.create( view, 300, 300 );
+	const view = {
+
+		select( id )	{
+			return( "#" + view_elements[ id ] );
+		},
+		log_str( str )	{
+			let log_area = document.getElementById( view_elements[ "log" ] );
+			log_area.value += str;
+			log_area.value += '\n';
+			log_area.scrollTop = log_area.scrollHeight;
+		},
+		log( input )	{
+			if( typeof input === "string" )	{
+				this.log_str( input );
+			}
+			else	{
+				this.log_str( JSON.stringify( input, null, 2 ) );
+			}
+		}
+	};
 
 	let graph = graph_gen.simple_graph();
-	let attr = attributes( 10 );
-
-	let histo = histogram.create( view, attr, 300, 50 );
-	histo.update( graph.degrees, 10, true );
-
-	sim.init( graph, attr );
-	sim.update();
-
+	let sim = graph_sim.create( view, 300, 300 );
 
 	let app = {
 
 		view,
-		attr,
 		graph,
 		sim,
-		histo,
+
+		histo: null,
+		attr: null,
+		max_degree: 10,
+
+		select_nodes: [],
+		select_links: [],
 
 		timeout: null,
 		auto: false,
 		ival: 1000,
-		reset: true
+		reset: true // auto-edit balace reset
 	};
 
-	register_events( app );
+	app.attr = attribute_handlers( app );
+	register_reset_handlers( app );
+	register_event_handlers( app );
+
+	app.sim.select = selection_handlers( app );
+	app.sim.init( graph, app.attr );
+	app.sim.update();
+
+	app.histo = histogram.create( view, app.attr, 300, 50 );
+	app.histo.update( graph.degrees, app.max_degree, true );
 }
 
 ///////////////////////////////////////////////////////////////////////
 
-function attributes( max_degree )	{
+function attribute_handlers( app )	{
 
 	function ext( id )	{
 		// extended_color_scheme # 32
@@ -74,34 +94,33 @@ function attributes( max_degree )	{
 	let attr = {
 
 		bin_color( degree )	{
-			return( d3.interpolateTurbo( d2v( degree, max_degree ) ) );
+			return( d3.interpolateTurbo( d2v( degree, app.max_degree ) ) );
 		},
 		node_border( node )	{
 
 // 			if( node.group == 1 ) return( 5.0 );
 // 			return( 2.0 );
 
-			if( node.group == 1 ) return( 0.8 * d2r( node.adjacent.length, max_degree ) );
-			return( 0.25 * d2r( node.adjacent.length, max_degree ) );
-
-//			return( 0 );
+			if( node.group == 1 ) return( 0.5 * d2r( node.adjacent.length, app.max_degree ) );
+//			return( 0.2 * d2r( node.adjacent.length, app.max_degree ) );
+			return( 0 );
 		},
 		node_border_color( node )	{
 //			return( this.bin_color( node.adjacent.length ) );
-			return( ext( node.id ) );
+//			return( ext( node.id ) );
+			return( "#000" );
 		},
 		node_radius( node )	{
-			return( d2r( node.adjacent.length, max_degree ) );
+			return( d2r( node.adjacent.length, app.max_degree ) );
 		},
 		node_color( node )	{
 		//	if( node.group == 1 ) return(  );
 //			return( ext( node.id ) );
-//			return( d3.interpolateTurbo( d2v( node.adjacent.length, max_degree ) ) );
 			return( this.bin_color( node.adjacent.length ) );
 		},
 		link_color( link )	{
 			if( link.group == 1 ) return( "#000" );
-			return( "#bbb" );
+			return( "#aaa" );
 		},
 		link_width( link )	{
 			if( link.group == 1 ) return( 4.0 );
@@ -113,58 +132,108 @@ function attributes( max_degree )	{
 
 ///////////////////////////////////////////////////////////////////////
 
-function register_events( app )	{
+function selection_handlers( app )	{
+
+	function mousedown_node( event, node )	{
+
+//		console.log( "down event: " + JSON.stringify( event, null, 2 ) ); // bupkis
+//		console.log( "down node: " + JSON.stringify( node, null, 2 ) );
+
+		let arr_i = app.select_nodes.indexOf( node.index );
+		if( arr_i == -1 )	{
+
+			app.select_nodes.push( node.index );
+			node.group = 1;
+		}
+		else	{ // de-select
+
+			app.select_nodes.splice( arr_i, 1 );
+			node.group = 0;
+		}
+
+		app.sim.update();
+		app.view.log( "node: " + node.id + " [ " + node.adjacent.join( ", " ) + " ] " + node.index );
+	}
+
+	function mousedown_link( event, link )	{
+
+//		console.log( "down event: " + JSON.stringify( event, null, 2 ) ); // bupkis
+//		console.log( "down link: " + JSON.stringify( link, null, 2 ) );
+
+		let arr_i = app.select_links.indexOf( link.index );
+		if( arr_i == -1 )	{
+
+			app.select_links.push( link.index );
+			link.group = 1;
+		}
+		else	{ // de-select
+
+			app.select_links.splice( arr_i, 1 );
+			link.group = 0;
+		}
+
+		app.sim.update();
+		app.view.log( "link: [ " + link.source.id + ", " + link.target.id + " ] " + link.index );
+	}
+
+	return( { mousedown_node, mousedown_link } );
+}
+
+///////////////////////////////////////////////////////////////////////
+
+function register_reset_handlers( app )	{
 
 	d3.select( app.view.select( "simple" ) ).on(
 		"mousedown",
 		function( event )	{
 
-			app.reset = true; // auto-edit balace reset
+			app.max_degree = 10;
+			app.reset = true;
 			app.graph = graph_gen.simple_graph();
 			app.sim.init( app.graph, app.attr );
 			app.sim.update();
-//			app.histo.update( app.graph.degrees, app.max_degree, true );
-			app.histo.update( app.graph.degrees, 10, true );
+			app.histo.update( app.graph.degrees, app.max_degree, true );
 		}
 	);
 	d3.select( app.view.select( "ring" ) ).on(
 		"mousedown",
 		function( event )	{
 
+			app.max_degree = 10;
 			app.reset = true;
-//			app.graph = graph_gen.ring_graph( 6, 1 );
 			app.graph = graph_gen.ring_graph( 12, 1 );
 			app.sim.init( app.graph, app.attr );
 			app.sim.update();
-//			app.histo.update( app.graph.degrees, app.max_degree, true );
-			app.histo.update( app.graph.degrees, 10, true );
+			app.histo.update( app.graph.degrees, app.max_degree, true );
 		}
 	);
 	d3.select( app.view.select( "chain" ) ).on(
 		"mousedown",
 		function( event )	{
 
+			app.max_degree = 15;
 			app.reset = true;
-//			app.graph = graph_gen.ring_graph( 12, 2 );
 			app.graph = graph_gen.ring_graph( 18, 3 );
 			app.sim.init( app.graph, app.attr );
 			app.sim.update();
-//			app.histo.update( app.graph.degrees, app.max_degree, true );
-			app.histo.update( app.graph.degrees, 10, true );
+			app.histo.update( app.graph.degrees, app.max_degree, true );
 		}
 	);
 	d3.select( app.view.select( "power" ) ).on(
 		"mousedown",
 		function( event )	{
 
+			app.max_degree = 20;
 			app.reset = true;
-			app.graph = graph_gen.power_graph( 32, 0.9, 10 );
+			app.graph = graph_gen.power_graph( 32, 0.9, app.max_degree );
 			app.sim.init( app.graph, app.attr );
 			app.sim.update();
-//			app.histo.update( app.graph.degrees, app.max_degree, true );
-			app.histo.update( app.graph.degrees, 10, true );
+			app.histo.update( app.graph.degrees, app.max_degree, true );
 		}
 	);
+}
+
+function register_event_handlers( app )	{
 
 	function ungroup( arr )	{
 		for( let i=0; i< arr.length; i++ )	{
@@ -177,43 +246,43 @@ function register_events( app )	{
 		function( event )	{
 
 			ungroup( app.graph.links );
-			app.sim.select_links = graph_edit.select_links( app.graph, app.sim.select_nodes );
+			app.select_links = graph_edit.select_links( app.graph, app.select_nodes );
 
 			ungroup( app.graph.nodes );
-			app.sim.select_nodes = [];
+			app.select_nodes = [];
+
 			app.sim.update();
-//			app.histo.update( app.graph.degrees, app.max_degree, false );
-			app.histo.update( app.graph.degrees, 10, false );
+			app.histo.update( app.graph.degrees, app.max_degree, false );
 		}
 	);
 	d3.select( app.view.select( "add" ) ).on(
 		"mousedown",
 		function( event )	{
 
-			graph_edit.add_elems( app.graph, app.sim.select_nodes );
+			graph_edit.add_elems( app.graph, app.select_nodes );
 			ungroup( app.graph.links );
 			ungroup( app.graph.nodes );
 
-			app.sim.select_links = [];
-			app.sim.select_nodes = [];
+			app.select_links = [];
+			app.select_nodes = [];
+
 			app.sim.update();
-//			app.histo.update( app.graph.degrees, app.max_degree, false );
-			app.histo.update( app.graph.degrees, 10, false );
+			app.histo.update( app.graph.degrees, app.max_degree, false );
 		}
 	);
 	d3.select( app.view.select( "del" ) ).on(
 		"mousedown",
 		function( event )	{
 
-			graph_edit.delete_elems( app.graph, app.sim.select_links, app.sim.select_nodes );
+			graph_edit.delete_elems( app.graph, app.select_links, app.select_nodes );
 			ungroup( app.graph.links );
 			ungroup( app.graph.nodes );
 
-			app.sim.select_links = [];
-			app.sim.select_nodes = [];
+			app.select_links = [];
+			app.select_nodes = [];
+
 			app.sim.update();
-//			app.histo.update( app.graph.degrees, app.max_degree, false );
-			app.histo.update( app.graph.degrees, 10, false );
+			app.histo.update( app.graph.degrees, app.max_degree, false );
 		}
 	);
 
@@ -221,35 +290,7 @@ function register_events( app )	{
 		"input",
 		function( event )	{
 
-			if( this.value > 0 )	{
-
-				function mutate_timeout_callback( d )	{
-
-					let update = graph_edit.auto_edit( app.graph, 10, app.reset );
-					app.reset = false;
-
-					if( update == true )	{
-						app.sim.update();
-//						app.histo.update( app.graph.degrees, app.max_degree, false );
-						app.histo.update( app.graph.degrees, 10, false );
-					}
-					if( app.auto )	{
-						app.timeout = d3.timeout( mutate_timeout_callback, app.ival );
-					}
-				}
-
-				function rate_conversion( i, max )	{
-					return( 10 + 1000 * ( max - i ) / max );
-				}
-
-				if( app.timeout ) app.timeout.stop();
-				app.auto = true;
-				app.ival = rate_conversion( this.value, Number( this.max ) );
-				app.timeout = d3.timeout( mutate_timeout_callback, app.ival );
-			}
-			else	{
-				app.auto = false;
-			}
+			update_auto_edit( app, this.value, this.max );
 		}
 	);
 
@@ -263,6 +304,38 @@ function register_events( app )	{
 }
 
 ///////////////////////////////////////////////////////////////////////
+
+function update_auto_edit( app, value, max )	{
+
+	if( value > 0 )	{
+
+		function mutate_timeout_callback( d )	{
+
+			let update = graph_edit.auto_edit( app.graph, app.max_degree, app.reset );
+			app.reset = false;
+
+			if( update == true )	{
+				app.sim.update();
+				app.histo.update( app.graph.degrees, app.max_degree, false );
+			}
+			if( app.auto )	{
+				app.timeout = d3.timeout( mutate_timeout_callback, app.ival );
+			}
+		}
+
+		function rate_conversion( i, max )	{
+			return( 10 + 1000 * ( max - i ) / max );
+		}
+
+		if( app.timeout ) app.timeout.stop();
+		app.auto = true;
+		app.ival = rate_conversion( value, Number( max ) );
+		app.timeout = d3.timeout( mutate_timeout_callback, app.ival );
+	}
+	else	{
+		app.auto = false;
+	}
+}
 
 function log_graph( graph, view )	{
 
@@ -278,6 +351,5 @@ function log_graph( graph, view )	{
 		view.log( "links: [ " + graph.links[ i ].source.id + ", " + graph.links[ i ].target.id + " ]" );
 	}
 }
-
 
 ///////////////////////////////////////////////////////////////////////

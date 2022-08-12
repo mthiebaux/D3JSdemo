@@ -26,10 +26,11 @@ function create( view, attr, width, height )	{
 		update( degrees, num_buckets, reset_history = false ) {
 			update_histogram( this, degrees, num_buckets, reset_history );
 		}
-
 	};
 	return( hist );
 }
+
+///////////////////////////////////////////////////////////////////////
 
 function accumulate_bins( bins, accum )	{
 
@@ -61,9 +62,7 @@ function update_histogram( hist, degrees, num_buckets, reset_history = false )	{
 		.domain( [ 0, num_buckets + 1 ] )
 		.thresholds( num_buckets );
 
-//console.log( degrees );
 	let bins = histo_bins( degrees );
-//console.log( bins );
 
 	let Y_scale = d3.scaleLinear()
 		.domain( [ 0, d3.max( bins, (d) => d.length ) ] )
@@ -93,10 +92,6 @@ function update_histogram( hist, degrees, num_buckets, reset_history = false )	{
 			)
 			.attr( "fill",
 				d => hist.attr.bin_color( d.length ? d[ 0 ] : 0 )
-
-// 				d3.interpolateTurbo(
-// 					degree_to_value( d.length ? d[ 0 ] : 0, num_buckets )
-// 				)
 			);
 
 	hist.accum = accumulate_bins( bins, hist.accum );

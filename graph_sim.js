@@ -12,11 +12,18 @@ function create( view, width, height )	{
 			.attr( "viewBox", [ -width / 2, -height / 2, width, height ] );
 
 	let dfl_attr = {
-		node_border()	{ return( 1.0 ); },
-		node_radius()	{ return( 4.0 ); },
-		node_color()	{ return( "#00f" ); },
-		link_color()	{ return( "#999" ); },
-		link_width()	{ return( 1.0 ); }
+		bin_color()			{ return( "#999" ); },
+		node_border()		{ return( 1.0 ); },
+		node_border_color()	{ return( "#000" ); },
+		node_radius()		{ return( 4.0 ); },
+		node_color()		{ return( "#00f" ); },
+		link_color()		{ return( "#999" ); },
+		link_width()		{ return( 1.0 ); }
+	};
+
+	let dfl_select = {
+		mousedown_node(){},
+		mousedown_link(){}
 	};
 
 	let sim = {
@@ -29,17 +36,16 @@ function create( view, width, height )	{
 		nodes: null, // these are not graph.nodes, these are sim.nodes
 		links: null, // these are not graph.links, these are sim.links
 
+		// element selection callback:
+		select: dfl_select,
+
 		// export funcs
 		init( graph, attr, view ) {
 			init_simulation( this, graph, attr, view );
 		},
 		update() {
 			update_simulation( this );
-		},
-
-		// edit status:
-		select_nodes: [],
-		select_links: []
+		}
 	};
 	return( sim );
 }
@@ -95,14 +101,11 @@ function update_simulation( sim )	{
 		.data( sim.graph.nodes )
 		.join(
 			enter => enter.append( "circle" )
-
-//				.attr( "stroke", d => "#000" )
 				.attr( "stroke", d => sim.attr.node_border_color( d ) )
-
 				.attr( "stroke-width", d => sim.attr.node_border( d ) )
 				.attr( "fill", d => sim.attr.node_color( d ) )
 				.attr( "r", d => sim.attr.node_radius( d ) )
-				.on( "mousedown", mousedown_node )
+				.on( "mousedown", sim.select.mousedown_node )
 				.call(
 					d3.drag()
 						.on( "start", dragstarted )
@@ -112,7 +115,6 @@ function update_simulation( sim )	{
 			,
 			update => update
 				.attr( "stroke", d => sim.attr.node_border_color( d ) )
-
 				.attr( "stroke-width", d => sim.attr.node_border( d ) )
 				.attr( "fill", d => sim.attr.node_color( d ) )
 				.attr( "r", d => sim.attr.node_radius( d ) )
@@ -127,11 +129,13 @@ function update_simulation( sim )	{
 			enter => enter.append( "line" )
 				.attr( "stroke", d => sim.attr.link_color( d ) )
 				.attr( "stroke-width", d => sim.attr.link_width( d ) )
-				.on( "mousedown", mousedown_link )
+				.attr( "stroke-opacity", d => 0.5 )
+				.on( "mousedown", sim.select.mousedown_link )
 			,
 			update => update
 				.attr( "stroke", d => sim.attr.link_color( d ) )
 				.attr( "stroke-width", d => sim.attr.link_width( d ) )
+//				.attr( "stroke-opacity", d => 0.5 )
 			,
 			exit => exit
 				.remove()
@@ -141,49 +145,6 @@ function update_simulation( sim )	{
 	sim.engine.force( "link" ).links( sim.graph.links );
 	sim.engine.alphaTarget( 0.1 ).restart();
 
-	function mousedown_node( event, node )	{
-
-//		console.log( "drag start event: " + JSON.stringify( event, null, 2 ) ); // bupkis
-//		console.log( "down node: " + JSON.stringify( node, null, 2 ) );
-
-		let arr_i = sim.select_nodes.indexOf( node.index );
-		if( arr_i == -1 )	{
-
-			sim.select_nodes.push( node.index );
-			node.group = 1;
-		}
-		else	{ // de-select
-
-			sim.select_nodes.splice( arr_i, 1 );
-			node.group = 0;
-		}
-
-		sim.update();
-		sim.view.log( "node: " + node.id + " [ " + node.adjacent.join( ", " ) + " ] " + node.index );
-	}
-
-	function mousedown_link( event, link )	{
-
-//		console.log( "down event: " + JSON.stringify( event, null, 2 ) ); // bupkis
-//		console.log( "down link: " + JSON.stringify( link, null, 2 ) );
-//		console.log( this );
-
-		let arr_i = sim.select_links.indexOf( link.index );
-		if( arr_i == -1 )	{
-
-			sim.select_links.push( link.index );
-			link.group = 1;
-		}
-		else	{ // de-select
-
-			sim.select_links.splice( arr_i, 1 );
-			link.group = 0;
-		}
-
-		sim.update();
-		sim.view.log( "link: [ " + link.source.id + ", " + link.target.id + " ] " + link.index );
-	}
-
 	function dragstarted( event, node ) {
 
 //		console.log( "drag start event: " + JSON.stringify( event, null, 2 ) );
@@ -192,6 +153,7 @@ function update_simulation( sim )	{
 
 		if ( !event.active )
 			sim.engine.alphaTarget( 0.9 ).restart(); // range [ 0, 1 ]
+
 		event.subject.fx = event.subject.x;
 		event.subject.fy = event.subject.y;
 	}
@@ -204,6 +166,7 @@ function update_simulation( sim )	{
 
 		if ( !event.active )
 			sim.engine.alphaTarget( 0 );
+
 		event.subject.fx = null;
 		event.subject.fy = null;
 	}

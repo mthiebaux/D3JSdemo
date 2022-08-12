@@ -28,25 +28,23 @@ function build_node_map( nodes )	{
 	return( map );
 }
 
+///////////////////////////////////////////////////////////////////////
+
 function simple_graph()	{
 
-//	let max_degree = 10;
-//	let degrees = [ 1, 2, 1, 0 ];
 	let nodes = [
 		{ id: 0, adjacent: [ 1 ], group: 0 },
 		{ id: 1, adjacent: [ 0, 2 ], group: 0 },
 		{ id: 2, adjacent: [ 1 ], group: 0 },
 		{ id: 3, adjacent: [], group: 0 }
 	];
-//	let degrees = build_degrees( nodes );
-//	let map = build_node_map( nodes );
+
 	let links = [
 		{ source: 0, target: 1, group: 0 },
 		{ source: 1, target: 2, group: 0 }
 	];
 
 	return {
-//		max_degree,
 		degrees:	build_degrees( nodes ),
 		map:		build_node_map( nodes ),
 		nodes,
@@ -56,14 +54,10 @@ function simple_graph()	{
 
 function ring_graph( n, w )	{
 
-//	let max_degree = 10;
-//	let degrees = new Array( n ).fill( 2 * w );
-
 	let nodes = [];
 	for( let i=0; i< n; i++ )	{
 		nodes.push( { id: i, adjacent: [], group: 0 } );
 	}
-//	let map = build_node_map( nodes );
 
 	let links = [];
 	for( let i=0; i< n; i++ )	{
@@ -86,7 +80,6 @@ function ring_graph( n, w )	{
 	}
 
 	return {
-//		max_degree,
 		degrees:	build_degrees( nodes ),
 		map:		build_node_map( nodes ),
 		nodes,
@@ -240,19 +233,10 @@ function power_graph( num_nodes, min_degree, max_degree )	{
 		}
 	}
 
-
-	let graph_data = {
-		degrees: [],
-		map: null,
-		nodes: [],
-		links: []
-	};
-
+	let nodes = [];
 	for( let i=0; i< num_nodes; i++ )	{
 
-		graph_data.degrees.push( adjacencies[ i ].length );
-
-		graph_data.nodes.push(
+		nodes.push(
 			{
 				id: i,
 				adjacent: adjacencies[ i ],
@@ -260,11 +244,11 @@ function power_graph( num_nodes, min_degree, max_degree )	{
 			}
 		);
 	}
-	graph_data.map = build_node_map( graph_data.nodes );
 
+	let links = [];
 	for( let i=0; i< edges.length; i++ )	{
 
-		graph_data.links.push(
+		links.push(
 			{
 				source: edges[ i ][ 0 ],
 				target: edges[ i ][ 1 ],
@@ -273,7 +257,12 @@ function power_graph( num_nodes, min_degree, max_degree )	{
 		);
 	}
 
-	return( graph_data );
+	return {
+		degrees:	build_degrees( nodes ),
+		map:		build_node_map( nodes ),
+		nodes,
+		links
+	};
 }
 
 ///////////////////////////////////////////////////////////////////////

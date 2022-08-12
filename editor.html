@@ -21,46 +21,46 @@
 
 		<div id="page_contents">
 
-<div style="border:1px solid lightgrey; padding:10px;">
-			<strong><em> initialize </em></strong>
-			<br>
-			<input
-				type="button"
-				id="init_simple_button"
-				value="simple"
-				style="color:black">
-			<input
-				type="button"
-				id="init_ring_button"
-				value="ring"
-				style="color:black">
-			<input
-				type="button"
-				id="init_chain_button"
-				value="chain"
-				style="color:black">
-			<input
-				type="button"
-				id="init_power_button"
-				value="power"
-				style="color:black">
-			<p>
+			<div style="border:1px solid lightgrey; padding:10px;">
+				<strong><em> initialize </em></strong>
+				<br>
+				<input
+					type="button"
+					id="init_simple_button"
+					value="simple"
+					style="color:black">
+				<input
+					type="button"
+					id="init_ring_button"
+					value="ring"
+					style="color:black">
+				<input
+					type="button"
+					id="init_chain_button"
+					value="chain"
+					style="color:black">
+				<input
+					type="button"
+					id="init_power_button"
+					value="power"
+					style="color:black">
+				<p>
 
-			<strong><em> links </em></strong>
-			<br>
-				&#8226; for each node selected: select links <br>
-				&#8226; click twice to unselect all
-			<p>
-			<strong><em> add </em></strong>
-			<br>
-				&#8226; no nodes selected: add new node <br>
-				&#8226; one selected: add new node and link <br>
-				&#8226; multiple: link together in order
-			<p>
-			<strong><em> del </em></strong>
-			<br>
-				&#8226; remove all selected elements
-</div>
+				<strong><em> links </em></strong>
+				<br>
+					&#8226; for each node selected: select links <br>
+					&#8226; click twice to unselect all
+				<p>
+				<strong><em> add </em></strong>
+				<br>
+					&#8226; no nodes selected: add new node <br>
+					&#8226; one selected: add new node and link <br>
+					&#8226; multiple: link together in order
+				<p>
+				<strong><em> del </em></strong>
+				<br>
+					&#8226; remove all selected elements
+			</div>
 
 			<div style="border:1px solid lightgrey; background:white; padding:5px;">
 
@@ -113,43 +113,22 @@
 
 		import * as editor from './editor.js';
 
-		const view_obj = {
-
-			elements:	{
-				graphic:	"graph_plot_div",
-				histo:		"histo_plot_div",
-				simple:		"init_simple_button",
-				ring: 		"init_ring_button",
-				chain:		"init_chain_button",
-				power:		"init_power_button",
-				links:		"links_button",
-				add:		"add_button",
-				del:		"delete_button",
-				rate:		"rate_slider",
-				print:		"print_button",
-				log:		"output_log"
-			},
-			select( id )	{
-				return( "#" + this.elements[ id ] );
-			},
-
-			log_str( str )	{
-				let log_area = document.getElementById( this.elements[ "log" ] );
-				log_area.value += str;
-				log_area.value += '\n';
-				log_area.scrollTop = log_area.scrollHeight;
-			},
-			log( input )	{
-				if( typeof input === "string" )	{
-					this.log_str( input );
-				}
-				else	{
-					this.log_str( JSON.stringify( input, null, 2 ) );
-				}
-			}
+		const view_elements = {
+			graphic:	"graph_plot_div",
+			histo:		"histo_plot_div",
+			simple:		"init_simple_button",
+			ring: 		"init_ring_button",
+			chain:		"init_chain_button",
+			power:		"init_power_button",
+			links:		"links_button",
+			add:		"add_button",
+			del:		"delete_button",
+			rate:		"rate_slider",
+			print:		"print_button",
+			log:		"output_log"
 		};
 
-		editor.init( view_obj );
+		editor.init( view_elements );
 
 	</script>
 
