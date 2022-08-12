@@ -225,7 +225,7 @@ function register_reset_handlers( app )	{
 
 			app.max_degree = 20;
 			app.reset = true;
-			app.graph = graph_gen.power_graph( 32, 0.9, app.max_degree );
+			app.graph = graph_gen.power_graph( 42, 0.9, app.max_degree );
 			app.sim.init( app.graph, app.attr );
 			app.sim.update();
 			app.histo.update( app.graph.degrees, app.max_degree, true );
