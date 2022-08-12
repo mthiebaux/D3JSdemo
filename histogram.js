@@ -23,7 +23,7 @@ function create( view, attr, width, height )	{
 		path: null,
 
 		// export funcs
-		update( degrees, num_buckets, reset_history ) {
+		update( degrees, num_buckets, reset_history = false ) {
 			update_histogram( this, degrees, num_buckets, reset_history );
 		}
 

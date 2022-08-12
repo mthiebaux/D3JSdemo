@@ -95,7 +95,10 @@ function update_simulation( sim )	{
 		.data( sim.graph.nodes )
 		.join(
 			enter => enter.append( "circle" )
-				.attr( "stroke", d => "#000" )
+
+//				.attr( "stroke", d => "#000" )
+				.attr( "stroke", d => sim.attr.node_border_color( d ) )
+
 				.attr( "stroke-width", d => sim.attr.node_border( d ) )
 				.attr( "fill", d => sim.attr.node_color( d ) )
 				.attr( "r", d => sim.attr.node_radius( d ) )
@@ -108,6 +111,8 @@ function update_simulation( sim )	{
 				)
 			,
 			update => update
+				.attr( "stroke", d => sim.attr.node_border_color( d ) )
+
 				.attr( "stroke-width", d => sim.attr.node_border( d ) )
 				.attr( "fill", d => sim.attr.node_color( d ) )
 				.attr( "r", d => sim.attr.node_radius( d ) )

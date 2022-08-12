@@ -77,16 +77,25 @@ function attributes( max_degree )	{
 			return( d3.interpolateTurbo( d2v( degree, max_degree ) ) );
 		},
 		node_border( node )	{
-			if( node.group == 1 ) return( 3.0 );
-//			return( 1.0 );
-			return( 0 );
+
+// 			if( node.group == 1 ) return( 5.0 );
+// 			return( 2.0 );
+
+			if( node.group == 1 ) return( 0.8 * d2r( node.adjacent.length, max_degree ) );
+			return( 0.25 * d2r( node.adjacent.length, max_degree ) );
+
+//			return( 0 );
+		},
+		node_border_color( node )	{
+//			return( this.bin_color( node.adjacent.length ) );
+			return( ext( node.id ) );
 		},
 		node_radius( node )	{
 			return( d2r( node.adjacent.length, max_degree ) );
 		},
 		node_color( node )	{
 		//	if( node.group == 1 ) return(  );
-		//	return( ext( node.id ) );
+//			return( ext( node.id ) );
 //			return( d3.interpolateTurbo( d2v( node.adjacent.length, max_degree ) ) );
 			return( this.bin_color( node.adjacent.length ) );
 		},
