@@ -17,9 +17,10 @@ function collect_links( graph, select_nodes )	{
 	let links = [];
 
 	for( let i=0; i< graph.links.length; i++ )	{
-		if( set.has( graph.links[ i ].source.index ) ||
-			set.has( graph.links[ i ].target.index ) )	{
-
+		if(
+			set.has( graph.links[ i ].source.index ) ||
+			set.has( graph.links[ i ].target.index )
+		)	{
 			links.push( i );
 		}
 	}

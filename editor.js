@@ -48,7 +48,7 @@ function init( view_elements )	{
 		attr: null,
 
 		max_degree: 10,
-		select_nodes: [],
+		select_nodes: [], // ephemeral: stored temporarily by index, not id
 		select_links: [],
 
 		timeout: null,
