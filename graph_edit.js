@@ -5,14 +5,13 @@ export {
 
 	add_elems,
 	delete_elems,
-	select_links,
-	collect_node_links,
+	collect_links,
 	auto_edit_links
 };
 
 ///////////////////////////////////////////////////////////////////////
 
-function select_links( graph, select_nodes )	{
+function collect_links( graph, select_nodes )	{
 
 	let set = new Set( [ ...select_nodes ] );
 	let links = [];
@@ -22,12 +21,10 @@ function select_links( graph, select_nodes )	{
 			set.has( graph.links[ i ].target.index ) )	{
 
 			links.push( i );
-//			graph.links[ i ].group = 1;
 		}
 	}
 	return( links );
 }
-
 
 function collect_node_links( graph, node_index )	{
 
@@ -127,6 +124,8 @@ function delete_elems( graph, select_links, select_nodes )	{
 
 
 	let link_arr = [ ...link_set ].sort( ( a, b ) => b - a  ); // descending
+
+
 	for( let i=0; i< link_arr.length; i++ )	{
 
 		detach_link( graph, link_arr[ i ] );
