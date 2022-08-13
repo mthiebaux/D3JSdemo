@@ -5,7 +5,7 @@ import * as d3 from "https://cdn.skypack.dev/d3@7"; // GitHub recommended
 
 import * as graph_gen from './graph_gen.js';
 import * as graph_edit from './graph_edit.js';
-import * as graph_sim from './graph_sim.js';
+import * as simulation from './simulation.js';
 import * as histogram from './histogram.js';
 
 export { init };
@@ -36,7 +36,7 @@ function init( view_elements )	{
 	};
 
 	let graph = graph_gen.simple_graph();
-	let sim = graph_sim.create( view, 300, 300 );
+	let sim = simulation.create( view, 300, 300 );
 
 	let app = {
 
