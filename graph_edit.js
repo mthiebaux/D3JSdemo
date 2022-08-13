@@ -5,11 +5,29 @@ export {
 
 	add_elems,
 	delete_elems,
+	select_links,
 	collect_node_links,
-	auto_edit
+	auto_edit_links
 };
 
 ///////////////////////////////////////////////////////////////////////
+
+function select_links( graph, select_nodes )	{
+
+	let set = new Set( [ ...select_nodes ] );
+	let links = [];
+
+	for( let i=0; i< graph.links.length; i++ )	{
+		if( set.has( graph.links[ i ].source.index ) ||
+			set.has( graph.links[ i ].target.index ) )	{
+
+			links.push( i );
+//			graph.links[ i ].group = 1;
+		}
+	}
+	return( links );
+}
+
 
 function collect_node_links( graph, node_index )	{
 
@@ -99,12 +117,14 @@ function detach_link( graph, link_index )	{
 
 function delete_elems( graph, select_links, select_nodes )	{
 
+
 	let link_set = new Set( select_links );
 	for( let i=0; i< select_nodes.length; i++ )	{
 
 		let arr = collect_node_links( graph, select_nodes[ i ] );
 		arr.forEach( l => link_set.add( l ) );
 	}
+
 
 	let link_arr = [ ...link_set ].sort( ( a, b ) => b - a  ); // descending
 	for( let i=0; i< link_arr.length; i++ )	{
@@ -133,13 +153,13 @@ function delete_elems( graph, select_links, select_nodes )	{
 
 ///////////////////////////////////////////////////////////////////////
 
-function auto_edit( graph, max_degree, reset_balance = false )	{
+function auto_edit_links( graph, max_degree, reset_balance = false )	{
 
-//	if( reset_balance ) console.log( "auto_edit: reset_balance" );
+//	if( reset_balance ) console.log( "auto_edit_links: reset_balance" );
 
 	// static variable
-    if( ( auto_edit.balance === undefined )|| reset_balance ) {
-         auto_edit.balance = 0;
+    if( ( auto_edit_links.balance === undefined )|| reset_balance ) {
+         auto_edit_links.balance = 0;
     }
 	let edited = false;
 
@@ -147,7 +167,7 @@ function auto_edit( graph, max_degree, reset_balance = false )	{
 
 		// remove existing link
 
-		if( auto_edit.balance > -( max_degree / 2 ) )	{ // this is just a heuristic band-aid
+		if( auto_edit_links.balance > -( max_degree / 2 ) )	{ // this is just a heuristic band-aid
 
 			if( graph.links.length > 0 )	{
 
@@ -155,7 +175,7 @@ function auto_edit( graph, max_degree, reset_balance = false )	{
 
 				delete_elems( graph, [ r_link_id  ], [] );
 
-				auto_edit.balance--;
+				auto_edit_links.balance--;
 				edited = true;
 			}
 		}
@@ -163,7 +183,7 @@ function auto_edit( graph, max_degree, reset_balance = false )	{
 	else	{
 		// add new link
 
-		if( auto_edit.balance < ( max_degree * 2 ) )	{
+		if( auto_edit_links.balance < ( max_degree * 2 ) )	{
 
 			let curr_max_deg = 0;
 			for( let i=0; i< graph.nodes.length; i++ )	{
@@ -186,14 +206,14 @@ function auto_edit( graph, max_degree, reset_balance = false )	{
 
 				if( add_new_link( graph, r_src_id, r_tgt_id ) )	{
 
-					auto_edit.balance++;
+					auto_edit_links.balance++;
 					edited = true;
 				}
 			}
 		}
 	}
 
-//	console.log( "auto_edit.balance: " + auto_edit.balance );
+//	console.log( "auto_edit_links.balance: " + auto_edit_links.balance );
 	return( edited );
 }
 

@@ -243,8 +243,10 @@ function register_event_handlers( app )	{
 		function( event )	{
 
 			ungroup( app.graph.links );
-			app.select_links = graph_edit.collect_node_links( app.graph, app.select_nodes );
-			for( let i in app.select_links )
+//			app.select_links = graph_edit.collect_node_links( app.graph, app.select_nodes );
+			app.select_links = graph_edit.select_links( app.graph, app.select_nodes );
+
+			for( let i of app.select_links )
 				app.graph.links[ i ].group = 1;
 
 			ungroup( app.graph.nodes );
@@ -310,7 +312,7 @@ function update_auto_edit( app, value, max )	{
 
 		function mutate_timeout_callback( d )	{
 
-			let update = graph_edit.auto_edit( app.graph, app.max_degree, app.reset );
+			let update = graph_edit.auto_edit_links( app.graph, app.max_degree, app.reset );
 			app.reset = false;
 
 			if( update == true )	{
