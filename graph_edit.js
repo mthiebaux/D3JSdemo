@@ -3,31 +3,15 @@ import * as graph_gen from './graph_gen.js';
 
 export {
 
-	select_links, // rename this
 	add_elems,
 	delete_elems,
+	collect_node_links,
 	auto_edit
 };
 
 ///////////////////////////////////////////////////////////////////////
 
-function select_links( graph, select_nodes )	{
-
-	let set = new Set( [ ...select_nodes ] );
-	let links = [];
-
-	for( let i=0; i< graph.links.length; i++ )	{
-		if( set.has( graph.links[ i ].source.index ) ||
-			set.has( graph.links[ i ].target.index ) )	{
-
-			links.push( i );
-			graph.links[ i ].group = 1;
-		}
-	}
-	return( links );
-}
-
-function collect_links( graph, node_index )	{
+function collect_node_links( graph, node_index )	{
 
 	let links = [];
 	for( let i=0; i< graph.links.length; i++ )	{
@@ -118,7 +102,7 @@ function delete_elems( graph, select_links, select_nodes )	{
 	let link_set = new Set( select_links );
 	for( let i=0; i< select_nodes.length; i++ )	{
 
-		let arr = collect_links( graph, select_nodes[ i ] );
+		let arr = collect_node_links( graph, select_nodes[ i ] );
 		arr.forEach( l => link_set.add( l ) );
 	}
 
@@ -160,6 +144,7 @@ function auto_edit( graph, max_degree, reset_balance = false )	{
 	let edited = false;
 
 	if( Math.random() < 0.5  )	{
+
 		// remove existing link
 
 		if( auto_edit.balance > -( max_degree / 2 ) )	{ // this is just a heuristic band-aid

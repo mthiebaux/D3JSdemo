@@ -31,6 +31,7 @@ function create( view, width, height )	{
 		svg,
 		view,
 		attr: dfl_attr,
+
 		graph: null,
 		engine: null,
 		nodes: null, // these are not graph.nodes, these are sim.nodes

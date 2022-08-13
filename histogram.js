@@ -16,6 +16,7 @@ function create( view, attr, width, height )	{
 
 		svg,
 		attr,
+
 		width,
 		height,
 

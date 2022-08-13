@@ -183,56 +183,49 @@ function selection_handlers( app )	{
 
 function register_reset_handlers( app )	{
 
+	function reset()	{
+		app.reset = true;
+		app.sim.init( app.graph, app.attr );
+		app.sim.update();
+		app.histo.update( app.graph.degrees, app.max_degree, true );
+	}
+
 	d3.select( app.view.select( "simple" ) ).on(
 		"mousedown",
 		function( event )	{
 
-			app.reset = true;
 			app.max_degree = 10;
 			app.graph = graph_gen.simple_graph();
-
-			app.sim.init( app.graph, app.attr );
-			app.sim.update();
-			app.histo.update( app.graph.degrees, app.max_degree, true );
+			reset();
 		}
 	);
 	d3.select( app.view.select( "ring" ) ).on(
 		"mousedown",
 		function( event )	{
 
-			app.reset = true;
 			app.max_degree = 10;
 			app.graph = graph_gen.ring_graph( 12, 1 );
-
-			app.sim.init( app.graph, app.attr );
-			app.sim.update();
-			app.histo.update( app.graph.degrees, app.max_degree, true );
+			reset();
 		}
 	);
 	d3.select( app.view.select( "chain" ) ).on(
 		"mousedown",
 		function( event )	{
 
-			app.reset = true;
 			app.max_degree = 15;
 			app.graph = graph_gen.ring_graph( 18, 3 );
-
-			app.sim.init( app.graph, app.attr );
-			app.sim.update();
-			app.histo.update( app.graph.degrees, app.max_degree, true );
+			reset();
 		}
 	);
 	d3.select( app.view.select( "power" ) ).on(
 		"mousedown",
 		function( event )	{
 
-			app.reset = true;
 			app.max_degree = 20;
-			app.graph = graph_gen.power_graph( 42, 0.9, app.max_degree );
-
-			app.sim.init( app.graph, app.attr );
-			app.sim.update();
-			app.histo.update( app.graph.degrees, app.max_degree, true );
+			let num_nodes = 42;
+			let N = graph_gen.rand_int_range( num_nodes * 0.5, num_nodes * 1.5 );
+			app.graph = graph_gen.power_graph( N, 0.9, app.max_degree );
+			reset();
 		}
 	);
 }
@@ -250,7 +243,9 @@ function register_event_handlers( app )	{
 		function( event )	{
 
 			ungroup( app.graph.links );
-			app.select_links = graph_edit.select_links( app.graph, app.select_nodes );
+			app.select_links = graph_edit.collect_node_links( app.graph, app.select_nodes );
+			for( let i in app.select_links )
+				app.graph.links[ i ].group = 1;
 
 			ungroup( app.graph.nodes );
 			app.select_nodes = [];
