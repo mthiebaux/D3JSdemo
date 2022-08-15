@@ -13,13 +13,13 @@ export {
 
 function collect_links( graph, select_nodes )	{
 
-	let set = new Set( [ ...select_nodes ] );
+	let node_set = new Set( [ ...select_nodes ] );
 	let links = [];
 
 	for( let i=0; i< graph.links.length; i++ )	{
 		if(
-			set.has( graph.links[ i ].source.index ) ||
-			set.has( graph.links[ i ].target.index )
+			node_set.has( graph.links[ i ].source.index ) ||
+			node_set.has( graph.links[ i ].target.index )
 		)	{
 			links.push( i );
 		}
@@ -45,7 +45,6 @@ function collect_node_links( graph, node_index )	{
 
 function add_new_node( graph )	{
 
-//	let new_id = 10; // 0; for testing
 	let new_id = 0;
 	while( graph.map.has( new_id ) ) new_id++;
 	let new_i = graph.nodes.length;
@@ -68,7 +67,13 @@ function add_new_link( graph, src_index, tgt_index )	{
 		graph.nodes[ tgt_index ].adjacent.push( src_id );
 
 		let [ s, t ] = [ src_id, tgt_id ].sort( ( a, b ) => a - b );
-		graph.links.push( { source: s, target: t, group: 0 } );
+		graph.links.push(
+			{
+				source: graph_gen.get_node_object( graph, s ),
+				target: graph_gen.get_node_object( graph, t ),
+				group: 0
+			}
+		);
 
 		graph.degrees[ src_index ]++;
 		graph.degrees[ tgt_index ]++;
@@ -120,13 +125,11 @@ function delete_elems( graph, select_links, select_nodes )	{
 	for( let i=0; i< select_nodes.length; i++ )	{
 
 		let arr = collect_node_links( graph, select_nodes[ i ] );
+
 		arr.forEach( l => link_set.add( l ) );
 	}
 
-
 	let link_arr = [ ...link_set ].sort( ( a, b ) => b - a  ); // descending
-
-
 	for( let i=0; i< link_arr.length; i++ )	{
 
 		detach_link( graph, link_arr[ i ] );

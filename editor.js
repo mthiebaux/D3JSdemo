@@ -5,6 +5,8 @@ import * as d3 from "https://cdn.skypack.dev/d3@7"; // GitHub recommended
 
 import * as graph_gen from './graph_gen.js';
 import * as graph_edit from './graph_edit.js';
+import * as graph_algo from './graph_algo.js';
+
 import * as simulation from './simulation.js';
 import * as histogram from './histogram.js';
 
@@ -13,6 +15,10 @@ export { init };
 ///////////////////////////////////////////////////////////////////////
 
 function init( view_elements )	{
+
+
+//		graph_algo.test();
+
 
 	const view = {
 
@@ -35,7 +41,9 @@ function init( view_elements )	{
 		}
 	};
 
-	let graph = graph_gen.simple_graph();
+	let graph = graph_gen.test_graph();
+//	let graph = graph_gen.simple_graph();
+
 	let sim = simulation.create( view, 300, 300 );
 
 	let app = {
@@ -129,8 +137,6 @@ function attribute_handlers( app )	{
 	};
 	return( attr );
 }
-
-///////////////////////////////////////////////////////////////////////
 
 function selection_handlers( app )	{
 
@@ -304,7 +310,7 @@ function register_event_handlers( app )	{
 
 ///////////////////////////////////////////////////////////////////////
 
-function update_auto_edit( app, value, max )	{
+function update_auto_edit( app, value, slider_max )	{
 
 	if( value > 0 )	{
 
@@ -328,7 +334,7 @@ function update_auto_edit( app, value, max )	{
 
 		if( app.timeout ) app.timeout.stop();
 		app.auto = true;
-		app.ival = rate_conversion( value, Number( max ) );
+		app.ival = rate_conversion( value, Number( slider_max ) );
 		app.timeout = d3.timeout( mutate_timeout_callback, app.ival );
 	}
 	else	{

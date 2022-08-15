@@ -70,6 +70,8 @@ graph: {
 }
 ```
 
+While the link source and target are conveniently referenced by node id on initialization, as soon as the graph is fed to the simulation, these are automatically expanded by D3 into their corresponding object instances. This means that while typeof *source* starts out as 'number', it will eventually become type 'object'. For consistency, the editing app expands them immediately on creation and while editing.
+
 Manual editing operations are supported with 3 custom action buttons: *links*, *add*, and *del*. These are sufficient to allow intuitive modification and building of unique graphs.
 
 * **links**: For each selected node, select its links and then unselect the node. This logic allows all elements to be unselected by clicking twice.

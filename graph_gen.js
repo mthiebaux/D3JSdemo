@@ -1,11 +1,13 @@
 
 export {
 
+	test_graph,
 	simple_graph,
 	ring_graph,
 	power_graph,
 
 	build_node_map,
+	get_node_object,
 	rand_int_range,
 	expand_stub_array
 };
@@ -30,7 +32,75 @@ function build_node_map( nodes )	{
 	return( map );
 }
 
+function get_node_object( graph, node_id )	{
+
+	return( graph.nodes[ graph.map.get( node_id ) ] );
+}
+
+function expand_link_refs( graph )	{
+
+	for( let i=0; i< graph.links.length; i++ )	{
+
+		if( typeof graph.links[ i ].source === 'number' )	{
+
+			graph.links[ i ].source = get_node_object( graph, graph.links[ i ].source );
+
+		}
+		if( typeof graph.links[ i ].target === 'number' )	{
+
+			graph.links[ i ].target = get_node_object( graph, graph.links[ i ].target );
+		}
+	}
+	return( graph );
+}
+
 ///////////////////////////////////////////////////////////////////////
+
+/*
+
+	0 --- 1     2 --- 3
+	|     |  /  |  /  |
+	4     5 --- 6 --- 7
+
+*/
+
+function test_graph()	{
+
+	let nodes = [
+		{ id: 0, adjacent: [ 1, 4 ], group: 0 },
+		{ id: 1, adjacent: [ 0, 5 ], group: 0 },
+		{ id: 2, adjacent: [ 3, 5, 6 ], group: 0 },
+		{ id: 3, adjacent: [ 2, 6, 7 ], group: 0 },
+		{ id: 4, adjacent: [ 0 ], group: 0 },
+		{ id: 5, adjacent: [ 1, 2, 6 ], group: 0 },
+		{ id: 6, adjacent: [ 2, 3, 5, 7 ], group: 0 },
+		{ id: 7, adjacent: [ 3, 6 ], group: 0 }
+	];
+
+	let links = [
+		{ source: 0, target: 1, group: 0 },
+		{ source: 0, target: 4, group: 0 },
+		{ source: 1, target: 5, group: 0 },
+		{ source: 2, target: 3, group: 0 },
+		{ source: 2, target: 5, group: 0 },
+		{ source: 2, target: 6, group: 0 },
+		{ source: 3, target: 6, group: 0 },
+		{ source: 3, target: 7, group: 0 },
+		{ source: 5, target: 6, group: 0 },
+		{ source: 6, target: 7, group: 0 }
+	];
+
+	return(
+		expand_link_refs(
+			{
+				degrees:	build_degrees( nodes ),
+				map:		build_node_map( nodes ),
+				nodes,
+				links
+			}
+		)
+	);
+}
 
 function simple_graph()	{
 
@@ -46,12 +116,16 @@ function simple_graph()	{
 		{ source: 1, target: 2, group: 0 }
 	];
 
-	return {
-		degrees:	build_degrees( nodes ),
-		map:		build_node_map( nodes ),
-		nodes,
-		links
-	};
+	return(
+		expand_link_refs(
+			{
+				degrees:	build_degrees( nodes ),
+				map:		build_node_map( nodes ),
+				nodes,
+				links
+			}
+		)
+	);
 }
 
 function ring_graph( n, w )	{
@@ -81,12 +155,16 @@ function ring_graph( n, w )	{
 		}
 	}
 
-	return {
-		degrees:	build_degrees( nodes ),
-		map:		build_node_map( nodes ),
-		nodes,
-		links
-	};
+	return(
+		expand_link_refs(
+			{
+				degrees:	build_degrees( nodes ),
+				map:		build_node_map( nodes ),
+				nodes,
+				links
+			}
+		)
+	);
 }
 
 ///////////////////////////////////////////////////////////////////////
@@ -259,12 +337,16 @@ function power_graph( num_nodes, min_degree, max_degree )	{
 		);
 	}
 
-	return {
-		degrees:	build_degrees( nodes ),
-		map:		build_node_map( nodes ),
-		nodes,
-		links
-	};
+	return(
+		expand_link_refs(
+			{
+				degrees:	build_degrees( nodes ),
+				map:		build_node_map( nodes ),
+				nodes,
+				links
+			}
+		)
+	);
 }
 
 ///////////////////////////////////////////////////////////////////////
