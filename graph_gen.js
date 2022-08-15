@@ -12,6 +12,8 @@ export {
 	expand_stub_array
 };
 
+const id_off = 0; // offset for testing separation of id and array index
+
 ///////////////////////////////////////////////////////////////////////
 
 function build_degrees( nodes )	{
@@ -70,6 +72,45 @@ function expand_graph_links( graph )	{
 function test_graph()	{
 
 	let nodes = [
+		{ id: 0 + id_off, adjacent: [ 1 + id_off, 4 + id_off ], group: 0 },
+		{ id: 1 + id_off, adjacent: [ 0 + id_off, 5 + id_off ], group: 0 },
+		{ id: 2 + id_off, adjacent: [ 3 + id_off, 5 + id_off, 6 + id_off ], group: 0 },
+		{ id: 3 + id_off, adjacent: [ 2 + id_off, 6 + id_off, 7 + id_off ], group: 0 },
+		{ id: 4 + id_off, adjacent: [ 0 + id_off ], group: 0 },
+		{ id: 5 + id_off, adjacent: [ 1 + id_off, 2 + id_off, 6 + id_off ], group: 0 },
+		{ id: 6 + id_off, adjacent: [ 2 + id_off, 3 + id_off, 5 + id_off, 7 + id_off ], group: 0 },
+		{ id: 7 + id_off, adjacent: [ 3 + id_off, 6 + id_off ], group: 0 }
+	];
+
+	let links = [
+		{ source: 0 + id_off, target: 1 + id_off, group: 0 },
+		{ source: 0 + id_off, target: 4 + id_off, group: 0 },
+		{ source: 1 + id_off, target: 5 + id_off, group: 0 },
+		{ source: 2 + id_off, target: 3 + id_off, group: 0 },
+		{ source: 2 + id_off, target: 5 + id_off, group: 0 },
+		{ source: 2 + id_off, target: 6 + id_off, group: 0 },
+		{ source: 3 + id_off, target: 6 + id_off, group: 0 },
+		{ source: 3 + id_off, target: 7 + id_off, group: 0 },
+		{ source: 5 + id_off, target: 6 + id_off, group: 0 },
+		{ source: 6 + id_off, target: 7 + id_off, group: 0 }
+	];
+
+	return(
+		expand_graph_links(
+			{
+				degrees:	build_degrees( nodes ),
+				map:		build_node_map( nodes ),
+				nodes,
+				links
+			}
+		)
+	);
+}
+
+/*
+function test_graph()	{
+
+	let nodes = [
 		{ id: 0, adjacent: [ 1, 4 ], group: 0 },
 		{ id: 1, adjacent: [ 0, 5 ], group: 0 },
 		{ id: 2, adjacent: [ 3, 5, 6 ], group: 0 },
@@ -104,6 +145,7 @@ function test_graph()	{
 		)
 	);
 }
+*/
 
 function simple_graph()	{
 
@@ -169,6 +211,7 @@ function ring_graph( n, w )	{
 		)
 	);
 }
+
 
 ///////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////

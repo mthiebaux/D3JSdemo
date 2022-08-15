@@ -41,8 +41,12 @@ function test()	{
 
 	let graph = graph_gen.test_graph();
 
-	let nodes = path_search_BFS( graph, 5, 7 );
 //	let nodes = path_search_BFS( graph, 4, 6 );
+	let nodes = path_search_BFS( graph, 5, 7 );
+//	let nodes = path_search_BFS( graph, 15, 17 );
+//	let nodes = path_search_BFS( graph, 105, 107 );
+//	let nodes = path_search_BFS( graph, 105, 1 );
+
 	console.log( nodes );
 
 	let links = find_links( graph, nodes );
@@ -57,22 +61,29 @@ function test()	{
 
 */
 
-function path_search_BFS( graph, fr_id, to_id )	{ // returns array of node index, not id
+function path_search_BFS( graph, fr_id, to_id )	{ // returns array of node id, not index
 
-	if( fr_id == to_id )	{ // redundant?
+	if( ( graph.map.has( fr_id ) == false )||(  graph.map.has( to_id ) == false ) )	{
+		return( [] );
+	}
+	if( fr_id == to_id )	{ // redundant? no, it will bounce off adjacent
 		return( [ fr_id ] );
+	}
+
+	function index( id )	{ // convert id to array index
+		return( graph.map.get( id ) );
 	}
 
 	let parent = new Array( graph.nodes.length ).fill( -1 );
 	let queue = [];
 
-	parent[ fr_id ] = fr_id;
+	parent[ index( fr_id ) ] = fr_id;
 	queue.push( fr_id );
 
 	while( queue.length )	{
 
 		let p_id = queue.shift();
-		let node = graph.nodes[ p_id ];
+		let node = graph.nodes[ index( p_id ) ];
 
 		for( let i=0; i< node.adjacent.length; i++ )	{
 
@@ -83,14 +94,15 @@ function path_search_BFS( graph, fr_id, to_id )	{ // returns array of node index
 				path.push( p_id );
 
 				while( p_id != fr_id )	{
-					p_id = parent[ p_id ];
+
+					p_id = parent[ index( p_id ) ];
 					path.push( p_id );
 				}
 				return( path.reverse() );
 			}
-			if( parent[ adj_id ] == -1 )	{
+			if( parent[ index( adj_id ) ] == -1 )	{
 
-				parent[ adj_id ] = p_id;
+				parent[ index( adj_id ) ] = p_id;
 				queue.push( adj_id );
 			}
 		}

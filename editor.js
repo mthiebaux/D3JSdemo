@@ -17,7 +17,7 @@ export { init };
 function init( view_elements )	{
 
 
-//		graph_algo.test();
+		graph_algo.test();
 
 
 	const view = {
