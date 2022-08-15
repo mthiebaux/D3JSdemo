@@ -7,7 +7,7 @@ export {
 	power_graph,
 
 	build_node_map,
-	get_node_object,
+	expand_link,
 	rand_int_range,
 	expand_stub_array
 };
@@ -37,19 +37,22 @@ function get_node_object( graph, node_id )	{
 	return( graph.nodes[ graph.map.get( node_id ) ] );
 }
 
-function expand_link_refs( graph )	{
+function expand_link( graph, link )	{
+
+	if( typeof link.source === 'number' )	{
+		link.source = get_node_object( graph, link.source );
+	}
+	if( typeof link.target === 'number' )	{
+		link.target = get_node_object( graph, link.target );
+	}
+	return( link );
+}
+
+function expand_graph_links( graph )	{
 
 	for( let i=0; i< graph.links.length; i++ )	{
 
-		if( typeof graph.links[ i ].source === 'number' )	{
-
-			graph.links[ i ].source = get_node_object( graph, graph.links[ i ].source );
-
-		}
-		if( typeof graph.links[ i ].target === 'number' )	{
-
-			graph.links[ i ].target = get_node_object( graph, graph.links[ i ].target );
-		}
+		graph.links[ i ] = expand_link( graph, graph.links[ i ] );
 	}
 	return( graph );
 }
@@ -91,7 +94,7 @@ function test_graph()	{
 	];
 
 	return(
-		expand_link_refs(
+		expand_graph_links(
 			{
 				degrees:	build_degrees( nodes ),
 				map:		build_node_map( nodes ),
@@ -117,7 +120,7 @@ function simple_graph()	{
 	];
 
 	return(
-		expand_link_refs(
+		expand_graph_links(
 			{
 				degrees:	build_degrees( nodes ),
 				map:		build_node_map( nodes ),
@@ -156,7 +159,7 @@ function ring_graph( n, w )	{
 	}
 
 	return(
-		expand_link_refs(
+		expand_graph_links(
 			{
 				degrees:	build_degrees( nodes ),
 				map:		build_node_map( nodes ),
@@ -338,7 +341,7 @@ function power_graph( num_nodes, min_degree, max_degree )	{
 	}
 
 	return(
-		expand_link_refs(
+		expand_graph_links(
 			{
 				degrees:	build_degrees( nodes ),
 				map:		build_node_map( nodes ),

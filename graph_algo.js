@@ -27,7 +27,6 @@ function find_links( graph, node_ids )	{
 	}
 
 	let links = [];
-
 	for( let i=0; i< graph.links.length; i++ )	{
 
 		let str = graph.links[ i ].source.id + "-" + graph.links[ i ].target.id; // pre-sorted
@@ -35,9 +34,7 @@ function find_links( graph, node_ids )	{
 			links.push( i );
 		}
 	}
-
 	return( links );
-
 }
 
 function test()	{

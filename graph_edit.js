@@ -68,11 +68,7 @@ function add_new_link( graph, src_index, tgt_index )	{
 
 		let [ s, t ] = [ src_id, tgt_id ].sort( ( a, b ) => a - b );
 		graph.links.push(
-			{
-				source: graph_gen.get_node_object( graph, s ),
-				target: graph_gen.get_node_object( graph, t ),
-				group: 0
-			}
+			graph_gen.expand_link( graph, { source: s, target: t, group: 0 } )
 		);
 
 		graph.degrees[ src_index ]++;
