@@ -17,7 +17,7 @@ export { init };
 function init( view_elements )	{
 
 
-		graph_algo.test();
+//		graph_algo.test();
 
 
 	const view = {
@@ -43,6 +43,8 @@ function init( view_elements )	{
 
 	let graph = graph_gen.test_graph();
 //	let graph = graph_gen.simple_graph();
+
+//	let warr = graph_algo.generate_link_weights( graph );
 
 	let sim = simulation.create( view, 300, 300 );
 
@@ -190,6 +192,11 @@ function selection_handlers( app )	{
 function register_reset_handlers( app )	{
 
 	function reset()	{
+
+//	let warr = graph_algo.generate_link_weights( app.graph );
+
+		app.select_links = [];
+		app.select_nodes = [];
 		app.reset = true;
 		app.sim.init( app.graph, app.attr );
 		app.sim.update();
@@ -238,11 +245,66 @@ function register_reset_handlers( app )	{
 
 function register_event_handlers( app )	{
 
+	function stop_auto_edit()	{
+
+		d3.select( app.view.select( "rate" ) ).property( "value", 0 );
+		update_auto_edit( app, 0 );
+	}
+
 	function ungroup( arr )	{
+
 		for( let i=0; i< arr.length; i++ )	{
 			arr[ i ].group = 0;
 		}
 	}
+
+	function index( id )	{ // convert id to array index
+		return( app.graph.map.get( id ) );
+	}
+
+	d3.select( app.view.select( "bfs" ) ).on(
+		"mousedown",
+		function( event )	{
+
+			stop_auto_edit();
+			ungroup( app.graph.nodes );
+			ungroup( app.graph.links );
+
+			let len = app.select_nodes.length;
+			if( len > 1 )	{
+
+				let fr_id = app.graph.nodes[ app.select_nodes[ 0 ] ].id;
+				let to_id = app.graph.nodes[ app.select_nodes[ len - 1 ] ].id;
+
+				let path_nodes = graph_algo.path_search_BFS( app.graph, fr_id, to_id );
+
+if( 1 )	{
+				let fr_i = index( fr_id );
+				let to_i = index( to_id );
+				app.select_nodes = [ fr_i, to_i ];
+				app.graph.nodes[ fr_i ].group = 1;
+				app.graph.nodes[ to_i ].group = 1;
+}
+else	{
+				app.select_nodes = [];
+				for( let id of path_nodes )	{
+					let i = index( id );
+					app.select_nodes.push( i );
+					app.graph.nodes[ i ].group = 1;
+				}
+}
+
+				let path_links = graph_algo.find_path_links( app.graph, path_nodes );
+				app.select_links = [];
+				for( let i of path_links )	{
+					app.select_links.push( i );
+					app.graph.links[ i ].group = 1;
+				}
+				app.sim.update();
+			}
+
+		}
+	);
 
 	d3.select( app.view.select( "links" ) ).on(
 		"mousedown",
@@ -250,14 +312,13 @@ function register_event_handlers( app )	{
 
 			ungroup( app.graph.links );
 			app.select_links = graph_edit.collect_links( app.graph, app.select_nodes );
-			for( let i of app.select_links )
+			for( let i of app.select_links )	{
 				app.graph.links[ i ].group = 1;
+			}
 
 			ungroup( app.graph.nodes );
 			app.select_nodes = [];
-
 			app.sim.update();
-			app.histo.update( app.graph.degrees, app.max_degree, false );
 		}
 	);
 	d3.select( app.view.select( "add" ) ).on(
@@ -270,7 +331,6 @@ function register_event_handlers( app )	{
 
 			app.select_links = [];
 			app.select_nodes = [];
-
 			app.sim.update();
 			app.histo.update( app.graph.degrees, app.max_degree, false );
 		}
@@ -285,7 +345,6 @@ function register_event_handlers( app )	{
 
 			app.select_links = [];
 			app.select_nodes = [];
-
 			app.sim.update();
 			app.histo.update( app.graph.degrees, app.max_degree, false );
 		}

@@ -66,6 +66,14 @@
 
 				<input
 					type="button"
+					id="bfs_button"
+					value="BFS"
+					style="color:black">
+
+				<div id="graph_plot_div"></div>
+
+				<input
+					type="button"
 					id="links_button"
 					value="links"
 					style="color:black">
@@ -80,8 +88,6 @@
 					value="del"
 					style="color:black">
 				<br>
-
-				<div id="graph_plot_div"></div>
 
 				<input id="rate_slider" type="range"
 					min="0" max="100" value="0"
@@ -122,6 +128,8 @@
 			ring: 		"init_ring_button",
 			chain:		"init_chain_button",
 			power:		"init_power_button",
+
+			bfs:		"bfs_button",
 
 			links:		"links_button",
 			add:		"add_button",
