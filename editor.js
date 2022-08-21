@@ -104,35 +104,39 @@ function attribute_handlers( app )	{
 	let attr = {
 
 		bin_color( degree )	{
+
 			return( d3.interpolateTurbo( d2v( degree, app.max_degree ) ) );
 		},
 		node_border( node )	{
 
-// 			if( node.group == 1 ) return( 5.0 );
-// 			return( 2.0 );
-
-			if( node.group == 1 ) return( 0.5 * d2r( node.adjacent.length, app.max_degree ) );
-//			return( 0.2 * d2r( node.adjacent.length, app.max_degree ) );
+//			if( node.group == 1 ) return( 0.5 * d2r( node.adjacent.length, app.max_degree ) );
+			if( node.group > 0 ) return( 0.5 * d2r( node.adjacent.length, app.max_degree ) );
 			return( 0 );
 		},
 		node_border_color( node )	{
+
 //			return( this.bin_color( node.adjacent.length ) );
 //			return( ext( node.id ) );
+			if( node.group == 2 ) return( "#aaa" );
 			return( "#000" );
 		},
 		node_radius( node )	{
+
 			return( d2r( node.adjacent.length, app.max_degree ) );
 		},
 		node_color( node )	{
+
 		//	if( node.group == 1 ) return(  );
 //			return( ext( node.id ) );
 			return( this.bin_color( node.adjacent.length ) );
 		},
 		link_color( link )	{
+
 			if( link.group == 1 ) return( "#000" );
 			return( "#aaa" );
 		},
 		link_width( link )	{
+
 			if( link.group == 1 ) return( 4.0 );
 			return( 3.0 );
 		}
@@ -278,12 +282,24 @@ function register_event_handlers( app )	{
 
 				let path_nodes = graph_algo.path_search_BFS( app.graph, fr_id, to_id );
 
+if( 0 )	{
+				let fr_i = index( fr_id );
+				let to_i = index( to_id );
+				app.select_nodes = [ fr_i, to_i ];
+				app.graph.nodes[ fr_i ].group = 1;
+				app.graph.nodes[ to_i ].group = 1;
+}
+else
 if( 1 )	{
 				let fr_i = index( fr_id );
 				let to_i = index( to_id );
 				app.select_nodes = [ fr_i, to_i ];
 				app.graph.nodes[ fr_i ].group = 1;
 				app.graph.nodes[ to_i ].group = 1;
+
+				for( let i = 1; i < path_nodes.length - 1; i++ )	{
+					app.graph.nodes[ index( path_nodes[ i ] ) ].group = 2;
+				}
 }
 else	{
 				app.select_nodes = [];
