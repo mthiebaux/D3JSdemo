@@ -121,7 +121,7 @@ function find_path_links( graph, node_ids )	{
 			links.push( i );
 		}
 	}
-	return( links );
+	return( links ); // sorted by default
 }
 
 function test()	{

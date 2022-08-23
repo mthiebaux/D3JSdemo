@@ -66,9 +66,27 @@
 
 				<input
 					type="button"
+					id="stop_and_clear_button"
+					value="X"
+					style="color:black">
+				<input
+					type="button"
 					id="bfs_button"
 					value="BFS"
 					style="color:black">
+				<input
+					type="button"
+					id="dijkstra_min_button"
+					value="Dmin"
+					style="color:black">
+				<input
+					type="button"
+					id="dijkstra_max_button"
+					value="Dmax"
+					style="color:black">
+				<input
+					type="checkbox" id="auto_path_search" name="auto_path_search">
+					<label for="auto_path_search">auto</label>
 
 				<div id="graph_plot_div"></div>
 
@@ -80,12 +98,12 @@
 				<input
 					type="button"
 					id="add_button"
-					value="add"
+					value="ADD"
 					style="color:black">
 				<input
 					type="button"
 					id="delete_button"
-					value="del"
+					value="DEL"
 					style="color:black">
 				<br>
 
@@ -129,7 +147,11 @@
 			chain:		"init_chain_button",
 			power:		"init_power_button",
 
+			stop:		"stop_and_clear_button",
 			bfs:		"bfs_button",
+			dmin:		"dijkstra_min_button",
+			dmax:		"dijkstra_max_button",
+			search:		"auto_path_search",
 
 			links:		"links_button",
 			add:		"add_button",

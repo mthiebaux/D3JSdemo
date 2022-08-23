@@ -80,6 +80,10 @@ Manual editing operations are supported with 3 custom action buttons: *links*, *
 
 * **del**: Remove all selected links and nodes from the graph.
 
+## Path Search
+
+If at least 2 nodes are selected, the first and last serve as end points for a path search algorithm. If the *auto* checkbox is checked, the program will continuously search for the path between these nodes while the graph is actively mutating.
+
 
 
 
