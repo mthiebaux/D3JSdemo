@@ -30,7 +30,7 @@ function create( view_elements )	{
 
 		auto_path:	false,
 		auto_edit:	false,
-		reset:		false, // auto-edit balance
+		reset_bal:	false, // auto-edit balance
 		timeout:	null,
 		ival:		1000,
 
@@ -38,7 +38,7 @@ function create( view_elements )	{
 			init_editor( this );
 		},
 		reset()	{
-			reset_editor( this );
+			reset_editor( this ); // for client changes
 		}
 	};
 	return( app );
@@ -222,7 +222,7 @@ function register_reset_handlers( app )	{
 
 			app.max_degree = 10;
 			app.graph = graph_gen.simple_graph();
-			reset_editor( app );
+			app.reset();
 		}
 	);
 	d3.select( app.view.select( "ring" ) ).on(
@@ -231,7 +231,7 @@ function register_reset_handlers( app )	{
 
 			app.max_degree = 10;
 			app.graph = graph_gen.ring_graph( 12, 1 );
-			reset_editor( app );
+			app.reset();
 		}
 	);
 	d3.select( app.view.select( "chain" ) ).on(
@@ -240,7 +240,7 @@ function register_reset_handlers( app )	{
 
 			app.max_degree = 15;
 			app.graph = graph_gen.ring_graph( 18, 3 );
-			reset_editor( app );
+			app.reset();
 		}
 	);
 	d3.select( app.view.select( "power" ) ).on(
@@ -251,7 +251,7 @@ function register_reset_handlers( app )	{
 			let num_nodes = 42;
 			let N = graph_gen.rand_int_range( num_nodes * 0.5, num_nodes * 1.5 );
 			app.graph = graph_gen.power_graph( N, 0.9, app.max_degree );
-			reset_editor( app );
+			app.reset();
 		}
 	);
 }
@@ -369,7 +369,7 @@ function reset_editor( app )	{
 
 	app.select_links = [];
 	app.select_nodes = [];
-	app.reset = true;
+	app.reset_bal = true;
 	app.sim.init( app.graph, app.attr );
 	app.sim.update();
 	app.histo.update( app.graph.degrees, app.max_degree, true );
@@ -426,8 +426,8 @@ function update_auto_edit( app, value, slider_max )	{
 
 		function mutate_timeout_callback( d )	{
 
-			let update = graph_edit.auto_edit_links( app.graph, app.max_degree, app.reset );
-			app.reset = false;
+			let update = graph_edit.auto_edit_links( app.graph, app.max_degree, app.reset_bal );
+			app.reset_bal = false;
 
 			if( update == true )	{
 				app.sim.update();
