@@ -57,24 +57,25 @@
 		import * as editor from './editor.js';
 
 		const view_elements = {
-
 			graphic:	"graph_plot_div",
 			histo:		"histo_plot_div",
-
 			reset:		"reset_button",
 			rate:		"rate_slider"
 		};
 
 		let app = editor.create( view_elements );
 
-		let num_nodes = 64;
+		let num_nodes = 100;
 		let min_degree = 0.9;
 		app.max_degree = 20;
 		app.graph = graph_gen.power_graph( num_nodes, min_degree, app.max_degree );
 
-		app.sim = simulation.create( app.view, 400, 400 );
-
+		app.sim = simulation.create( app.view, 500, 500 );
 		app.init();
+
+		// overwrite an attr handler:
+		app.attr.node_border = () => 1;
+		app.reset();
 
 		d3.select( app.view.select( "reset" ) ).on(
 			"mousedown",
