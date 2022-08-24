@@ -27,7 +27,7 @@
 
 				<input
 					type="button"
-					id="init_power_button"
+					id="reset_button"
 					value="reset"
 					style="color:black">
 
@@ -51,6 +51,8 @@
 	</body>
 	<script type="module">
 
+		import * as d3 from "https://cdn.skypack.dev/d3@7";
+		import * as simulation from './simulation.js';
 		import * as graph_gen from './graph_gen.js';
 		import * as editor from './editor.js';
 
@@ -59,18 +61,28 @@
 			graphic:	"graph_plot_div",
 			histo:		"histo_plot_div",
 
-			power:		"init_power_button",
+			reset:		"reset_button",
 			rate:		"rate_slider"
 		};
 
 		let app = editor.create( view_elements );
 
-		app.max_degree = 20;
-		let num_nodes = 42;
+		let num_nodes = 64;
 		let min_degree = 0.9;
-		let graph = graph_gen.power_graph( num_nodes, min_degree, app.max_degree );
+		app.max_degree = 20;
+		app.graph = graph_gen.power_graph( num_nodes, min_degree, app.max_degree );
 
-		app.init( graph );
+		app.sim = simulation.create( app.view, 400, 400 );
+
+		app.init();
+
+		d3.select( app.view.select( "reset" ) ).on(
+			"mousedown",
+			function( event )	{
+				app.graph = graph_gen.power_graph( num_nodes, 0.9, app.max_degree );
+				app.reset();
+			}
+		);
 
 	</script>
 

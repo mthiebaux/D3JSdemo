@@ -3,12 +3,12 @@
 
 import * as d3 from "https://cdn.skypack.dev/d3@7"; // GitHub recommended
 
+import * as simulation from './simulation.js';
+import * as histogram from './histogram.js';
+
 import * as graph_gen from './graph_gen.js';
 import * as graph_edit from './graph_edit.js';
 import * as graph_algo from './graph_algo.js';
-
-import * as simulation from './simulation.js';
-import * as histogram from './histogram.js';
 
 export { create };
 
@@ -34,11 +34,11 @@ function create( view_elements )	{
 		timeout:	null,
 		ival:		1000,
 
-		init( graph = null, attr = null )	{
-
-			this.graph = graph;
-			this.attr = attr;
+		init()	{
 			init_editor( this );
+		},
+		reset()	{
+			reset_editor( this );
 		}
 	};
 	return( app );
@@ -46,21 +46,25 @@ function create( view_elements )	{
 
 function init_editor( app )	{
 
-	if( app.graph == null )
-		app.graph = graph_gen.simple_graph();
+	register_reset_handlers( app );
+	register_event_handlers( app );
 
 	if( app.attr == null )
 		app.attr = attribute_handlers( app );
 
-	register_reset_handlers( app );
-	register_event_handlers( app );
+	if( app.graph == null )
+		app.graph = graph_gen.simple_graph();
 
-	app.sim = simulation.create( app.view, 300, 300 );
+	if( app.sim == null )
+		app.sim = simulation.create( app.view, 300, 300 );
+
 	app.sim.select = selection_handlers( app ); // defaults to no-op
 	app.sim.init( app.graph, app.attr );
 	app.sim.update();
 
-	app.histo = histogram.create( app.view, app.attr, 300, 50 );
+	if( app.histo == null )
+		app.histo = histogram.create( app.view, app.attr, 300, 50 );
+
 	app.histo.update( app.graph.degrees, app.max_degree, true );
 }
 
@@ -212,22 +216,13 @@ function selection_handlers( app )	{
 
 function register_reset_handlers( app )	{
 
-	function sim_reset()	{
-		app.select_links = [];
-		app.select_nodes = [];
-		app.reset = true;
-		app.sim.init( app.graph, app.attr );
-		app.sim.update();
-		app.histo.update( app.graph.degrees, app.max_degree, true );
-	}
-
 	d3.select( app.view.select( "simple" ) ).on(
 		"mousedown",
 		function( event )	{
 
 			app.max_degree = 10;
 			app.graph = graph_gen.simple_graph();
-			sim_reset();
+			reset_editor( app );
 		}
 	);
 	d3.select( app.view.select( "ring" ) ).on(
@@ -236,7 +231,7 @@ function register_reset_handlers( app )	{
 
 			app.max_degree = 10;
 			app.graph = graph_gen.ring_graph( 12, 1 );
-			sim_reset();
+			reset_editor( app );
 		}
 	);
 	d3.select( app.view.select( "chain" ) ).on(
@@ -245,7 +240,7 @@ function register_reset_handlers( app )	{
 
 			app.max_degree = 15;
 			app.graph = graph_gen.ring_graph( 18, 3 );
-			sim_reset();
+			reset_editor( app );
 		}
 	);
 	d3.select( app.view.select( "power" ) ).on(
@@ -256,7 +251,7 @@ function register_reset_handlers( app )	{
 			let num_nodes = 42;
 			let N = graph_gen.rand_int_range( num_nodes * 0.5, num_nodes * 1.5 );
 			app.graph = graph_gen.power_graph( N, 0.9, app.max_degree );
-			sim_reset();
+			reset_editor( app );
 		}
 	);
 }
@@ -369,6 +364,16 @@ function register_event_handlers( app )	{
 }
 
 ///////////////////////////////////////////////////////////////////////
+
+function reset_editor( app )	{
+
+	app.select_links = [];
+	app.select_nodes = [];
+	app.reset = true;
+	app.sim.init( app.graph, app.attr );
+	app.sim.update();
+	app.histo.update( app.graph.degrees, app.max_degree, true );
+}
 
 function ungroup_elems( arr )	{
 
