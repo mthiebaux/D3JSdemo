@@ -12,6 +12,8 @@ export {
 
 /*
 
+degree-based link weighting: w = sqrt( d0 ) * sqrt( d1 )
+
 	1.0  1.4  1.7  2.0  2.2  2.4  2.6  2.8  3.0  3.2
 
 	1.4  2.0  2.4  2.8  3.2  3.5  3.7  4.0  4.2  4.5
@@ -57,7 +59,7 @@ invert-basis 10:
 */
 
 
-function link_weight_table( n )	{
+function print_link_weight_table( n )	{
 
 	for( let i=1; i<= n; i++ )	{
 		let s = "";
@@ -74,7 +76,7 @@ function link_weight_table( n )	{
 
 function generate_link_weights( graph, invert_basis = 0 )	{
 
-//	link_weight_table( 10 );
+//	print_link_weight_table( 10 );
 
 	let weights = [];
 	for( let i=0; i< graph.links.length; i++ )	{
@@ -154,9 +156,8 @@ function path_search_BFS( graph, fr_id, to_id )	{ // returns array of node id, n
 		return( [ fr_id ] );
 	}
 
-	function index( id )	{ // convert id to array index
-		return( graph.map.get( id ) );
-	}
+	// convert node id to array index
+	const index = ( id ) => graph.map.get( id );
 
 	let parent = new Array( graph.nodes.length ).fill( -1 );
 	let queue = [];
@@ -192,6 +193,22 @@ function path_search_BFS( graph, fr_id, to_id )	{ // returns array of node id, n
 		}
 	}
 	return( [] );
+}
+
+function path_search_Dijkstra( graph, weights, fr_id, to_id )	{ // returns array of node id, not index
+
+	if( ( graph.map.has( fr_id ) == false )||(  graph.map.has( to_id ) == false ) )	{
+		return( [] );
+	}
+	if( fr_id == to_id )	{ // redundant? no, it will bounce off adjacent
+		return( [ fr_id ] );
+	}
+
+	// convert node id to array index
+	const index = ( id ) => graph.map.get( id );
+
+
+
 }
 
 ///////////////////////////////////////////////////////////////////////

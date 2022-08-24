@@ -10,26 +10,88 @@ import * as graph_algo from './graph_algo.js';
 import * as simulation from './simulation.js';
 import * as histogram from './histogram.js';
 
-export { init };
+export { create };
 
 ///////////////////////////////////////////////////////////////////////
 
-function init( view_elements )	{
+function create( view_elements )	{
 
-//	graph_algo.test();
+	let app = {
 
-	const view = {
+		view:	view_handlers( view_elements ),
+		attr:	null,
+		graph:	null,
+		sim:	null,
+		histo:	null,
+
+		max_degree:		10,
+		select_nodes:	[], // ephemeral: stored temporarily by index, not id
+		select_links:	[],
+
+		auto_path:	false,
+		auto_edit:	false,
+		reset:		false, // auto-edit balance
+		timeout:	null,
+		ival:		1000,
+
+		init( graph = null, attr = null )	{
+
+			this.graph = graph;
+			this.attr = attr;
+			init_editor( this );
+		}
+	};
+	return( app );
+}
+
+function init_editor( app )	{
+
+	if( app.graph == null )
+		app.graph = graph_gen.simple_graph();
+
+	if( app.attr == null )
+		app.attr = attribute_handlers( app );
+
+	register_reset_handlers( app );
+	register_event_handlers( app );
+
+	app.sim = simulation.create( app.view, 300, 300 );
+	app.sim.select = selection_handlers( app ); // defaults to no-op
+	app.sim.init( app.graph, app.attr );
+	app.sim.update();
+
+	app.histo = histogram.create( app.view, app.attr, 300, 50 );
+	app.histo.update( app.graph.degrees, app.max_degree, true );
+}
+
+///////////////////////////////////////////////////////////////////////
+
+function view_handlers( view_elements )	{
+
+	return {
 
 		select( id )	{
-			return( "#" + view_elements[ id ] );
+
+			if( view_elements[ id ] !== undefined )	{
+				return( "#" + view_elements[ id ] );
+			}
+			return( null );
 		},
+
 		log_str( str )	{
-			let log_area = document.getElementById( view_elements[ "log" ] );
-			log_area.value += str;
-			log_area.value += '\n';
-			log_area.scrollTop = log_area.scrollHeight;
+
+			let elem_name = view_elements[ "log" ];
+			if( elem_name )	{
+
+				let log_area = document.getElementById( elem_name );
+				log_area.value += str;
+				log_area.value += '\n';
+				log_area.scrollTop = log_area.scrollHeight;
+			}
 		},
+
 		log( input )	{
+
 			if( typeof input === "string" )	{
 				this.log_str( input );
 			}
@@ -38,45 +100,7 @@ function init( view_elements )	{
 			}
 		}
 	};
-
-	let graph = graph_gen.test_graph();
-//	let graph = graph_gen.simple_graph();
-
-	let sim = simulation.create( view, 300, 300 );
-
-	let app = {
-
-		view,
-		graph,
-		sim,
-
-		histo: null,
-		attr: null,
-
-		max_degree: 10,
-		select_nodes: [], // ephemeral: stored temporarily by index, not id
-		select_links: [],
-
-		auto_path: false,
-		auto_edit: false,
-		timeout: null,
-		ival: 1000,
-		reset: true // auto-edit balance
-	};
-
-	app.attr = attribute_handlers( app );
-	register_reset_handlers( app );
-	register_event_handlers( app );
-
-	app.sim.select = selection_handlers( app );
-	app.sim.init( graph, app.attr );
-	app.sim.update();
-
-	app.histo = histogram.create( view, app.attr, 300, 50 );
-	app.histo.update( graph.degrees, app.max_degree, true );
 }
-
-///////////////////////////////////////////////////////////////////////
 
 function attribute_handlers( app )	{
 
@@ -89,7 +113,7 @@ function attribute_handlers( app )	{
 		return( d3.schemeSet3[ i - 20 ] );
 	}
 	function v2r( v )	{	// value to radius
-		return( 4 + 8 * v );
+		return( 4 + 6 * v );
 	}
 	function d2v( deg, max )	{ // degree_to_value
 		return( 0.1 + deg / max );
@@ -106,7 +130,7 @@ function attribute_handlers( app )	{
 		},
 		node_border( node )	{
 
-			if( node.group > 0 ) return( 0.5 * d2r( node.adjacent.length, app.max_degree ) );
+			if( node.group > 0 ) return( 0.4 * d2r( node.adjacent.length, app.max_degree ) );
 			return( 0 );
 		},
 		node_border_color( node )	{
@@ -189,9 +213,6 @@ function selection_handlers( app )	{
 function register_reset_handlers( app )	{
 
 	function sim_reset()	{
-
-//	let warr = graph_algo.generate_link_weights( app.graph );
-
 		app.select_links = [];
 		app.select_nodes = [];
 		app.reset = true;
@@ -241,10 +262,6 @@ function register_reset_handlers( app )	{
 }
 
 function register_event_handlers( app )	{
-
-	function index( id )	{ // convert node id to array index
-		return( app.graph.map.get( id ) );
-	}
 
 	d3.select( app.view.select( "stop" ) ).on(
 		"mousedown",
@@ -362,9 +379,8 @@ function ungroup_elems( arr )	{
 
 function update_bfs_path( app )	{
 
-	function index( id )	{ // convert node id to array index
-		return( app.graph.map.get( id ) );
-	}
+	// convert node id to array index
+	const index = ( id ) => app.graph.map.get( id );
 
 	ungroup_elems( app.graph.nodes );
 	ungroup_elems( app.graph.links );

@@ -7,10 +7,14 @@ export { create };
 
 function create( view, attr, width, height )	{
 
-	let svg = d3.select( view.select( "histo" ) )
-		.append( "svg" )
-		.attr( "width", width )
-		.attr( "height", height );
+	let svg = null;
+	let elem_name = view.select( "histo" );
+	if( elem_name )	{
+		svg = d3.select( elem_name )
+			.append( "svg" )
+			.attr( "width", width )
+			.attr( "height", height );
+	}
 
 	let hist = {
 
@@ -25,7 +29,9 @@ function create( view, attr, width, height )	{
 
 		// export funcs
 		update( degrees, num_buckets, reset_history = false ) {
-			update_histogram( this, degrees, num_buckets, reset_history );
+			if( svg )	{
+				update_histogram( this, degrees, num_buckets, reset_history );
+			}
 		}
 	};
 	return( hist );

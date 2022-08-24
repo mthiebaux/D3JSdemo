@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+
+		<title> graph demo </title>
+
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+	</head>
+	<body style="font-family:helvetica; font-weight:lighter; background:linear-gradient( 60deg, #ffffff, #c4dfee );">
+
+		<div class="page_header">
+
+			<h2> D3 Scale-Free Graphs </h2>
+
+		</div>
+
+		<div id="page_contents">
+
+			Using a prescribed power-law degree distribution and a network growth
+			configuration model to create random scale-free graphs. Adjust slider to
+			control mutation rate.
+			<p>
+
+			<div style="border:1px solid lightgrey; background:white; padding:5px;">
+
+				<input
+					type="button"
+					id="init_power_button"
+					value="reset"
+					style="color:black">
+
+				<div id="graph_plot_div"></div>
+
+				<input id="rate_slider" type="range"
+					min="0" max="100" value="0"
+					style="width:98%; height:10px;">
+
+			</div>
+
+			<div id="histo_plot_div" style="border:1px solid lightgrey; background:white; padding:5px"></div>
+
+		</div>
+
+		<div class="page_footer">
+			<p>
+			<em> © thiebaux 2022 </em>
+		</div>
+
+	</body>
+	<script type="module">
+
+		import * as graph_gen from './graph_gen.js';
+		import * as editor from './editor.js';
+
+		const view_elements = {
+
+			graphic:	"graph_plot_div",
+			histo:		"histo_plot_div",
+
+			power:		"init_power_button",
+			rate:		"rate_slider"
+		};
+
+		let app = editor.create( view_elements );
+
+		app.max_degree = 20;
+		let num_nodes = 42;
+		let min_degree = 0.9;
+		let graph = graph_gen.power_graph( num_nodes, min_degree, app.max_degree );
+
+		app.init( graph );
+
+	</script>
+
+</html>

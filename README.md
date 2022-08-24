@@ -2,7 +2,7 @@
 
  **D3.js Editor with Scale-Free graph generation**
 
-* Live hosting at [thiebaux.site44.com](https://thiebaux.site44.com/D3JSdemo/index.html)
+* Live hosting at [thiebaux.site44.com](https://thiebaux.site44.com/D3JSdemo/demo.html)
 
 <img src="./images/screencap.png" width="200">
 

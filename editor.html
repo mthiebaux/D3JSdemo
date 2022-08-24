@@ -7,9 +7,6 @@
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-		<!--script src="https://d3js.org/d3.v7.min.js"></script>
-		<script src="./editor.js"></script-->
-
 	</head>
 	<body style="font-family:helvetica; font-weight:lighter; background:linear-gradient( 60deg, #ffffff, #c4dfee );">
 
@@ -137,6 +134,7 @@
 	</body>
 	<script type="module">
 
+		import * as graph_gen from './graph_gen.js';
 		import * as editor from './editor.js';
 
 		const view_elements = {
@@ -164,7 +162,11 @@
 			log:		"output_log"
 		};
 
-		editor.init( view_elements );
+		let app = editor.create( view_elements );
+
+		let graph = graph_gen.test_graph();
+
+		app.init( graph );
 
 	</script>
 
