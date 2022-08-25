@@ -28,8 +28,12 @@ function create( view, attr, width, height )	{
 		path: null,
 
 		// export funcs
-		update( degrees, num_buckets, reset_history = false ) {
+		update( graph, num_buckets, reset_history = false ) {
 			if( svg )	{
+				let degrees = [];
+				for( let i=0; i< graph.nodes.length; i++ )	{
+					degrees.push( graph.nodes[ i ].adjacent.length );
+				}
 				update_histogram( this, degrees, num_buckets, reset_history );
 			}
 		}

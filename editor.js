@@ -64,7 +64,7 @@ function init_editor( app )	{
 	if( app.histo == null )
 		app.histo = histogram.create( app.view, app.attr, 300, 50 );
 
-	app.histo.update( app.graph.degrees, app.max_degree, true );
+	app.histo.update( app.graph, app.max_degree, true );
 }
 
 ///////////////////////////////////////////////////////////////////////
@@ -327,7 +327,7 @@ function register_event_handlers( app )	{
 			app.select_links = [];
 			app.select_nodes = [];
 			app.sim.update();
-			app.histo.update( app.graph.degrees, app.max_degree, false );
+			app.histo.update( app.graph, app.max_degree, false );
 		}
 	);
 	d3.select( app.view.select( "del" ) ).on(
@@ -341,7 +341,7 @@ function register_event_handlers( app )	{
 			app.select_links = [];
 			app.select_nodes = [];
 			app.sim.update();
-			app.histo.update( app.graph.degrees, app.max_degree, false );
+			app.histo.update( app.graph, app.max_degree, false );
 		}
 	);
 
@@ -370,7 +370,7 @@ function reset_editor( app )	{
 	app.select_nodes = [];
 	app.sim.init( app.graph, app.attr );
 	app.sim.update();
-	app.histo.update( app.graph.degrees, app.max_degree, true );
+	app.histo.update( app.graph, app.max_degree, true );
 }
 
 function ungroup_elems( arr )	{
@@ -427,7 +427,8 @@ function update_auto_edit( app, value, slider_max )	{
 			let update = graph_edit.auto_edit_links( app.graph, app.max_degree );
 			if( update == true )	{
 				app.sim.update();
-				app.histo.update( app.graph.degrees, app.max_degree, false );
+
+				app.histo.update( app.graph, app.max_degree, false );
 			}
 			if( app.auto_path )	{
 				update_bfs_path( app );
@@ -457,7 +458,6 @@ function log_graph( graph, view )	{
 	view.log( "GRAPH: " );
 //	view.log( graph );
 
-	view.log( "degrees: [ " + graph.degrees.join( ", " ) + " ]" );
 	view.log( "map: " + JSON.stringify( [ ...( graph.map.entries() ) ] ) );
 	for( let i=0; i< graph.nodes.length; i++ )	{
 		view.log( "nodes: " + graph.nodes[ i ].id + " [ " + graph.nodes[ i ].adjacent.join( ", " ) + " ]" );

@@ -16,15 +16,6 @@ const id_off = 0; // offset for testing separation of id and array index
 
 ///////////////////////////////////////////////////////////////////////
 
-function build_degrees( nodes )	{
-
-	let arr = [];
-	for( let i=0; i< nodes.length; i++ )	{
-		arr.push( nodes[ i ].adjacent.length );
-	}
-	return( arr );
-}
-
 function build_node_map( nodes )	{
 
 	let map = new Map();
@@ -98,8 +89,7 @@ function test_graph()	{
 	return(
 		expand_graph_links(
 			{
-				degrees:	build_degrees( nodes ),
-				map:		build_node_map( nodes ),
+				map:	build_node_map( nodes ),
 				nodes,
 				links
 			}
@@ -137,8 +127,7 @@ function test_graph()	{
 	return(
 		expand_graph_links(
 			{
-				degrees:	build_degrees( nodes ),
-				map:		build_node_map( nodes ),
+				map:	build_node_map( nodes ),
 				nodes,
 				links
 			}
@@ -164,8 +153,7 @@ function simple_graph()	{
 	return(
 		expand_graph_links(
 			{
-				degrees:	build_degrees( nodes ),
-				map:		build_node_map( nodes ),
+				map:	build_node_map( nodes ),
 				nodes,
 				links
 			}
@@ -203,8 +191,7 @@ function ring_graph( n, w )	{
 	return(
 		expand_graph_links(
 			{
-				degrees:	build_degrees( nodes ),
-				map:		build_node_map( nodes ),
+				map:	build_node_map( nodes ),
 				nodes,
 				links
 			}
@@ -386,8 +373,7 @@ function power_graph( num_nodes, min_degree, max_degree )	{
 	return(
 		expand_graph_links(
 			{
-				degrees:	build_degrees( nodes ),
-				map:		build_node_map( nodes ),
+				map:	build_node_map( nodes ),
 				nodes,
 				links
 			}

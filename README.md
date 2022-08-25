@@ -49,13 +49,12 @@ d3.forceSimulation()
 
 Building on lessons learned from implementing link mutations, the project developed into a general graph editor, allowing insertion and deletion of both links and nodes, with a variety of initialization options. With deep refactoring and modularization of the various components, it becomes easier to customize the client code for specific purposes, such as animated graph traversal and feature detection.
 
-Each node maintains a separate list of its neighbors (adjacency array), for ease of traversal. When a node is deleted, there is a lot of book-keeping. We must maintain a node degree list, and a separate edge list curated for the D3 visualizer. To support deletion, each node must be referred to by unique name, rather than its position in the array. These are kept in a hash map. The degree vector is used to color nodes and update the histogram.
+Each node maintains a separate list of its neighbors (adjacency array), for ease of traversal. When a node is deleted, there is some redundant book-keeping. We require a separate list of links curated for the D3 visualizer. To support deletion, each node must be referred to by unique name, rather than its position in the array. These are kept in a hash map. The degree vector is used to color nodes and update the histogram.
 
 A very simple graph has the following properties at minumum, with the map initialized to identity values:
 
 ```
 graph: {
-    degrees: [ 1, 2, 1, 0 ],
     map: [ [0,0], [1,1], [2,2], [3,3] ],
     nodes: [
         { id: 0, adjacent: [ 1 ] },

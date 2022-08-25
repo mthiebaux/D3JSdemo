@@ -51,7 +51,6 @@ function add_new_node( graph )	{
 
 	graph.nodes.push( { id: new_id, adjacent: [] } );
 	graph.map.set( new_id, new_i );
-	graph.degrees.push( 0 );
 
 	return( new_i );
 }
@@ -70,9 +69,6 @@ function add_new_link( graph, src_index, tgt_index )	{
 		graph.links.push(
 			graph_gen.expand_link( graph, { source: s, target: t, group: 0 } )
 		);
-
-		graph.degrees[ src_index ]++;
-		graph.degrees[ tgt_index ]++;
 
 		return( true );
 	}
@@ -139,12 +135,6 @@ function delete_elems( graph, select_links, select_nodes )	{
 	for( let i=0; i< select_nodes.length; i++ )	{
 
 		graph.nodes.splice( select_nodes[ i ], 1 );
-	}
-
-	graph.degrees = [];
-	for( let i=0; i< graph.nodes.length; i++ )	{
-
-		graph.degrees.push( graph.nodes[ i ].adjacent.length );
 	}
 
 	graph.map = graph_gen.build_node_map( graph.nodes );
