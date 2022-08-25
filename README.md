@@ -45,7 +45,7 @@ d3.forceSimulation()
 
 ## Graph Editor
 
-* Live hosting at [thiebaux.site44.com](https://thiebaux.site44.com/D3JSdemo/editor.html)
+* Live hosting at [thiebaux.site44.com](https://thiebaux.site44.com/D3JSdemo/index.html)
 
 Building on lessons learned from implementing link mutations, the project developed into a general graph editor, allowing insertion and deletion of both links and nodes, with a variety of initialization options. With deep refactoring and modularization of the various components, it becomes easier to customize the client code for specific purposes, such as animated graph traversal and feature detection.
 

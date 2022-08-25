@@ -427,7 +427,6 @@ function update_auto_edit( app, value, slider_max )	{
 			let update = graph_edit.auto_edit_links( app.graph, app.max_degree );
 			if( update == true )	{
 				app.sim.update();
-
 				app.histo.update( app.graph, app.max_degree, false );
 			}
 			if( app.auto_path )	{
