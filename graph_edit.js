@@ -152,21 +152,29 @@ function delete_elems( graph, select_links, select_nodes )	{
 
 ///////////////////////////////////////////////////////////////////////
 
-function auto_edit_links( graph, max_degree, reset_balance = false )	{
+function auto_edit_links( graph, max_degree ) { // , reset_balance = false )	{
 
 //	if( reset_balance ) console.log( "auto_edit_links: reset_balance" );
-
+/*
 	// static variable
     if( ( auto_edit_links.balance === undefined )|| reset_balance ) {
          auto_edit_links.balance = 0;
+
+		// update only...
+         // return( false );
     }
+*/
 	let edited = false;
 
-	if( Math.random() < 0.5  )	{
+//	if( Math.random() < 0.499 )	{
+//	if( Math.random() < 0.47 )	{
+	if( Math.random() < 0.4 )	{
+//	if( Math.random() < 0.3 )	{
 
 		// remove existing link
 
-		if( auto_edit_links.balance > -( max_degree / 2 ) )	{ // this is just a heuristic band-aid
+//		if( auto_edit_links.balance > -( max_degree / 2 ) )	{ // this is just a heuristic band-aid
+		if( true )	{ // let it rip
 
 			if( graph.links.length > 0 )	{
 
@@ -174,7 +182,7 @@ function auto_edit_links( graph, max_degree, reset_balance = false )	{
 
 				delete_elems( graph, [ r_link_id  ], [] );
 
-				auto_edit_links.balance--;
+//				auto_edit_links.balance--;
 				edited = true;
 			}
 		}
@@ -182,30 +190,30 @@ function auto_edit_links( graph, max_degree, reset_balance = false )	{
 	else	{
 		// add new link
 
-		if( auto_edit_links.balance < ( max_degree * 2 ) )	{
-
-			let curr_max_deg = 0;
-			for( let i=0; i< graph.nodes.length; i++ )	{
-
-				let len = graph.nodes[ i ].adjacent.length;
-				if( len > curr_max_deg ) curr_max_deg = len;
-			}
+//		if( auto_edit_links.balance < ( max_degree * 2 ) )	{
+		if( true )	{ // let it rip
+//let repeat = 10;
+// while( !edited && repeat ) { repeat--; // ... }
 
 			let stub_counts = [];
 			for( let i=0; i< graph.nodes.length; i++ )	{
 
-				stub_counts.push( graph.nodes[ i ].adjacent.length + 1 );
+//				stub_counts.push( graph.nodes[ i ].adjacent.length + 1 );
+				stub_counts.push( Math.floor( Math.pow( graph.nodes[ i ].adjacent.length + 1, 1.5 ) ) );
+//				stub_counts.push( Math.pow( graph.nodes[ i ].adjacent.length + 1, 2 ) );
 			}
 			let stubs = graph_gen.expand_stub_array( stub_counts );
+
+// while( !edited && repeat ) { repeat--; // ... }
 
 			let r_src_id = stubs[ graph_gen.rand_int_range( 0, stubs.length ) ];
 			let r_tgt_id = stubs[ graph_gen.rand_int_range( 0, stubs.length ) ];
 
 			if( r_src_id != r_tgt_id )	{
 
-				if( add_new_link( graph, r_src_id, r_tgt_id ) )	{
+				if( add_new_link( graph, r_src_id, r_tgt_id ) )	{ // not already adjacent
 
-					auto_edit_links.balance++;
+//					auto_edit_links.balance++;
 					edited = true;
 				}
 			}

@@ -30,7 +30,6 @@ function create( view_elements )	{
 
 		auto_path:	false,
 		auto_edit:	false,
-		reset_bal:	false, // auto-edit balance
 		timeout:	null,
 		ival:		1000,
 
@@ -369,7 +368,6 @@ function reset_editor( app )	{
 
 	app.select_links = [];
 	app.select_nodes = [];
-	app.reset_bal = true;
 	app.sim.init( app.graph, app.attr );
 	app.sim.update();
 	app.histo.update( app.graph.degrees, app.max_degree, true );
@@ -426,9 +424,7 @@ function update_auto_edit( app, value, slider_max )	{
 
 		function mutate_timeout_callback( d )	{
 
-			let update = graph_edit.auto_edit_links( app.graph, app.max_degree, app.reset_bal );
-			app.reset_bal = false;
-
+			let update = graph_edit.auto_edit_links( app.graph, app.max_degree );
 			if( update == true )	{
 				app.sim.update();
 				app.histo.update( app.graph.degrees, app.max_degree, false );
