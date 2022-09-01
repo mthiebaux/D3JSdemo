@@ -87,8 +87,8 @@ If at least 2 nodes are selected, the first and last serve as end points for a p
 
 Dijkstra's
 - *DJK*: unit node steps
-- *Dmin*: avoid highly connected hubs: rush hour
-- *Dmax*: prefer dense hubs: burning midnight oil
+- *Dmin*: avoid highly connected hubs
+- *Dmax*: prefer dense hubs
 
 
 
