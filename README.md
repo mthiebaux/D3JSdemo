@@ -41,7 +41,7 @@ d3.forceSimulation()
   );
 ```
 
-<img src="./images/screencap4.png" width="200">
+<img src="./images/screencap4.png" width="400">
 
 ## Graph Editor
 
