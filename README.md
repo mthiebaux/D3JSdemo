@@ -41,7 +41,7 @@ d3.forceSimulation()
   );
 ```
 
-<img src="./images/screencap4.png" width="400">
+<img src="./images/screencap4.png" width="200">
 
 ## Graph Editor
 
@@ -79,7 +79,7 @@ Manual editing operations are supported with 3 custom action buttons: *links*, *
 
 * **del**: Remove all selected links and nodes from the graph.
 
-<img src="./images/screencap5.png" width="200">
+<img src="./images/screencap5.png" width="400">
 
 ## Path Search
 
