@@ -286,9 +286,20 @@ function register_event_handlers( app )	{
 			update_path_search( app );
 		}
 	);
+	d3.select( app.view.select( "djk" ) ).on(
+		"mousedown",
+		function( event )	{
+
+			app.path_search = 2;
+			update_path_search( app );
+		}
+	);
 	d3.select( app.view.select( "dmin" ) ).on(
 		"mousedown",
 		function( event )	{
+
+//			app.path_search = 2;
+//			update_path_search( app );
 
 /*
 
@@ -296,22 +307,14 @@ function register_event_handlers( app )	{
 	|  /  |  /
 	3 --- 4
 
-	let links = [
-		{ source: 0, target: 1, group: 0 }, // A - B
-		{ source: 0, target: 3, group: 0 }, // A - D
-		{ source: 1, target: 2, group: 0 }, // B - C
-		{ source: 1, target: 3, group: 0 }, // B - D
-		{ source: 1, target: 4, group: 0 }, // B - E
-		{ source: 2, target: 4, group: 0 }, // C - E
-		{ source: 3, target: 4, group: 0 }  // D - E
-	];
 */
-// 			let w = graph_algo.generate_link_weights( app.graph, 0 );
-// 			for( let i=0; i< w.length; i++ )	{
-// 				console.log( i + ": " + w[ i ] );
-// 			}
+///*
+// 			let W = graph_algo.generate_link_weights( app.graph, 0 );
 
 			let W = [ 6, 1, 5, 2, 2, 5, 1 ];
+//			let W = [ 1, 1, 1, 1, 1, 1, 1 ];
+//			let W = new Array( app.graph.links.length ).fill( 1 );
+
 			console.log( "weight:" );
 			for( let i=0; i< W.length; i++ )	{
 				console.log( i + ": " + W[ i ] );
@@ -319,12 +322,14 @@ function register_event_handlers( app )	{
 
 //			let path_nodes = graph_algo.path_search_Dijkstra( app.graph, W, fr_id, to_id );
 			let path_nodes = graph_algo.path_search_Dijkstra( app.graph, W, 0, 2 );
+//			let path_nodes = graph_algo.path_search_Dijkstra( app.graph, W, 2, 4 );
 //			let path_nodes = graph_algo.path_search_Dijkstra( app.graph, W, 100, 102 );
 
 			console.log( "path:" );
 			for( let i=0; i< path_nodes.length; i++ )	{
 				console.log( path_nodes[ i ] );
 			}
+//*/
 
 		}
 	);
@@ -426,6 +431,11 @@ function execute_auto_search( app, fr_id, to_id )	{
 
 	if( app.path_search == 1 )	{
 		return( graph_algo.path_search_BFS( app.graph, fr_id, to_id ) );
+	}
+	else
+	if( app.path_search == 2 )	{
+		let weights = new Array( app.graph.links.length ).fill( 1 );
+		return( graph_algo.path_search_Dijkstra( app.graph, weights, fr_id, to_id ) );
 	}
 	return( [] );
 }

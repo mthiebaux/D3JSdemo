@@ -242,13 +242,18 @@ function path_search_Dijkstra( graph, weights, fr_id, to_id )	{
 		curr_id = min_frontier();
 	}
 
-	let p_id = to_id;
-	let path = [ p_id ];
-	while( p_id != fr_id )	{
-		p_id = parent[ index( p_id ) ];
-		path.push( p_id );
+	if( parent[ index( to_id ) ] > -1 )	{
+
+		let path = [ to_id ];
+		let p_id = to_id;
+		while( p_id != fr_id )	{
+
+			p_id = parent[ index( p_id ) ];
+			path.push( p_id );
+		}
+		return( path.reverse() );
 	}
-	return( path.reverse() );
+	return( [] );
 
   // private member functions:
 

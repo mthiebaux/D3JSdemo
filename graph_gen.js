@@ -152,7 +152,9 @@ function test_graph2()	{
 		{ group: 0, id: 1 + id_off, adjacent: [ 0 + id_off, 2 + id_off, 3 + id_off, 4 + id_off ] },	// B
 		{ group: 0, id: 2 + id_off, adjacent: [ 1 + id_off, 4 + id_off ] },					// C
 		{ group: 0, id: 3 + id_off, adjacent: [ 0 + id_off, 1 + id_off, 4 + id_off ] },		// D
-		{ group: 0, id: 4 + id_off, adjacent: [ 1 + id_off, 2 + id_off, 3 + id_off] }		// E
+		{ group: 0, id: 4 + id_off, adjacent: [ 1 + id_off, 2 + id_off, 3 + id_off ] }		// E
+
+		,{ group: 0, id: 5 + id_off, adjacent: [] }											// X
 	];
 
 	let links = [
