@@ -223,27 +223,17 @@ function path_search_Dijkstra( graph, weights, fr_id, to_id )	{
 
 	// by node id, not array index:
 	let visited = new Set();
-//	let frontier = new Set( [ fr_id ] );
-	let frontier = [ fr_id ];
+	let frontier = new Set( [ fr_id ] );
 	function set_visited( id )	{
-
-// 		if( frontier.delete( id ) )	{
-// 			visited.add( id );
-// 		}
-// 		else	{
-// 			console.log( "ERR: set_visited id: " + id );
-//		}
-
-		let i = frontier.indexOf( id );
-		if( i > -1 )	{
-			visited.add( ...( frontier.splice( i, 1 ) ) );
+		if( frontier.delete( id ) )	{
+			visited.add( id );
 		}
 		else	{
 			console.log( "ERR: set_visited id: " + id );
 		}
-
 	}
 
+	// by array index, not node id:
 	let distance = new Array( graph.nodes.length ).fill( Infinity );
 	distance[ index( fr_id ) ] = 0;
 	function min_frontier()	{
@@ -262,15 +252,10 @@ function path_search_Dijkstra( graph, weights, fr_id, to_id )	{
 		return( min_id );
 	}
 
+	// by array index, not node id:
 	let parent = new Array( graph.nodes.length ).fill( -1 );
 	parent[ index( fr_id ) ] = -1;
 	function test_frontier( curr_id, adj_id )	{
-
-		// not in visited, and not in frontier... must be new
-		if( frontier.indexOf( adj_id ) == -1 )	{
-			frontier.push( adj_id );
-		}
-//		frontier.add( adj_id );
 
 		// path distance is a summation of link weights
 		let d = distance[ index( curr_id ) ] + get_weight( curr_id, adj_id );
@@ -280,11 +265,11 @@ function path_search_Dijkstra( graph, weights, fr_id, to_id )	{
 			distance[ adj_i ] = d;
 			parent[ adj_i ] = curr_id;
 		}
+		frontier.add( adj_id );
 	}
 
 	let curr_id = fr_id;
-//	while( frontier.size > 0 )	{
-	while( frontier.length > 0 )	{
+	while( frontier.size > 0 )	{
 
 		for( let i=0; i< graph.nodes[ index( curr_id ) ].adjacent.length; i++ )	{
 
