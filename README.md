@@ -75,9 +75,9 @@ Manual editing operations are supported with 3 custom action buttons: *links*, *
 
 * **links**: For each selected node, select its links and then unselect the node. This logic allows all elements to be unselected by clicking twice.
 
-* **add**: If no nodes are selected, a new unconnected node is added. If one node is selected, a new node is added and linked to it. When multiple nodes are selected, they are linked together in order of selection.
+* **ADD**: If no nodes are selected, a new unconnected node is added. If one node is selected, a new node is added and linked to it. When multiple nodes are selected, they are linked together in order of selection.
 
-* **del**: Remove all selected links and nodes from the graph.
+* **DEL**: Remove all selected links and nodes from the graph.
 
 
 <img src="./images/screencap5.png" width="400">
