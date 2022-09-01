@@ -79,6 +79,7 @@ Manual editing operations are supported with 3 custom action buttons: *links*, *
 
 * **del**: Remove all selected links and nodes from the graph.
 
+
 <img src="./images/screencap5.png" width="400">
 
 ## Path Search
@@ -86,9 +87,9 @@ Manual editing operations are supported with 3 custom action buttons: *links*, *
 If at least 2 nodes are selected, the first and last serve as end points for a path search algorithm. If the *auto* checkbox is checked, the program will continuously search for the path between these nodes while the graph is actively mutating.
 
 Dijkstra's
-- *DJK*: unit node steps
-- *Dmin*: avoid highly connected hubs
-- *Dmax*: prefer dense hubs
+- *DJK*: uniform edge weights
+- *Dmin*: dense hub avoidance
+- *Dmax*: dense hub preference
 
 
 
