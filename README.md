@@ -82,16 +82,16 @@ Manual editing operations are supported with 3 custom action buttons: *links*, *
 
 <img src="./images/screencap5.png" width="400">
 
-## Path Search
+## Weighted Path Search
 
 If at least 2 nodes are selected, the first and last serve as end points for a path search algorithm. If the *auto* checkbox is checked, the program will continuously search for the path between these nodes while the graph is actively mutating.
 
-Dijkstra's
-- *DJK*: uniform edge weights
-- *Dmin*: dense hub avoidance
-- *Dmax*: dense hub preference
+* **BFS**: Standard breadth first search
+* **DJK**: Dijkstra's with uniform edge weights
+* **Dmin**: Weighted for dense hub avoidance
+* **Dmax**: Inverted weights for dense hub preference
 
-
+For Dijkstra's weighted path algorithm, weights are automatically generated based on node degrees of each link's endpoints. The degrees are combined based on the product of the square-roots of each node's degree, resulting in hub avoidance. The result is inverted to find paths that prefer hubs.
 
 
 
