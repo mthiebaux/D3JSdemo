@@ -93,6 +93,6 @@ If at least 2 nodes are selected, the first and last serve as end points for a p
 
 For Dijkstra's weighted path algorithm, weights are automatically generated based on node degrees of each link's endpoints. The degrees are combined based on the product of the square-roots of each node's degree, resulting in hub avoidance. The result is inverted to find paths that prefer hubs.
 
-
+Dijkstra's is implemented using two JS *Set* structures, one for visited nodes, and another for the active frontier. New nodes are added to the frontier as they are discovered, and transferred to visited when processing completes. This minimizes the size of the frontier search space when the next shortest leg is needed.
 
 
