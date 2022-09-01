@@ -4,7 +4,9 @@ import * as graph_gen from './graph_gen.js';
 export {
 	test,
 	find_path_links,
-	path_search_BFS
+	generate_link_weights,
+	path_search_BFS,
+	path_search_Dijkstra
 };
 
 ///////////////////////////////////////////////////////////////////////
@@ -109,8 +111,7 @@ function find_path_links( graph, node_ids )	{
 		let to_id = node_ids[ i ];
 
 		let [ a, b ] = [ fr_id, to_id ].sort( (a, b) => a - b );
-		let str = a + "-" + b;
-		link_set.add( str );
+		link_set.add( a + "-" + b );
 
 		fr_id = to_id;
 	}
@@ -177,7 +178,6 @@ function path_search_BFS( graph, fr_id, to_id )	{ // returns array of node id, n
 
 				let path = [ to_id ];
 				path.push( p_id );
-
 				while( p_id != fr_id )	{
 
 					p_id = parent[ index( p_id ) ];
@@ -195,20 +195,355 @@ function path_search_BFS( graph, fr_id, to_id )	{ // returns array of node id, n
 	return( [] );
 }
 
-function path_search_Dijkstra( graph, weights, fr_id, to_id )	{ // returns array of node id, not index
+///////////////////////////////////////////////////////////////////////
+
+function path_search_Dijkstra( graph, weights, fr_id, to_id )	{
+
+	// returns array of node id, not index
 
 	if( ( graph.map.has( fr_id ) == false )||(  graph.map.has( to_id ) == false ) )	{
 		return( [] );
 	}
-	if( fr_id == to_id )	{ // redundant? no, it will bounce off adjacent
+	if( fr_id == to_id )	{ // redundant? no, it will bounce off adjacent... Check this
 		return( [ fr_id ] );
 	}
 
 	// convert node id to array index
 	const index = ( id ) => graph.map.get( id );
 
+	let weight_map = new Map();
+	for( let i=0; i< graph.links.length; i++ )	{
+		let str = graph.links[ i ].source.id + "-" + graph.links[ i ].target.id; // assume sorted
+		weight_map.set( str, weights[ i ] );
+	}
+	function get_weight( fr_id, to_id )	{
+		let [ s, t ] = [ fr_id, to_id ].sort( (a, b) => a - b );
+		return( weight_map.get( s + "-" + t ) );
+	}
 
+	// by node id, not array index:
+	let visited = new Set();
+//	let frontier = new Set( [ fr_id ] );
+	let frontier = [ fr_id ];
+	function set_visited( id )	{
 
+// 		if( frontier.delete( id ) )	{
+// 			visited.add( id );
+// 		}
+// 		else	{
+// 			console.log( "ERR: set_visited id: " + id );
+//		}
+
+		let i = frontier.indexOf( id );
+		if( i > -1 )	{
+			visited.add( ...( frontier.splice( i, 1 ) ) );
+		}
+		else	{
+			console.log( "ERR: set_visited id: " + id );
+		}
+
+	}
+
+	let distance = new Array( graph.nodes.length ).fill( Infinity );
+	distance[ index( fr_id ) ] = 0;
+	function min_frontier()	{
+
+		let min_d = Infinity;
+		let min_id = -1;
+		function check_min( id )	{
+
+			let d = distance[ index( id ) ];
+			if( d < min_d )	{
+				min_d = d;
+				min_id = id;
+			}
+		}
+		frontier.forEach( check_min );
+		return( min_id );
+	}
+
+	let parent = new Array( graph.nodes.length ).fill( -1 );
+	parent[ index( fr_id ) ] = -1;
+	function test_frontier( curr_id, adj_id )	{
+
+		// not in visited, and not in frontier... must be new
+		if( frontier.indexOf( adj_id ) == -1 )	{
+			frontier.push( adj_id );
+		}
+//		frontier.add( adj_id );
+
+		// path distance is a summation of link weights
+		let d = distance[ index( curr_id ) ] + get_weight( curr_id, adj_id );
+
+		let adj_i = index( adj_id );
+		if( d < distance[ adj_i ] )	{
+			distance[ adj_i ] = d;
+			parent[ adj_i ] = curr_id;
+		}
+	}
+
+	let curr_id = fr_id;
+//	while( frontier.size > 0 )	{
+	while( frontier.length > 0 )	{
+
+		for( let i=0; i< graph.nodes[ index( curr_id ) ].adjacent.length; i++ )	{
+
+			let adj_id = graph.nodes[ index( curr_id ) ].adjacent[ i ];
+
+			if( visited.has( adj_id ) == false )	{
+
+				test_frontier( curr_id, adj_id );
+			}
+		}
+
+		set_visited( curr_id );
+		curr_id = min_frontier();
+	}
+
+	let p_id = to_id;
+	let path = [ p_id ];
+	while( p_id != fr_id )	{
+		p_id = parent[ index( p_id ) ];
+		path.push( p_id );
+	}
+	return( path.reverse() );
+}
+
+///////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////
+
+function path_search_Dijkstra_X( graph, weights, fr_id, to_id )	{
+
+	// returns array of node id, not index
+
+	if( ( graph.map.has( fr_id ) == false )||(  graph.map.has( to_id ) == false ) )	{
+		return( [] );
+	}
+	if( fr_id == to_id )	{ // redundant? no, it will bounce off adjacent... Check this
+		return( [ fr_id ] );
+	}
+
+	// convert node id to array index
+	const index = ( id ) => graph.map.get( id );
+
+	let weight_map = new Map();
+	for( let i=0; i< graph.links.length; i++ )	{
+		let str = graph.links[ i ].source.id + "-" + graph.links[ i ].target.id; // assume sorted
+		weight_map.set( str, weights[ i ] );
+	}
+	function get_weight( fr_id, to_id )	{
+		let [ s, t ] = [ fr_id, to_id ].sort( (a, b) => a - b );
+		return( weight_map.get( s + "-" + t ) );
+	}
+
+	let visited = new Set();
+	let unvisited = [];
+	for( let i=0; i< graph.nodes.length; i++ )	{
+		unvisited.push( graph.nodes[ i ].id );
+	}
+	function push_frontier( id )	{
+		unvisited.push( id );
+	}
+	function set_visited( id )	{
+
+		let i = unvisited.indexOf( id );
+		if( i > -1 )	{
+			visited.add( ...( unvisited.splice( i, 1 ) ) );
+		}
+	}
+
+	let distance = new Array( graph.nodes.length ).fill( Infinity );
+	distance[ index( fr_id ) ] = 0;
+//	function min_frontier()	{
+	function min_unvisited()	{
+
+		let min_d = Infinity;
+		let min_id = -1;
+		for( let i=0; i< unvisited.length; i++ )	{
+
+			let id = unvisited[ i ];
+			let d = distance[ index( id ) ];
+			if( d < min_d )	{
+				min_d = d;
+				min_id = id;
+			}
+		}
+		return( min_id );
+	}
+
+	let parent = new Array( graph.nodes.length ).fill( -1 );
+	parent[ index( fr_id ) ] = -1;
+
+	let curr_id = fr_id;
+	while( unvisited.length > 0 )	{
+
+		for( let i=0; i< graph.nodes[ index( curr_id ) ].adjacent.length; i++ )	{
+
+			let adj_id = graph.nodes[ index( curr_id ) ].adjacent[ i ];
+
+			if( visited.has( adj_id ) == false )	{
+
+// if unknown: if( unvisited.indexOf( adj_id ) == -1 ) {}
+//				push_frontier( adj_id );
+
+				// distance is a summation of path weights
+				let d = distance[ index( curr_id ) ] + get_weight( curr_id, adj_id );
+
+				let adj_i = index( adj_id );
+				if( d < distance[ adj_i ] )	{
+					distance[ adj_i ] = d;
+					parent[ adj_i ] = curr_id;
+				}
+
+			}
+		}
+
+		set_visited( curr_id );
+		curr_id = min_unvisited();
+	}
+
+	let p_id = to_id;
+	let path = [ p_id ];
+	while( p_id != fr_id )	{
+		p_id = parent[ index( p_id ) ];
+		path.push( p_id );
+	}
+	return( path.reverse() );
+}
+
+///////////////////////////////////////////////////////////////////////
+
+function path_search_Dijkstra_DBG( graph, weights, fr_id, to_id )	{ // returns array of node id, not index
+
+	if( ( graph.map.has( fr_id ) == false )||(  graph.map.has( to_id ) == false ) )	{
+		return( [] );
+	}
+	if( fr_id == to_id )	{ // redundant? no, it will bounce off adjacent... Check this
+		return( [ fr_id ] );
+	}
+
+	// convert node id to array index
+	const index = ( id ) => graph.map.get( id );
+
+	function label( i )	{
+		if( i === undefined ) return( "<empty>" );
+		if( i < 0 ) return( "" );
+		return( ( "ABCDEFGHIJKLMNOPQRSTUVWXYZ" ).split( '' )[ i % 26 ] );
+	}
+	function print_table( D, P )	{
+		console.log( "distance:" );
+		for( let i=0; i< D.length; i++ )	{
+//			console.log( label( i ) + ": " + D[ i ] );
+			console.log( label( graph.nodes[ i ].id ) + ": " + D[ i ] );
+		}
+		console.log( "parent:" );
+		for( let i=0; i< P.length; i++ )	{
+//			console.log( label( i ) + ": " + label( P[ i ] ) );
+			console.log( label( graph.nodes[ i ].id ) + ": " + label( P[ i ] ) );
+		}
+		console.log( "parent index label:" );
+		for( let i=0; i< P.length; i++ )	{
+//			console.log( i + " , " + P[ i ] + " , " + index( P[ i ] ) + " , " + label( index( P[ i ] ) ) );
+			console.log( label( i ) + ": " + label( index( P[ i ] ) ) );
+		}
+	}
+
+	let weight_map = new Map();
+	for( let i=0; i< graph.links.length; i++ )	{
+
+		// apply i = index( id ) here? no...
+
+		let str = graph.links[ i ].source.id + "-" + graph.links[ i ].target.id; // assume sorted
+		weight_map.set( str, weights[ i ] );
+	}
+	function get_weight( fr_id, to_id )	{
+		let [ s, t ] = [ fr_id, to_id ].sort( (a, b) => a - b );
+		return( weight_map.get( s + "-" + t ) );
+	}
+
+	let unvisited = [];
+	for( let i=0; i< graph.nodes.length; i++ )	{
+		unvisited.push( graph.nodes[ i ].id );
+	}
+	function set_visited( id )	{
+		let i = unvisited.indexOf( id );
+		if( i > -1 )	{
+			unvisited.splice( i, 1 );
+		}
+	}
+	function get_visited( id )	{
+		return( unvisited.indexOf( id ) == -1 );
+	}
+
+	let distance = new Array( graph.nodes.length ).fill( Infinity );
+	distance[ index( fr_id ) ] = 0;
+	function min_unvisited()	{
+
+		let min_d = Infinity;
+		let min_id = -1;
+		for( let i=0; i< unvisited.length; i++ )	{
+
+			let id = unvisited[ i ];
+			let d = distance[ index( id ) ];
+			if( d < min_d )	{
+				min_d = d;
+				min_id = id;
+			}
+		}
+		return( min_id );
+	}
+
+	let parent = new Array( graph.nodes.length ).fill( -1 );
+	parent[ index( fr_id ) ] = -1;
+
+	print_table( distance, parent );
+
+	let curr_id = fr_id;
+	while( unvisited.length > 0 )	{
+
+console.log( "CURR: " + label( curr_id ) );
+
+		for( let i=0; i< graph.nodes[ index( curr_id ) ].adjacent.length; i++ )	{
+
+			let adj_id = graph.nodes[ index( curr_id ) ].adjacent[ i ];
+
+			if( get_visited( adj_id ) == false )	{
+
+console.log( "adj: " + label( adj_id ) );
+
+				// distance is a summation of path weights
+				let d = distance[ index( curr_id ) ] + get_weight( curr_id, adj_id );
+
+				let adj_i = index( adj_id );
+
+				if( d < distance[ adj_i ] )	{
+					distance[ adj_i ] = d;
+					parent[ adj_i ] = curr_id;
+				}
+
+			}
+		}
+
+		set_visited( curr_id );
+		curr_id = min_unvisited();
+
+		print_table( distance, parent );
+	}
+
+	console.log( "COMPLETE" );
+	print_table( distance, parent );
+
+	let p_id = to_id;
+	let path = [ p_id ];
+	while( p_id != fr_id )	{
+		p_id = parent[ index( p_id ) ];
+		path.push( p_id );
+	}
+	console.log( "path:" );
+	for( let i= path.length - 1; i >= 0; i-- )	{
+		console.log( label( path[ i ] ) );
+	}
+	return( path.reverse() );
 }
 
 ///////////////////////////////////////////////////////////////////////

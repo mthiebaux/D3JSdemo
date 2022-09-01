@@ -83,7 +83,10 @@ Manual editing operations are supported with 3 custom action buttons: *links*, *
 
 If at least 2 nodes are selected, the first and last serve as end points for a path search algorithm. If the *auto* checkbox is checked, the program will continuously search for the path between these nodes while the graph is actively mutating.
 
-
+Dijkstra's
+- DJK: unit node steps
+- Dmin: avoid highly connected hubs: rush hour
+- Dmax: prefer dense hubs: burning midnight oil
 
 
 

@@ -28,7 +28,9 @@ function create( view_elements )	{
 		select_nodes:	[], // ephemeral: stored temporarily by index, not id
 		select_links:	[],
 
-		auto_path:	false,
+//		auto_search:	true,
+//		path_search:	0, // 0: none, 1: BFS, 2:Dmin, 3: DFL, 4: Dmax
+		auto_path:	false, // deprecate
 		auto_edit:	false,
 		timeout:	null,
 		ival:		1000,
@@ -285,6 +287,42 @@ function register_event_handlers( app )	{
 		"mousedown",
 		function( event )	{
 
+/*
+
+	0 --- 1 --- 2
+	|  /  |  /
+	3 --- 4
+
+	let links = [
+		{ source: 0, target: 1, group: 0 }, // A - B
+		{ source: 0, target: 3, group: 0 }, // A - D
+		{ source: 1, target: 2, group: 0 }, // B - C
+		{ source: 1, target: 3, group: 0 }, // B - D
+		{ source: 1, target: 4, group: 0 }, // B - E
+		{ source: 2, target: 4, group: 0 }, // C - E
+		{ source: 3, target: 4, group: 0 }  // D - E
+	];
+*/
+// 			let w = graph_algo.generate_link_weights( app.graph, 0 );
+// 			for( let i=0; i< w.length; i++ )	{
+// 				console.log( i + ": " + w[ i ] );
+// 			}
+
+			let W = [ 6, 1, 5, 2, 2, 5, 1 ];
+			console.log( "weight:" );
+			for( let i=0; i< W.length; i++ )	{
+				console.log( i + ": " + W[ i ] );
+			}
+
+//			let path_nodes = graph_algo.path_search_Dijkstra( app.graph, W, fr_id, to_id );
+			let path_nodes = graph_algo.path_search_Dijkstra( app.graph, W, 0, 2 );
+//			let path_nodes = graph_algo.path_search_Dijkstra( app.graph, W, 100, 102 );
+
+			console.log( "path:" );
+			for( let i=0; i< path_nodes.length; i++ )	{
+				console.log( path_nodes[ i ] );
+			}
+
 		}
 	);
 	d3.select( app.view.select( "dmax" ) ).on(
@@ -293,10 +331,11 @@ function register_event_handlers( app )	{
 
 		}
 	);
-	d3.select( app.view.select( "search" ) ).on(
+	d3.select( app.view.select( "auto" ) ).on(
 		"change",
 		function( event )	{
 
+//			app.auto_search = event.target.checked;
 			app.auto_path = event.target.checked;
 		}
 	);
@@ -380,6 +419,7 @@ function ungroup_elems( arr )	{
 	}
 }
 
+//function update_path_search( app )	{
 function update_bfs_path( app )	{
 
 	// convert node id to array index
@@ -394,7 +434,11 @@ function update_bfs_path( app )	{
 		let fr_id = app.graph.nodes[ app.select_nodes[ 0 ] ].id;
 		let to_id = app.graph.nodes[ app.select_nodes[ len - 1 ] ].id;
 
+
+
 		let path_nodes = graph_algo.path_search_BFS( app.graph, fr_id, to_id );
+
+
 
 		let fr_i = index( fr_id );
 		let to_i = index( to_id );
@@ -430,7 +474,11 @@ function update_auto_edit( app, value, slider_max )	{
 				app.histo.update( app.graph, app.max_degree, false );
 			}
 			if( app.auto_path )	{
+
+
 				update_bfs_path( app );
+
+
 			}
 			if( app.auto_edit )	{
 				app.timeout = d3.timeout( mutate_timeout_callback, app.ival );

@@ -73,6 +73,11 @@
 					style="color:black">
 				<input
 					type="button"
+					id="dijkstra_dfl_button"
+					value="DJK"
+					style="color:black">
+				<input
+					type="button"
 					id="dijkstra_min_button"
 					value="Dmin"
 					style="color:black">
@@ -149,9 +154,10 @@
 
 			stop:		"stop_and_clear_button",
 			bfs:		"bfs_button",
+			djk:		"dijkstra_button",
 			dmin:		"dijkstra_min_button",
 			dmax:		"dijkstra_max_button",
-			search:		"auto_path_search",
+			auto:		"auto_path_search",
 
 			links:		"links_button",
 			add:		"add_button",
@@ -164,7 +170,7 @@
 
 		let app = editor.create( view_elements );
 
-		app.graph = graph_gen.test_graph();
+		app.graph = graph_gen.test_graph2();
 
 		app.init();
 

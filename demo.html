@@ -80,7 +80,10 @@
 		d3.select( app.view.select( "reset" ) ).on(
 			"mousedown",
 			function( event )	{
-				app.graph = graph_gen.power_graph( num_nodes, 0.9, app.max_degree );
+
+				let N = graph_gen.rand_int_range( num_nodes * 0.2, num_nodes * 3.0 );
+
+				app.graph = graph_gen.power_graph( N, 0.9, app.max_degree );
 				app.reset();
 			}
 		);

@@ -2,6 +2,7 @@
 export {
 
 	test_graph,
+	test_graph2,
 	simple_graph,
 	ring_graph,
 	power_graph,
@@ -135,6 +136,47 @@ function test_graph()	{
 	);
 }
 */
+
+/*
+
+	0 --- 1 --- 2
+	|  /  |  /
+	3 --- 4
+
+*/
+
+function test_graph2()	{
+
+	let nodes = [
+		{ group: 0, id: 0 + id_off, adjacent: [ 1 + id_off, 3 + id_off ] },					// A
+		{ group: 0, id: 1 + id_off, adjacent: [ 0 + id_off, 2 + id_off, 3 + id_off, 4 + id_off ] },	// B
+		{ group: 0, id: 2 + id_off, adjacent: [ 1 + id_off, 4 + id_off ] },					// C
+		{ group: 0, id: 3 + id_off, adjacent: [ 0 + id_off, 1 + id_off, 4 + id_off ] },		// D
+		{ group: 0, id: 4 + id_off, adjacent: [ 1 + id_off, 2 + id_off, 3 + id_off] }		// E
+	];
+
+	let links = [
+		{ group: 0, source: 0 + id_off, target: 1 + id_off }, // A - B
+		{ group: 0, source: 0 + id_off, target: 3 + id_off }, // A - D
+		{ group: 0, source: 1 + id_off, target: 2 + id_off }, // B - C
+		{ group: 0, source: 1 + id_off, target: 3 + id_off }, // B - D
+		{ group: 0, source: 1 + id_off, target: 4 + id_off }, // B - E
+		{ group: 0, source: 2 + id_off, target: 4 + id_off }, // C - E
+		{ group: 0, source: 3 + id_off, target: 4 + id_off }  // D - E
+	];
+
+	return(
+		expand_graph_links(
+			{
+				map:	build_node_map( nodes ),
+				nodes,
+				links
+			}
+		)
+	);
+}
+
+///////////////////////////////////////////////////////////////////////
 
 function simple_graph()	{
 
