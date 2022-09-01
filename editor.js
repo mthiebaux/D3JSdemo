@@ -298,8 +298,8 @@ function register_event_handlers( app )	{
 		"mousedown",
 		function( event )	{
 
-//			app.path_search = 2;
-//			update_path_search( app );
+			app.path_search = 3;
+			update_path_search( app );
 
 /*
 
@@ -308,7 +308,7 @@ function register_event_handlers( app )	{
 	3 --- 4
 
 */
-///*
+/*
 // 			let W = graph_algo.generate_link_weights( app.graph, 0 );
 
 			let W = [ 6, 1, 5, 2, 2, 5, 1 ];
@@ -329,7 +329,7 @@ function register_event_handlers( app )	{
 			for( let i=0; i< path_nodes.length; i++ )	{
 				console.log( path_nodes[ i ] );
 			}
-//*/
+*/
 
 		}
 	);
@@ -337,6 +337,8 @@ function register_event_handlers( app )	{
 		"mousedown",
 		function( event )	{
 
+			app.path_search = 4;
+			update_path_search( app );
 		}
 	);
 	d3.select( app.view.select( "auto" ) ).on(
@@ -435,6 +437,16 @@ function execute_auto_search( app, fr_id, to_id )	{
 	else
 	if( app.path_search == 2 )	{
 		let weights = new Array( app.graph.links.length ).fill( 1 );
+		return( graph_algo.path_search_Dijkstra( app.graph, weights, fr_id, to_id ) );
+	}
+	else
+	if( app.path_search == 3 )	{
+		let weights = graph_algo.generate_link_weights( app.graph, 0 );
+		return( graph_algo.path_search_Dijkstra( app.graph, weights, fr_id, to_id ) );
+	}
+	else
+	if( app.path_search == 4 )	{
+		let weights = graph_algo.generate_link_weights( app.graph, 10 );
 		return( graph_algo.path_search_Dijkstra( app.graph, weights, fr_id, to_id ) );
 	}
 	return( [] );
