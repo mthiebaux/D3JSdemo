@@ -28,9 +28,9 @@ function create( view_elements )	{
 		select_nodes:	[], // ephemeral: stored temporarily by index, not id
 		select_links:	[],
 
-//		auto_search:	true,
-//		path_search:	0, // 0: none, 1: BFS, 2:Dmin, 3: DFL, 4: Dmax
-		auto_path:	false, // deprecate
+		auto_search:	false,
+//		path_search:	0, // 0: none, 1: BFS, 2:DFL, 3: Dmin, 4: Dmax
+//		auto_path:	false, // deprecate
 		auto_edit:	false,
 		timeout:	null,
 		ival:		1000,
@@ -267,7 +267,9 @@ function register_event_handlers( app )	{
 			update_auto_edit( app, 0 );
 
 			d3.select( app.view.select( "search" ) ).property( "checked", false );
-			app.auto_path = false;
+			app.path_search = 0;
+			app.auto_search = false;
+//			app.auto_path = false;
 
 			ungroup_elems( app.graph.links );
 			ungroup_elems( app.graph.nodes );
@@ -280,7 +282,8 @@ function register_event_handlers( app )	{
 		"mousedown",
 		function( event )	{
 
-			update_bfs_path( app );
+			app.path_search = 1;
+			update_path_search( app );
 		}
 	);
 	d3.select( app.view.select( "dmin" ) ).on(
@@ -335,8 +338,8 @@ function register_event_handlers( app )	{
 		"change",
 		function( event )	{
 
-//			app.auto_search = event.target.checked;
-			app.auto_path = event.target.checked;
+			app.auto_search = event.target.checked;
+//			app.auto_path = event.target.checked;
 		}
 	);
 
@@ -419,8 +422,15 @@ function ungroup_elems( arr )	{
 	}
 }
 
-//function update_path_search( app )	{
-function update_bfs_path( app )	{
+function execute_auto_search( app, fr_id, to_id )	{
+
+	if( app.path_search == 1 )	{
+		return( graph_algo.path_search_BFS( app.graph, fr_id, to_id ) );
+	}
+	return( [] );
+}
+
+function update_path_search( app )	{
 
 	// convert node id to array index
 	const index = ( id ) => app.graph.map.get( id );
@@ -431,14 +441,11 @@ function update_bfs_path( app )	{
 	let len = app.select_nodes.length;
 	if( len > 1 )	{
 
+		// first and last:
 		let fr_id = app.graph.nodes[ app.select_nodes[ 0 ] ].id;
 		let to_id = app.graph.nodes[ app.select_nodes[ len - 1 ] ].id;
 
-
-
-		let path_nodes = graph_algo.path_search_BFS( app.graph, fr_id, to_id );
-
-
+		let path_nodes = execute_auto_search( app, fr_id, to_id );
 
 		let fr_i = index( fr_id );
 		let to_i = index( to_id );
@@ -473,12 +480,8 @@ function update_auto_edit( app, value, slider_max )	{
 				app.sim.update();
 				app.histo.update( app.graph, app.max_degree, false );
 			}
-			if( app.auto_path )	{
-
-
-				update_bfs_path( app );
-
-
+			if( app.auto_search )	{
+				update_path_search( app );
 			}
 			if( app.auto_edit )	{
 				app.timeout = d3.timeout( mutate_timeout_callback, app.ival );

@@ -199,6 +199,120 @@ function path_search_BFS( graph, fr_id, to_id )	{ // returns array of node id, n
 
 function path_search_Dijkstra( graph, weights, fr_id, to_id )	{
 
+  // returns array of node id, not index
+
+	if( ( graph.map.has( fr_id ) == false )||(  graph.map.has( to_id ) == false ) )	{
+		return( [] );
+	}
+	if( fr_id == to_id )	{ // redundant? no, it will bounce off adjacent... Check this
+		return( [ fr_id ] );
+	}
+
+	// by node id, not array index:
+	let visited = new Set();
+	let frontier = new Set( [ fr_id ] );
+
+	// convert node id to array index
+	const index = ( id ) => graph.map.get( id );
+
+	// by array index, not node id:
+	let distance = new Array( graph.nodes.length ).fill( Infinity );
+	distance[ index( fr_id ) ] = 0;
+
+	// by array index, not node id:
+	let parent = new Array( graph.nodes.length ).fill( -1 );
+	parent[ index( fr_id ) ] = -1;
+
+	let weight_map = create_weight_map( weights );
+
+	let curr_id = fr_id;
+	while( frontier.size > 0 )	{
+
+		for( let i=0; i< graph.nodes[ index( curr_id ) ].adjacent.length; i++ )	{
+
+			let adj_id = graph.nodes[ index( curr_id ) ].adjacent[ i ];
+
+			if( visited.has( adj_id ) == false )	{
+
+				test_frontier( curr_id, adj_id );
+			}
+		}
+
+		set_visited( curr_id );
+		curr_id = min_frontier();
+	}
+
+	let p_id = to_id;
+	let path = [ p_id ];
+	while( p_id != fr_id )	{
+		p_id = parent[ index( p_id ) ];
+		path.push( p_id );
+	}
+	return( path.reverse() );
+
+  // private member functions:
+
+	function create_weight_map( w_arr ) {
+
+		let map = new Map();
+		for( let i=0; i< graph.links.length; i++ )	{
+			let str = graph.links[ i ].source.id + "-" + graph.links[ i ].target.id; // assume sorted
+			map.set( str, weights[ i ] );
+		}
+		return( map );
+	}
+
+	function get_weight( fr_id, to_id )	{
+
+		let [ s, t ] = [ fr_id, to_id ].sort( (a, b) => a - b );
+		return( weight_map.get( s + "-" + t ) );
+	}
+
+	function set_visited( id )	{
+
+		if( frontier.delete( id ) )	{
+			visited.add( id );
+		}
+		else	{
+			console.log( "ERR: set_visited id: " + id );
+		}
+	}
+
+	function min_frontier()	{
+
+		let min_d = Infinity;
+		let min_id = -1;
+		function check_min( id )	{
+
+			let d = distance[ index( id ) ];
+			if( d < min_d )	{
+				min_d = d;
+				min_id = id;
+			}
+		}
+		frontier.forEach( check_min );
+		return( min_id );
+	}
+
+	function test_frontier( curr_id, adj_id )	{
+
+		// path distance is a summation of link weights
+		let d = distance[ index( curr_id ) ] + get_weight( curr_id, adj_id );
+
+		let adj_i = index( adj_id );
+		if( d < distance[ adj_i ] )	{
+			distance[ adj_i ] = d;
+			parent[ adj_i ] = curr_id;
+		}
+		frontier.add( adj_id );
+	}
+}
+
+///////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////
+
+function path_search_Dijkstra_XX( graph, weights, fr_id, to_id )	{
+
 	// returns array of node id, not index
 
 	if( ( graph.map.has( fr_id ) == false )||(  graph.map.has( to_id ) == false ) )	{
@@ -211,12 +325,18 @@ function path_search_Dijkstra( graph, weights, fr_id, to_id )	{
 	// convert node id to array index
 	const index = ( id ) => graph.map.get( id );
 
-	let weight_map = new Map();
-	for( let i=0; i< graph.links.length; i++ )	{
-		let str = graph.links[ i ].source.id + "-" + graph.links[ i ].target.id; // assume sorted
-		weight_map.set( str, weights[ i ] );
+	let weight_map = create_weight_map( weights );
+	function create_weight_map( w_arr ) {
+
+		let map = new Map();
+		for( let i=0; i< graph.links.length; i++ )	{
+			let str = graph.links[ i ].source.id + "-" + graph.links[ i ].target.id; // assume sorted
+			map.set( str, weights[ i ] );
+		}
+		return( map );
 	}
 	function get_weight( fr_id, to_id )	{
+
 		let [ s, t ] = [ fr_id, to_id ].sort( (a, b) => a - b );
 		return( weight_map.get( s + "-" + t ) );
 	}
@@ -225,6 +345,7 @@ function path_search_Dijkstra( graph, weights, fr_id, to_id )	{
 	let visited = new Set();
 	let frontier = new Set( [ fr_id ] );
 	function set_visited( id )	{
+
 		if( frontier.delete( id ) )	{
 			visited.add( id );
 		}
@@ -292,10 +413,11 @@ function path_search_Dijkstra( graph, weights, fr_id, to_id )	{
 		path.push( p_id );
 	}
 	return( path.reverse() );
-}
 
-///////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////
+	// private member functions?
+
+
+}
 
 function path_search_Dijkstra_X( graph, weights, fr_id, to_id )	{
 
@@ -395,8 +517,6 @@ function path_search_Dijkstra_X( graph, weights, fr_id, to_id )	{
 	}
 	return( path.reverse() );
 }
-
-///////////////////////////////////////////////////////////////////////
 
 function path_search_Dijkstra_DBG( graph, weights, fr_id, to_id )	{ // returns array of node id, not index
 
