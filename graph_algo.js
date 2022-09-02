@@ -225,6 +225,8 @@ function path_search_Dijkstra( graph, weights, fr_id, to_id )	{
 
 	let weight_map = create_weight_map( weights );
 
+	// core processing loop:
+
 	let curr_id = fr_id;
 	while( frontier.size > 0 )	{
 
@@ -234,6 +236,7 @@ function path_search_Dijkstra( graph, weights, fr_id, to_id )	{
 
 			if( visited.has( adj_id ) == false )	{
 
+				// check distance and add to frontier
 				test_frontier( curr_id, adj_id );
 			}
 		}

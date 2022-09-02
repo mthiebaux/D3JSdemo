@@ -294,12 +294,9 @@ function register_event_handlers( app )	{
 			update_path_search( app );
 		}
 	);
-	d3.select( app.view.select( "dmin" ) ).on(
+	d3.select( app.view.select( "djk_test" ) ).on(
 		"mousedown",
 		function( event )	{
-
-			app.path_search = 3;
-			update_path_search( app );
 
 /*
 
@@ -308,29 +305,29 @@ function register_event_handlers( app )	{
 	3 --- 4
 
 */
-/*
-// 			let W = graph_algo.generate_link_weights( app.graph, 0 );
-
 			let W = [ 6, 1, 5, 2, 2, 5, 1 ];
-//			let W = [ 1, 1, 1, 1, 1, 1, 1 ];
-//			let W = new Array( app.graph.links.length ).fill( 1 );
 
 			console.log( "weight:" );
 			for( let i=0; i< W.length; i++ )	{
 				console.log( i + ": " + W[ i ] );
 			}
 
-//			let path_nodes = graph_algo.path_search_Dijkstra( app.graph, W, fr_id, to_id );
 			let path_nodes = graph_algo.path_search_Dijkstra( app.graph, W, 0, 2 );
-//			let path_nodes = graph_algo.path_search_Dijkstra( app.graph, W, 2, 4 );
 //			let path_nodes = graph_algo.path_search_Dijkstra( app.graph, W, 100, 102 );
 
 			console.log( "path:" );
 			for( let i=0; i< path_nodes.length; i++ )	{
 				console.log( path_nodes[ i ] );
 			}
-*/
 
+		}
+	);
+	d3.select( app.view.select( "dmin" ) ).on(
+		"mousedown",
+		function( event )	{
+
+			app.path_search = 3;
+			update_path_search( app );
 		}
 	);
 	d3.select( app.view.select( "dmax" ) ).on(
