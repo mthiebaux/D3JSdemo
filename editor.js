@@ -278,6 +278,7 @@ function register_event_handlers( app )	{
 			app.sim.update();
 		}
 	);
+
 	d3.select( app.view.select( "bfs" ) ).on(
 		"mousedown",
 		function( event )	{
